@@ -8,7 +8,19 @@ interface TimeUnit {
   label: string
 }
 
-export default function CountdownTimer() {
+interface CountdownTimerProps {
+  targetDate?: string // ISO format e.g. '2026-07-21T18:00:00'
+  title?: string
+  subtitle?: string
+  onComplete?: () => void
+}
+
+export default function CountdownTimer({
+  targetDate = '2026-07-21T18:00:00',
+  title = 'Countdown to Broadcast',
+  subtitle = 'July 21, 2026 • 6:00 PM EST',
+  onComplete
+}: CountdownTimerProps) {
   const [timeUnits, setTimeUnits] = useState<TimeUnit[]>([
     { value: 0, label: 'Days' },
     { value: 0, label: 'Hours' },
@@ -18,16 +30,16 @@ export default function CountdownTimer() {
   const [isLaunched, setIsLaunched] = useState(false)
 
   useEffect(() => {
-    // Set launch date to July 21, 2026
-    const launchDate = new Date('2026-07-21T18:00:00')
+    const target = new Date(targetDate)
 
-    const timer = setInterval(() => {
+    const calculate = () => {
       const now = new Date()
-      const difference = launchDate.getTime() - now.getTime()
+      const difference = target.getTime() - now.getTime()
 
       if (difference <= 0) {
         setIsLaunched(true)
-        clearInterval(timer)
+        if (onComplete) onComplete()
+        return false
       } else {
         const days = Math.floor(difference / (1000 * 60 * 60 * 24))
         const hours = Math.floor((difference / (1000 * 60 * 60)) % 24)
@@ -40,61 +52,64 @@ export default function CountdownTimer() {
           { value: minutes, label: 'Minutes' },
           { value: seconds, label: 'Seconds' },
         ])
+        return true
       }
+    }
+
+    calculate()
+    const timer = setInterval(() => {
+      const hasTime = calculate()
+      if (!hasTime) clearInterval(timer)
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [])
+  }, [targetDate, onComplete])
 
   if (isLaunched) {
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="text-center py-8 md:py-12"
+        className="editorial-card p-6 text-center space-y-2 bg-white"
       >
-        <p className="text-3xl md:text-4xl font-serif font-bold text-accent">
-          🎉 The Book Is Now Available
-        </p>
+        <span className="w-2.5 h-2.5 rounded-full bg-green-600 inline-block animate-pulse mr-2" />
+        <span className="text-xs uppercase tracking-widest text-[#c79a68] font-bold font-sans">
+          Premiere Broadcast Live
+        </span>
+        <h3 className="font-serif text-2xl font-bold text-[#1d1b18]">
+          The Launch Premiere Is Underway
+        </h3>
       </motion.div>
     )
   }
 
   return (
-    <div className="py-8 md:py-12">
-      <motion.h3
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="text-center text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-8"
-      >
-        Launch in
-      </motion.h3>
-      <div className="grid grid-cols-4 gap-2 md:gap-4">
-        {timeUnits.map((unit, index) => (
-          <motion.div
-            key={unit.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="text-center"
-          >
-            <motion.div
-              key={unit.value}
-              initial={{ scale: 1 }}
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 0.5 }}
-              className="bg-card border border-border rounded-lg p-3 md:p-4 mb-2"
-            >
-              <p className="text-xl md:text-3xl font-bold text-foreground">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="editorial-card p-6 text-center space-y-4 bg-white"
+    >
+      <div className="flex items-center justify-center gap-2">
+        <span className="w-2 h-2 rounded-full bg-[#c79a68] animate-pulse" />
+        <p className="text-xs uppercase tracking-widest text-[#c79a68] font-bold font-sans">
+          {title} {subtitle ? `• ${subtitle}` : ''}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-4 gap-2.5 sm:gap-4 max-w-md mx-auto">
+        {timeUnits.map((unit) => (
+          <div key={unit.label} className="text-center">
+            <div className="p-3 bg-[#f8f5ef] border border-[rgba(80,60,40,0.10)] rounded-xl shadow-2xs">
+              <span className="text-xl sm:text-2xl font-bold font-mono text-[#1d1b18]">
                 {String(unit.value).padStart(2, '0')}
-              </p>
-            </motion.div>
-            <p className="text-xs md:text-sm font-medium text-muted-foreground uppercase tracking-widest">
+              </span>
+            </div>
+            <span className="text-[9px] uppercase font-semibold text-[#77716a] block mt-1.5 font-sans">
               {unit.label}
-            </p>
-          </motion.div>
+            </span>
+          </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   )
 }

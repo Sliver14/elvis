@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { Mail, Phone, MapPin, CheckCircle } from 'lucide-react'
+import { Mail, Phone, MapPin, CheckCircle2, ArrowRight } from 'lucide-react'
 
 export default function ContactSection() {
   const [formData, setFormData] = useState({
@@ -22,7 +22,6 @@ export default function ContactSection() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (formData.name && formData.email && formData.subject && formData.message) {
-      // Save message to localStorage for Admin dashboard
       const currentMessages = JSON.parse(localStorage.getItem('aurora_messages') || '[]')
       const newMessage = {
         id: Date.now().toString(),
@@ -37,118 +36,95 @@ export default function ContactSection() {
 
       setSubmitted(true)
       setFormData({ name: '', email: '', subject: '', message: '', isBooking: false })
-      setTimeout(() => setSubmitted(false), 3000)
+      setTimeout(() => setSubmitted(false), 4000)
     }
   }
 
   const contactInfo = [
     {
       icon: Mail,
-      label: 'Email',
+      label: 'Direct Email',
       value: 'hello@elvisjusticebedi.com',
       href: 'mailto:hello@elvisjusticebedi.com',
     },
     {
       icon: Phone,
-      label: 'Phone',
-      value: '+1 (212) 555-1234',
-      href: 'tel:+12125551234',
+      label: 'Press & Booking Desk',
+      value: '+1 (212) 555-0198',
+      href: 'tel:+12125550198',
     },
     {
       icon: MapPin,
-      label: 'Location',
-      value: 'New York, NY, United States',
+      label: 'Publishing Office',
+      value: 'New York & Global Headquarters',
       href: '#',
     },
   ]
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.8 },
-    },
-  }
-
   return (
-    <section id="contact" className="py-20 md:py-32 px-4 sm:px-6 lg:px-8 bg-background">
-      <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-foreground mb-6 text-balance">
-            Get in Touch
+    <section id="contact" className="pt-8 sm:pt-10 md:pt-12 pb-20 md:pb-28 px-4 sm:px-6 lg:px-8 bg-[#f8f5ef]">
+      <div className="max-w-6xl mx-auto space-y-16">
+        
+        {/* Section Header */}
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <span className="editorial-script text-2xl sm:text-3xl text-[#c79a68]">
+            Get In Touch
+          </span>
+          <h2 className="editorial-heading text-3xl sm:text-4xl md:text-5xl text-[#1d1b18]">
+            Author &amp; Press Desk
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Have a question? We&apos;d love to hear from you. Send us a message and we&apos;ll respond as soon as possible.
+          <p className="body-text text-sm sm:text-base text-[#77716a]">
+            Have a question, bulk order inquiry, or media speaking request? Submit your message below and our executive team will get back to you promptly.
           </p>
-        </motion.div>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Contact Info Cards */}
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="space-y-6"
-          >
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
+          
+          {/* Left Column: Contact Cards (5 cols) */}
+          <div className="lg:col-span-5 space-y-4">
             {contactInfo.map((info) => {
               const Icon = info.icon
               return (
-                <motion.a
+                <a
                   key={info.label}
                   href={info.href}
-                  variants={itemVariants}
-                  whileHover={{ x: 5 }}
-                  className="flex gap-4 p-6 rounded-lg border border-border bg-card hover:border-accent transition-all group"
+                  className="editorial-card p-6 flex items-center gap-4 group hover:border-[#c79a68]/40 block transition-all"
                 >
-                  <div className="flex-shrink-0">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors">
-                      <Icon className="w-6 h-6 text-accent" />
-                    </div>
+                  <div className="w-12 h-12 rounded-2xl bg-[#f1ece3] text-[#c79a68] flex items-center justify-center shrink-0 group-hover:bg-[#c79a68] group-hover:text-white transition-colors duration-300">
+                    <Icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-1">
+                    <p className="text-[10px] uppercase font-semibold text-[#c79a68] tracking-widest font-sans">
                       {info.label}
                     </p>
-                    <p className="text-foreground font-medium group-hover:text-accent transition-colors">
+                    <p className="font-serif font-bold text-base text-[#1d1b18] group-hover:text-[#c79a68] transition-colors mt-0.5">
                       {info.value}
                     </p>
                   </div>
-                </motion.a>
+                </a>
               )
             })}
-          </motion.div>
 
-          {/* Contact Form */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            className="lg:col-span-2 p-8 rounded-lg border border-border bg-card/50"
-          >
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-2">
+            {/* Speaking Enquiries Callout */}
+            <div className="p-6 rounded-2xl bg-[#2a211c] text-[#f8f5ef] space-y-2 shadow-md">
+              <span className="text-[10px] uppercase tracking-widest text-[#c79a68] font-bold block">
+                Keynote Engagements
+              </span>
+              <h4 className="font-serif text-lg font-bold">
+                Book Dr. Elvis for Your Next Conference
+              </h4>
+              <p className="text-xs text-[#f8f5ef]/70 leading-relaxed">
+                Available for select global executive summits, university lectures, and private leadership retreats.
+              </p>
+            </div>
+          </div>
+
+          {/* Right Column: Contact Form (7 cols) */}
+          <div className="lg:col-span-7 editorial-card p-8 sm:p-10 bg-white">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-[#1d1b18] uppercase tracking-wider block font-sans">
                     Full Name
                   </label>
                   <input
@@ -157,13 +133,14 @@ export default function ContactSection() {
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
-                    placeholder="Your name"
+                    className="w-full px-4 py-3 rounded-xl bg-[#f8f5ef] border border-[rgba(80,60,40,0.12)] text-[#1d1b18] text-sm focus:outline-none focus:border-[#c79a68] focus:bg-white transition-all placeholder-[#77716a]/50"
+                    placeholder="e.g. Elvis Reader"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-2">
-                    Email
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-[#1d1b18] uppercase tracking-wider block font-sans">
+                    Email Address
                   </label>
                   <input
                     type="email"
@@ -171,15 +148,15 @@ export default function ContactSection() {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
-                    placeholder="your@email.com"
+                    className="w-full px-4 py-3 rounded-xl bg-[#f8f5ef] border border-[rgba(80,60,40,0.12)] text-[#1d1b18] text-sm focus:outline-none focus:border-[#c79a68] focus:bg-white transition-all placeholder-[#77716a]/50"
+                    placeholder="you@example.com"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-2">
-                  Subject
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-[#1d1b18] uppercase tracking-wider block font-sans">
+                  Subject / Topic
                 </label>
                 <input
                   type="text"
@@ -187,13 +164,13 @@ export default function ContactSection() {
                   value={formData.subject}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
-                  placeholder="How can we help?"
+                  className="w-full px-4 py-3 rounded-xl bg-[#f8f5ef] border border-[rgba(80,60,40,0.12)] text-[#1d1b18] text-sm focus:outline-none focus:border-[#c79a68] focus:bg-white transition-all placeholder-[#77716a]/50"
+                  placeholder="e.g. Media Interview / Bulk Order Request"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-2">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-[#1d1b18] uppercase tracking-wider block font-sans">
                   Message
                 </label>
                 <textarea
@@ -201,45 +178,44 @@ export default function ContactSection() {
                   value={formData.message}
                   onChange={handleChange}
                   required
-                  rows={5}
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all resize-none"
-                  placeholder="Your message here..."
+                  rows={4}
+                  className="w-full px-4 py-3 rounded-xl bg-[#f8f5ef] border border-[rgba(80,60,40,0.12)] text-[#1d1b18] text-sm focus:outline-none focus:border-[#c79a68] focus:bg-white transition-all resize-none placeholder-[#77716a]/50"
+                  placeholder="Share details of your inquiry..."
                 />
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5 pt-1">
                 <input
                   type="checkbox"
                   id="isBooking"
                   name="isBooking"
                   checked={formData.isBooking}
                   onChange={(e) => setFormData((prev) => ({ ...prev, isBooking: e.target.checked }))}
-                  className="w-4 h-4 rounded border-border text-accent focus:ring-accent accent-[#b08d57]"
+                  className="w-4 h-4 rounded border-[rgba(80,60,40,0.2)] text-[#c79a68] accent-[#c79a68] cursor-pointer"
                 />
-                <label htmlFor="isBooking" className="text-xs font-semibold text-muted-foreground uppercase cursor-pointer">
-                  This is a booking enquiry for speaking events / media interviews
+                <label htmlFor="isBooking" className="text-xs text-[#77716a] font-medium cursor-pointer">
+                  This inquiry is regarding a keynote speaking invitation or media feature.
                 </label>
               </div>
 
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+              <button
                 type="submit"
                 disabled={submitted}
-                className="w-full py-3 bg-accent text-accent-foreground rounded-lg font-semibold transition-all hover:shadow-lg disabled:opacity-75 disabled:cursor-not-allowed"
+                className="editorial-btn-primary w-full py-3.5 text-xs font-semibold tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-80"
               >
                 {submitted ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <CheckCircle className="w-5 h-5" />
-                    Message Sent!
+                  <span className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" /> Message Successfully Dispatched
                   </span>
                 ) : (
-                  'Send Message'
+                  <span>Send Message to Author Desk</span>
                 )}
-              </motion.button>
+              </button>
             </form>
-          </motion.div>
+          </div>
+
         </div>
+
       </div>
     </section>
   )

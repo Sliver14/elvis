@@ -9,15 +9,27 @@ import TestimonialsSection from '@/components/testimonials-section'
 import FAQSection from '@/components/faq-section'
 import NewsletterSection from '@/components/newsletter-section'
 import Footer from '@/components/footer'
+import { getStoredLaunches, defaultBookLaunches, BookLaunch } from '@/lib/data-store'
 
 export default function Page() {
+  const [featuredLaunch, setFeaturedLaunch] = useState<BookLaunch>(defaultBookLaunches[0])
   const [showPrelaunch, setShowPrelaunch] = useState(true)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-    if (sessionStorage.getItem('aurora_prelaunch_skipped') === 'true') {
+    const launches = getStoredLaunches()
+    const found = launches.find(l => l.isFeatured) || launches[0] || defaultBookLaunches[0]
+    setFeaturedLaunch(found)
+
+    const launchTimestamp = new Date(found.launchDate || '2026-07-21T18:00:00').getTime()
+    const isPastDue = Date.now() >= launchTimestamp || found.status === 'completed'
+    const skipped = sessionStorage.getItem('aurora_prelaunch_skipped') === 'true'
+
+    if (isPastDue || skipped) {
       setShowPrelaunch(false)
+    } else {
+      setShowPrelaunch(true)
     }
   }, [])
 
@@ -37,7 +49,7 @@ export default function Page() {
           key="prelaunch"
           exit={{ opacity: 0, transition: { duration: 0.6, ease: 'easeInOut' } }}
         >
-          <PrelaunchScreen onComplete={handleComplete} />
+          <PrelaunchScreen launch={featuredLaunch} onComplete={handleComplete} />
         </motion.div>
       ) : (
         <motion.main

@@ -1,160 +1,171 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Mail, Phone, MapPin } from 'lucide-react'
+import { Mail, Phone, MapPin, ArrowUpRight } from 'lucide-react'
 import Link from 'next/link'
+import { useAuth } from '@/lib/auth-context'
 
 const links = {
-  Quick: [
+  Navigation: [
     { name: 'Home', href: '/' },
-    { name: 'About the Book', href: '/book' },
     { name: 'About the Author', href: '/author' },
-    { name: 'Virtual Event', href: '/event' },
     { name: 'Bookstore', href: '/store' },
-    { name: 'Contact', href: '/contact' },
+    { name: 'Contact & Inquiries', href: '/contact' },
+  ],
+  Editions: [
+    { name: 'Hardcover Collector Edition', href: '/store' },
+    { name: 'Paperback First Edition', href: '/store' },
+    { name: 'Instant eBook (EPUB/PDF)', href: '/store' },
+    { name: 'Companion Audiobook', href: '/store' },
   ],
   Legal: [
     { name: 'Privacy Policy', href: '#' },
     { name: 'Terms of Service', href: '#' },
-    { name: 'Refund Policy', href: '#' },
+    { name: 'Delivery & Returns', href: '#' },
   ],
 }
 
-const socials = [
-  { icon: Mail, href: '#', label: 'Email' },
-  { icon: Phone, href: '#', label: 'Phone' },
-  { icon: MapPin, href: '#', label: 'Location' },
-]
-
 export default function Footer() {
-  return (
-    <footer className="bg-card border-t border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
-          {/* Brand */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="space-y-4"
-          >
-            <h3 className="text-2xl font-serif font-bold text-foreground">Elvis Bedi</h3>
-            <p className="text-sm text-muted-foreground">
-              Discover the extraordinary mindset, performance strategy, and success principles of Dr. Elvis Justice Bedi.
-            </p>
-            <div className="flex gap-3">
-              {socials.map((social, index) => {
-                const Icon = social.icon
-                return (
-                  <motion.a
-                    key={index}
-                    href={social.href}
-                    whileHover={{ scale: 1.2 }}
-                    className="p-2 rounded-lg border border-border hover:border-accent hover:bg-accent/5 transition-all"
-                  >
-                    <Icon className="w-5 h-5 text-muted-foreground hover:text-accent" />
-                  </motion.a>
-                )
-              })}
-            </div>
-          </motion.div>
+  const { user, setIsAuthModalOpen, setIsProfileModalOpen } = useAuth()
 
-          {/* Quick Links */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="space-y-4"
-          >
-            <h4 className="font-semibold text-foreground">Quick Links</h4>
+  return (
+    <footer className="bg-[#2a211c] text-[#f8f5ef] pt-16 pb-12 px-4 sm:px-6 lg:px-8 border-t border-[rgba(255,255,255,0.08)]">
+      <div className="max-w-7xl mx-auto space-y-12">
+        
+        {/* Top 4-Column Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12 pb-12 border-b border-[rgba(255,255,255,0.10)]">
+          
+          {/* Brand Column (5 cols) */}
+          <div className="lg:col-span-5 space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="w-9 h-9 rounded-full bg-[#c79a68] text-white flex items-center justify-center font-serif font-bold text-sm">
+                EJ
+              </span>
+              <div>
+                <h3 className="font-serif text-xl font-bold tracking-tight text-[#f8f5ef]">
+                  Dr. Elvis Justice Bedi
+                </h3>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#c79a68] font-sans font-semibold">
+                  Official Book Launch &amp; Bookstore
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-[#f8f5ef]/70 leading-relaxed font-sans max-w-sm">
+              *The Weight of Quiet Hearts* and our literary catalog represent an enduring blueprint on self-mastery, execution systems, and peak performance authored by Dr. Elvis Justice Bedi. Published worldwide.
+            </p>
+
+            <div className="pt-2">
+              <p className="text-[11px] text-[#c79a68] font-serif italic">
+                &ldquo;Where discipline meets destination.&rdquo;
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Links (2 cols) */}
+          <div className="lg:col-span-2 space-y-3">
+            <h4 className="text-xs uppercase tracking-widest font-semibold text-[#c79a68] font-sans">
+              Navigation
+            </h4>
             <ul className="space-y-2">
-              {links.Quick.map((link) => (
+              {links.Navigation.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground hover:text-accent transition-colors"
+                    className="text-xs text-[#f8f5ef]/70 hover:text-white transition-colors block"
                   >
                     {link.name}
                   </Link>
                 </li>
               ))}
             </ul>
-          </motion.div>
+          </div>
 
-          {/* Legal */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="space-y-4"
-          >
-            <h4 className="font-semibold text-foreground">Legal</h4>
+          {/* Editions Links (2 cols) */}
+          <div className="lg:col-span-2 space-y-3">
+            <h4 className="text-xs uppercase tracking-widest font-semibold text-[#c79a68] font-sans">
+              Bookstore
+            </h4>
             <ul className="space-y-2">
-              {links.Legal.map((link) => (
+              {links.Editions.map((link) => (
                 <li key={link.name}>
-                  <a
+                  <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground hover:text-accent transition-colors"
+                    className="text-xs text-[#f8f5ef]/70 hover:text-white transition-colors block"
                   >
                     {link.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
-          </motion.div>
+          </div>
 
-          {/* Contact */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
-            className="space-y-4 lg:col-span-2"
-          >
-            <h4 className="font-semibold text-foreground">Get in Touch</h4>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-accent flex-shrink-0" />
-                <a href="mailto:hello@elvisjusticebedi.com" className="text-sm text-muted-foreground hover:text-accent transition-colors">
+          {/* Contact Column (3 cols) */}
+          <div className="lg:col-span-3 space-y-3">
+            <h4 className="text-xs uppercase tracking-widest font-semibold text-[#c79a68] font-sans">
+              Author Desk
+            </h4>
+            <div className="space-y-2.5 text-xs text-[#f8f5ef]/70">
+              <div className="flex items-center gap-2.5">
+                <Mail className="w-4 h-4 text-[#c79a68] shrink-0" />
+                <a href="mailto:hello@elvisjusticebedi.com" className="hover:text-white transition-colors">
                   hello@elvisjusticebedi.com
                 </a>
               </div>
-              <div className="flex items-center gap-3">
-                <Phone className="w-4 h-4 text-accent flex-shrink-0" />
-                <a href="tel:+12125551234" className="text-sm text-muted-foreground hover:text-accent transition-colors">
-                  +1 (212) 555-1234
-                </a>
+              <div className="flex items-center gap-2.5">
+                <Phone className="w-4 h-4 text-[#c79a68] shrink-0" />
+                <span>+1 (212) 555-0198</span>
               </div>
-              <div className="flex items-start gap-3">
-                <MapPin className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-muted-foreground">
-                  New York, NY<br />
-                  United States
-                </p>
+              <div className="flex items-start gap-2.5">
+                <MapPin className="w-4 h-4 text-[#c79a68] shrink-0 mt-0.5" />
+                <span>Global Publishing &amp; Distribution</span>
               </div>
             </div>
-          </motion.div>
+
+            <div className="pt-2 flex flex-col gap-1.5">
+              {user ? (
+                <button
+                  onClick={() => setIsProfileModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 text-[11px] text-[#c79a68] hover:underline font-sans cursor-pointer text-left"
+                >
+                  <span>My Reader Account ({user.name.split(' ')[0]})</span>
+                  <ArrowUpRight className="w-3 h-3" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 text-[11px] text-[#c79a68] hover:underline font-sans cursor-pointer text-left"
+                >
+                  <span>Sign In / Reader Account</span>
+                  <ArrowUpRight className="w-3 h-3" />
+                </button>
+              )}
+              {user && (user.role === 'author' || user.role === 'admin') && (
+                <Link
+                  href="/admin"
+                  className="inline-flex items-center gap-1.5 text-[11px] text-[#f8f5ef]/60 hover:text-white font-sans"
+                >
+                  <span>Author Desk Operations</span>
+                  <ArrowUpRight className="w-3 h-3" />
+                </Link>
+              )}
+            </div>
+          </div>
+
         </div>
 
-        {/* Divider */}
-        <div className="border-t border-border mb-8" />
+        {/* Bottom Copyright */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-[11px] text-[#f8f5ef]/50 font-sans">
+          <p>&copy; {new Date().getFullYear()} Dr. Elvis Justice Bedi. All rights reserved.</p>
+          <div className="flex items-center gap-6">
+            {links.Legal.map((link) => (
+              <a key={link.name} href={link.href} className="hover:text-white transition-colors">
+                {link.name}
+              </a>
+            ))}
+          </div>
+        </div>
 
-        {/* Bottom */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground"
-        >
-          <p>&copy; {new Date().getFullYear()} JUST ELVIS JUSTICE. All rights reserved.</p>
-          <p>
-            Crafted with{' '}
-            <span className="text-accent">✨</span>
-            {' '}by Dr. Elvis Justice Bedi
-          </p>
-        </motion.div>
       </div>
     </footer>
   )

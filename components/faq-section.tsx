@@ -3,149 +3,110 @@
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
+import Link from 'next/link'
 
 const faqs = [
   {
-    question: 'How do I attend the launch event?',
-    answer: 'You can register for the launch event on our website. This is a 100% virtual event, and streaming details will be sent directly to your registered email address before the event.',
+    question: 'How do I attend the virtual launch event?',
+    answer: 'You can register directly on our Launch Event portal. This is a 100% virtual broadcast, and streaming credentials along with calendar invites will be dispatched to your email address prior to the live stream.',
   },
   {
-    question: 'Is the launch event free?',
-    answer: 'Yes, virtual attendance for the main launch stream is completely free! Simply register to receive your streaming link.',
+    question: 'Is attendance for the global launch free?',
+    answer: 'Yes, registration and live stream attendance for the virtual event are completely free! Simply RSVP to secure your personalized broadcast feed.',
   },
   {
-    question: 'Can I watch the event later if I miss it live?',
-    answer: 'Yes! The launch event stream will be recorded and available for all registered participants to watch on-demand for 30 days after the event.',
+    question: 'Can I rewatch the event if I cannot attend live?',
+    answer: 'All registered participants will receive exclusive on-demand access to the complete recorded keynote, author reading, and panel sessions for 30 days post-launch.',
   },
   {
-    question: 'How do I purchase the book?',
-    answer: 'You can purchase JUST ELVIS JUSTICE by Dr. Elvis Justice Bedi directly through our online store in digital eBook formats, high-fidelity Audiobook, and deluxe virtual experience bundles.',
+    question: 'What book formats are available?',
+    answer: 'JUST ELVIS JUSTICE is published in premium Hardcover (with custom gold foil dust jacket), collector Paperback, high-fidelity Audiobook, and instant digital eBook (PDF & EPUB) formats.',
   },
   {
-    question: 'Will signed copies be available?',
-    answer: 'Since this is a virtual-only launch, we are offering digitally-signed editions of the Author\'s Cut and Complete Virtual Experience Bundle, which include a high-resolution, digitally signed digital bookplate.',
+    question: 'How do I receive digital downloads upon checkout?',
+    answer: 'Immediately following checkout, you will receive a secure instant download panel on your screen as well as direct download links delivered to your inbox.',
   },
   {
-    question: 'How do I receive my digital files?',
-    answer: 'Immediately upon checkout or book release, you will receive a secure download link via email. You can download the files in EPUB, PDF, and MP3 formats as many times as you need.',
-  },
-  {
-    question: 'Are there physical copies or shipping?',
-    answer: 'No, this is a virtual-only release. There are no physical copies, printing, or shipping involved, keeping this launch 100% eco-friendly and instantly accessible worldwide.',
-  },
-  {
-    question: 'What payment methods do you accept?',
-    answer: 'We accept all major credit cards, PayPal, Apple Pay, and Google Pay for secure digital transactions.',
+    question: 'What international shipping options are supported for print editions?',
+    answer: 'We offer tracked global courier dispatch to over 140 countries. Standard delivery averages 4–8 business days depending on location.',
   },
 ]
 
 export default function FAQSection() {
-  const [openIndex, setOpenIndex] = useState(0)
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.8 },
-    },
-  }
+  const [openIndex, setOpenIndex] = useState<number | null>(0)
 
   return (
-    <section id="faq" className="py-20 md:py-32 px-4 sm:px-6 lg:px-8 bg-background">
-      <div className="max-w-3xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-foreground mb-6 text-balance">
+    <section id="faq" className="py-20 md:py-28 px-4 sm:px-6 lg:px-8 bg-[#f8f5ef]">
+      <div className="max-w-4xl mx-auto space-y-12">
+        
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <span className="editorial-script text-2xl sm:text-3xl text-[#c79a68]">
+            Inquiries
+          </span>
+          <h2 className="editorial-heading text-3xl sm:text-4xl md:text-5xl text-[#1d1b18]">
             Frequently Asked Questions
           </h2>
-          <p className="text-lg text-muted-foreground">
-            Find answers to common questions about the book, event, and store.
+          <p className="body-text text-sm sm:text-base text-[#77716a] max-w-lg mx-auto">
+            Everything you need to know regarding the book launch, order fulfillments, and virtual broadcast access.
           </p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="space-y-4"
-        >
-          {faqs.map((faq, index) => (
-            <motion.div
-              key={index}
-              variants={itemVariants}
-              className="border border-border rounded-lg overflow-hidden hover:border-accent transition-all"
-            >
-              <button
-                onClick={() => setOpenIndex(openIndex === index ? -1 : index)}
-                className="w-full px-6 py-4 flex items-center justify-between bg-card hover:bg-card/80 transition-colors"
+        {/* Accordions List */}
+        <div className="space-y-4">
+          {faqs.map((faq, index) => {
+            const isOpen = openIndex === index
+            return (
+              <div
+                key={index}
+                className="editorial-card overflow-hidden border border-[rgba(80,60,40,0.10)] transition-colors hover:border-[#c79a68]/40"
               >
-                <h3 className="text-lg font-semibold text-foreground text-left">
-                  {faq.question}
-                </h3>
-                <motion.div
-                  animate={{ rotate: openIndex === index ? 180 : 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="flex-shrink-0 ml-4"
+                <button
+                  onClick={() => setOpenIndex(isOpen ? null : index)}
+                  className="w-full px-6 py-5 flex items-center justify-between text-left bg-white transition-colors cursor-pointer"
+                  aria-expanded={isOpen}
                 >
-                  <ChevronDown className="w-5 h-5 text-accent" />
-                </motion.div>
-              </button>
+                  <span className="font-serif text-lg font-bold text-[#1d1b18] pr-4">
+                    {faq.question}
+                  </span>
+                  <div
+                    className={`w-8 h-8 rounded-full bg-[#f1ece3] text-[#c79a68] flex items-center justify-center shrink-0 transition-transform duration-300 ${
+                      isOpen ? 'rotate-180 bg-[#c79a68] text-white' : ''
+                    }`}
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
+                </button>
 
-              <motion.div
-                initial={false}
-                animate={{
-                  height: openIndex === index ? 'auto' : 0,
-                  opacity: openIndex === index ? 1 : 0,
-                }}
-                transition={{ duration: 0.3 }}
-                className="overflow-hidden"
-              >
-                <div className="px-6 py-4 bg-card/50 border-t border-border">
-                  <p className="text-muted-foreground leading-relaxed">
+                {isOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                    className="px-6 pb-6 pt-2 text-[#77716a] body-text text-sm leading-relaxed border-t border-[rgba(80,60,40,0.06)] bg-[#faf8f5]"
+                  >
                     {faq.answer}
-                  </p>
-                </div>
-              </motion.div>
-            </motion.div>
-          ))}
-        </motion.div>
+                  </motion.div>
+                )}
+              </div>
+            )
+          })}
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="text-center mt-16"
-        >
-          <p className="text-muted-foreground mb-4">
-            Can&apos;t find what you&apos;re looking for?
+        {/* Contact fallback */}
+        <div className="text-center pt-4">
+          <p className="text-sm text-[#77716a]">
+            Have an unanswered question or press inquiry?{' '}
+            <Link
+              href="/contact"
+              className="text-[#c79a68] font-semibold underline hover:text-[#2a211c] transition-colors"
+            >
+              Contact the author desk
+            </Link>
           </p>
-          <motion.a
-            href="#contact"
-            whileHover={{ scale: 1.05, color: '#d4af37' }}
-            className="inline-block font-semibold text-accent transition-colors"
-          >
-            Contact us
-          </motion.a>
-        </motion.div>
+        </div>
+
       </div>
     </section>
   )

@@ -2,54 +2,57 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Calendar, Globe, Video, Clock } from 'lucide-react'
+import { Calendar, Globe, Video, Clock, ArrowRight, UserCheck } from 'lucide-react'
+import Link from 'next/link'
 import { getStoredSchedule, ScheduleItem } from '@/lib/data-store'
 
 const eventDetails = [
   {
     icon: Calendar,
     label: 'Date',
-    value: 'September 15, 2026',
+    value: 'July 21, 2026',
   },
   {
     icon: Clock,
     label: 'Time',
-    value: '6:00 PM - 9:00 PM EST',
+    value: '6:00 PM – 9:00 PM EST',
   },
   {
     icon: Globe,
-    label: 'Location',
+    label: 'Platform',
     value: 'Virtual Mainstage',
   },
   {
     icon: Video,
     label: 'Format',
-    value: 'Live Interactive Stream',
+    value: 'Interactive Global Stream',
   },
 ]
-
-// Schedule events loaded dynamically from data-store
 
 const speakers = [
   {
     name: 'Dr. Elvis Justice Bedi',
-    title: 'Author',
-    bio: 'Self-mastery strategies mentor, leader, and author.',
+    title: 'Author & Keynote Speaker',
+    bio: 'Founder, venture strategist, and author of JUST ELVIS JUSTICE.',
+    initials: 'EJ'
   },
   {
     name: 'Marcus Thompson',
-    title: 'Literary Critic',
-    bio: 'Renowned book critic and cultural commentator.',
+    title: 'Literary Critic & Host',
+    bio: 'Renowned essayist and international cultural commentator.',
+    initials: 'MT'
   },
   {
     name: 'Sarah Chen',
-    title: 'Publisher',
-    bio: 'Leading voice in contemporary publishing.',
+    title: 'Publishing Director',
+    bio: 'Leading innovator in modern digital media and authorship.',
+    initials: 'SC'
   },
   {
     name: 'David Rodriguez',
-    title: 'Journalist',
-    bio: 'Award-winning journalist and interviewer.',
+    title: 'Executive Interviewer',
+    bio: 'Award-winning journalist and host of Global Leadership Series.',
+    initials: 'DR'
   },
 ]
 
@@ -65,47 +68,45 @@ export default function EventSection() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
+        staggerChildren: 0.08,
+        delayChildren: 0.1,
       },
     },
   }
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 16 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.8 },
+      transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
     },
   }
 
   return (
-    <section id="event" className="py-20 md:py-32 px-4 sm:px-6 lg:px-8 bg-card/30">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-foreground mb-6 text-balance">
-            Launch Event
+    <section id="event" className="py-20 md:py-28 px-4 sm:px-6 lg:px-8 bg-[#f1ece3]/40">
+      <div className="max-w-7xl mx-auto space-y-16">
+        
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto space-y-2">
+          <span className="editorial-script text-2xl sm:text-3xl text-[#c79a68]">
+            Global Launch
+          </span>
+          <h2 className="editorial-heading text-3xl sm:text-4xl md:text-5xl text-[#1d1b18]">
+            The Virtual Premiere
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Join us for an unforgettable evening celebrating Aurora&apos;s Awakening and the author&apos;s vision.
+          <p className="body-text text-sm sm:text-base text-[#77716a]">
+            An exclusive evening featuring live readings, deep-dive keynote address by Dr. Elvis, panel dialogues, and global interactive audience Q&amp;A.
           </p>
-        </motion.div>
+        </div>
 
-        {/* Event Details */}
+        {/* 4 Event Quick Detail Cards */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
         >
           {eventDetails.map((detail) => {
             const Icon = detail.icon
@@ -113,89 +114,119 @@ export default function EventSection() {
               <motion.div
                 key={detail.label}
                 variants={itemVariants}
-                whileHover={{ y: -5 }}
-                className="p-6 rounded-lg border border-border bg-background hover:border-accent transition-all"
+                className="editorial-card p-6 flex flex-col space-y-3 group hover:border-[#c79a68]/40"
               >
-                <Icon className="w-8 h-8 text-accent mb-4" />
-                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-2">
-                  {detail.label}
-                </p>
-                <p className="text-lg font-semibold text-foreground">{detail.value}</p>
+                <div className="w-10 h-10 rounded-xl bg-[#f1ece3] text-[#c79a68] flex items-center justify-center group-hover:bg-[#c79a68] group-hover:text-white transition-colors">
+                  <Icon className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase font-semibold text-[#c79a68] tracking-widest font-sans">
+                    {detail.label}
+                  </p>
+                  <p className="font-serif text-lg font-bold text-[#1d1b18] mt-0.5">
+                    {detail.value}
+                  </p>
+                </div>
               </motion.div>
             )
           })}
         </motion.div>
 
-        {/* Event Schedule Timeline */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="mb-16"
-        >
-          <h3 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-8">Event Schedule</h3>
-          <div className="space-y-0 border-l-2 border-accent pl-0">
-            {scheduleList.map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
-                className="relative pl-8 pb-8 last:pb-0"
-              >
-                <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-accent border-4 border-background" />
-                <div className="space-y-1">
-                  <p className="text-sm font-bold text-accent">{item.time}</p>
-                  <p className="text-lg font-semibold text-foreground">{item.activity}</p>
-                  {item.speaker && <p className="text-sm text-muted-foreground">{item.speaker}</p>}
+        {/* 2-Column: Schedule Timeline & Speakers */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+          
+          {/* Schedule Timeline (7 cols) */}
+          <div className="lg:col-span-7 space-y-8">
+            <div className="space-y-1">
+              <span className="eyebrow">Program Structure</span>
+              <h3 className="editorial-heading text-2xl sm:text-3xl text-[#1d1b18]">
+                Evening Schedule
+              </h3>
+            </div>
+
+            <div className="relative pl-6 sm:pl-8 border-l border-[#c79a68]/30 space-y-8">
+              {scheduleList.map((item, index) => (
+                <div key={item.id || index} className="relative group">
+                  {/* Timeline dot */}
+                  <div className="absolute -left-[31px] sm:-left-[39px] top-1.5 w-3.5 h-3.5 rounded-full bg-white border-2 border-[#c79a68] group-hover:bg-[#c79a68] transition-colors" />
+                  
+                  <div className="p-4 rounded-xl bg-white border border-[rgba(80,60,40,0.08)] shadow-xs space-y-1 group-hover:border-[#c79a68]/30 transition-colors">
+                    <span className="text-xs font-semibold text-[#c79a68] font-mono tracking-wider">
+                      {item.time}
+                    </span>
+                    <h4 className="font-serif font-bold text-base text-[#1d1b18]">
+                      {item.activity}
+                    </h4>
+                    {item.speaker && (
+                      <p className="text-xs text-[#77716a] font-sans">
+                        Presented by: <span className="text-[#1d1b18] font-medium">{item.speaker}</span>
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </motion.div>
-            ))}
+              ))}
+            </div>
           </div>
-        </motion.div>
 
-        {/* Guest Speakers */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-        >
-          <h3 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-8">Guest Speakers</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {speakers.map((speaker) => (
-              <motion.div
-                key={speaker.name}
-                whileHover={{ y: -5 }}
-                className="p-6 rounded-lg border border-border bg-background hover:border-accent transition-all text-center"
+          {/* Speakers Panel (5 cols) */}
+          <div className="lg:col-span-5 space-y-8">
+            <div className="space-y-1">
+              <span className="eyebrow">Distinguished Guests</span>
+              <h3 className="editorial-heading text-2xl sm:text-3xl text-[#1d1b18]">
+                Featured Speakers
+              </h3>
+            </div>
+
+            <div className="space-y-4">
+              {speakers.map((speaker) => (
+                <div
+                  key={speaker.name}
+                  className="editorial-card p-5 flex items-start gap-4 hover:border-[#c79a68]/40"
+                >
+                  <div className="w-11 h-11 rounded-full bg-[#2a211c] text-[#f8f5ef] font-serif font-bold flex items-center justify-center shrink-0 text-sm shadow-sm">
+                    {speaker.initials}
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="font-serif font-bold text-base text-[#1d1b18]">
+                      {speaker.name}
+                    </h4>
+                    <p className="text-[11px] font-sans text-[#c79a68] uppercase tracking-wider font-semibold">
+                      {speaker.title}
+                    </p>
+                    <p className="body-text text-xs text-[#77716a] leading-relaxed">
+                      {speaker.bio}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* RSVP CTA Box */}
+            <div className="p-6 rounded-2xl bg-[#2a211c] text-[#f8f5ef] space-y-4 shadow-xl">
+              <div className="space-y-1">
+                <span className="text-[10px] uppercase font-semibold tracking-widest text-[#c79a68]">
+                  Complimentary Registration
+                </span>
+                <h4 className="font-serif text-xl font-bold">
+                  Reserve Your Virtual Seat
+                </h4>
+                <p className="text-xs text-[#f8f5ef]/70 leading-relaxed font-sans">
+                  Free access to the live stream. Registered attendees receive the recorded replay package and calendar invite.
+                </p>
+              </div>
+
+              <Link
+                href="/event"
+                className="editorial-btn-primary w-full text-center block text-xs"
               >
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-accent to-accent/50 mx-auto mb-4" />
-                <h4 className="text-lg font-semibold text-foreground mb-1">{speaker.name}</h4>
-                <p className="text-sm font-medium text-accent mb-3">{speaker.title}</p>
-                <p className="text-sm text-muted-foreground">{speaker.bio}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+                RSVP for Mainstage Access
+              </Link>
+            </div>
 
-        {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="text-center mt-16"
-        >
-          <motion.button
-            whileHover={{ scale: 1.05, boxShadow: '0 20px 40px rgba(176, 141, 87, 0.2)' }}
-            whileTap={{ scale: 0.95 }}
-            className="px-8 py-3 bg-accent text-accent-foreground rounded-lg font-semibold transition-all hover:shadow-xl"
-          >
-            Register Now
-          </motion.button>
-        </motion.div>
+          </div>
+
+        </div>
+
       </div>
     </section>
   )

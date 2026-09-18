@@ -6,9 +6,7 @@ import Footer from '@/components/footer'
 export default function AuthorPage() {
   return (
     <main className="bg-background text-foreground min-h-screen">
-      <div className="pt-8">
-        <AuthorSection />
-      </div>
+      <AuthorSection />
       <Footer />
     </main>
   )

@@ -2,18 +2,45 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BookOpen, AlertCircle, ArrowRight, X, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Sparkles } from 'lucide-react'
 import Image from 'next/image'
+import { BookLaunch, getStoredLaunches, defaultBookLaunches, saveRSVP } from '@/lib/data-store'
 
 interface PrelaunchScreenProps {
   onComplete: () => void
+  launch?: BookLaunch
+  showEnterButton?: boolean
 }
 
-export default function PrelaunchScreen({ onComplete }: PrelaunchScreenProps) {
+export default function PrelaunchScreen({ 
+  onComplete, 
+  launch,
+  showEnterButton = true 
+}: PrelaunchScreenProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [rsvpName, setRsvpName] = useState('')
   const [rsvpEmail, setRsvpEmail] = useState('')
   const [isRsvpSuccess, setIsRsvpSuccess] = useState(false)
+
+  // Resolve current active launch
+  const [activeLaunch, setActiveLaunch] = useState<BookLaunch>(() => {
+    if (launch) return launch
+    if (typeof window !== 'undefined') {
+      const launches = getStoredLaunches()
+      return launches.find(l => l.isFeatured) || launches[0] || defaultBookLaunches[0]
+    }
+    return defaultBookLaunches[0]
+  })
+
+  useEffect(() => {
+    if (launch) {
+      setActiveLaunch(launch)
+    } else {
+      const launches = getStoredLaunches()
+      const found = launches.find(l => l.isFeatured) || launches[0] || defaultBookLaunches[0]
+      setActiveLaunch(found)
+    }
+  }, [launch])
 
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
@@ -23,11 +50,12 @@ export default function PrelaunchScreen({ onComplete }: PrelaunchScreenProps) {
   })
 
   useEffect(() => {
-    const targetDate = new Date('2026-07-21T18:00:00')
+    const targetDateStr = activeLaunch.launchDate || '2026-07-21T18:00:00'
+    const targetDate = new Date(targetDateStr)
 
     const calculateTimeLeft = () => {
       const difference = targetDate.getTime() - new Date().getTime()
-      if (difference <= 0) {
+      if (difference <= 0 || activeLaunch.status === 'completed') {
         onComplete()
         return { days: 0, hours: 0, minutes: 0, seconds: 0 }
       }
@@ -45,306 +73,260 @@ export default function PrelaunchScreen({ onComplete }: PrelaunchScreenProps) {
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [onComplete])
+  }, [activeLaunch, onComplete])
 
-  const radius = 45
-  const circumference = 2 * Math.PI * radius
-  const strokeDashoffset = circumference - (timeLeft.seconds / 60) * circumference
-
-  const authorName = "Dr. Elvis Justice Bedi"
-  const letterVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0 }
+  const handleModalSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!rsvpName || !rsvpEmail) return
+    saveRSVP(activeLaunch, rsvpName, rsvpEmail)
+    setIsRsvpSuccess(true)
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#fbf9f6] overflow-y-auto selection:bg-[#eae0d0] flex flex-col">
-      <div className="w-full min-h-screen flex flex-col items-center justify-between pt-2 px-4 pb-4 md:pt-4 md:px-8 md:pb-8 relative overflow-hidden text-[#1c1611] shrink-0">
+    <div className="fixed inset-0 z-50 bg-[#f8f5ef] overflow-y-auto selection:bg-[#f1ece3] flex flex-col">
+      <div className="w-full min-h-screen flex flex-col items-center justify-between pt-4 px-4 pb-6 md:pt-6 md:px-8 md:pb-8 relative overflow-hidden text-[#1d1b18] shrink-0">
 
-        {/* Dynamic Immersive Background Mesh splashes */}
+        {/* Subtle Background Lighting */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div
-            animate={{
-              scale: [1, 1.1, 1],
-              x: [0, 30, 0],
-              y: [0, -20, 0],
-            }}
-            transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -top-[15%] -left-[10%] w-[90vw] h-[90vw] max-w-[800px] rounded-full bg-gradient-to-br from-[#bda06d]/15 to-[#2b221a]/5 blur-[140px]"
-          />
-          <motion.div
-            animate={{
-              scale: [1.05, 0.95, 1.05],
-              x: [0, -40, 0],
-              y: [0, 30, 0],
-            }}
-            transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -bottom-[15%] -right-[10%] w-[90vw] h-[90vw] max-w-[900px] rounded-full bg-gradient-to-tl from-[#eae0d0]/40 to-[#bda06d]/10 blur-[140px]"
-          />
-          <div className="absolute inset-0 bg-[radial-gradient(#e5ddd0_1px,transparent_1px)] [background-size:32px_32px] opacity-40" />
+          <div className="absolute -top-[15%] -left-[10%] w-[80vw] h-[80vw] max-w-[700px] rounded-full bg-[#c79a68]/10 blur-[130px]" />
+          <div className="absolute -bottom-[15%] -right-[10%] w-[80vw] h-[80vw] max-w-[800px] rounded-full bg-[#f1ece3] blur-[120px]" />
         </div>
 
-        {/* Luxury Navigation Header */}
+        {/* Editorial Top Bar */}
         <motion.div
-          initial={{ opacity: 0, y: -15 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-6xl flex justify-between items-center z-10 border-b border-[#2b221a]/5 pb-3"
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-6xl flex justify-between items-center z-10 border-b border-[rgba(80,60,40,0.08)] pb-4"
         >
-          <span className="font-serif text-xs md:text-sm tracking-[0.3em] uppercase font-bold text-[#bda06d]">
-            {authorName} <span className="text-[#2b221a]/30 font-sans mx-2">•</span> Virtual Launch
-          </span>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={onComplete}
-            className="text-[10px] tracking-[0.2em] uppercase font-bold border border-[#bda06d]/30 px-4 py-2 rounded-full hover:bg-[#bda06d]/5 transition-all text-[#bda06d]"
-          >
-            Skip to Test Demo
-          </motion.button>
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-[#2a211c] text-[#f8f5ef] font-serif font-bold text-[10px] flex items-center justify-center">
+              EJ
+            </span>
+            <span className="font-serif text-sm tracking-wide font-bold text-[#1d1b18]">
+              {activeLaunch.author || 'Dr. Elvis Justice Bedi'}
+            </span>
+            <span className="text-xs text-[#c79a68] hidden sm:inline">&bull;</span>
+            <span className="text-[10px] uppercase tracking-[0.2em] text-[#c79a68] font-sans font-semibold hidden sm:inline">
+              Launch Premiere Portal
+            </span>
+          </div>
+
+          {showEnterButton && (
+            <button
+              onClick={onComplete}
+              className="editorial-btn-secondary py-1.5 px-4 text-xs tracking-wider uppercase font-semibold cursor-pointer"
+            >
+              Enter Launch Room
+            </button>
+          )}
         </motion.div>
 
-        {/* Main Structural Layout */}
-        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center my-auto z-10 py-4 lg:py-6 max-h-[calc(100vh-140px)] overflow-y-auto lg:overflow-visible pr-1 lg:pr-0">
+        {/* Main Editorial Grid */}
+        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center my-auto z-10 py-6">
 
-          {/* Editorial Textual Column */}
+          {/* Left Text Column (7 cols) */}
           <motion.div
-            initial={{ opacity: 0, x: -40 }}
+            initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 1, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-7 space-y-8 lg:pr-6"
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="lg:col-span-7 space-y-6 lg:pr-4"
           >
-            <div className="space-y-4">
-              <span className="inline-flex items-center gap-2 px-3 py-1 bg-[#2b221a]/5 text-[#2b221a] text-[10px] font-bold rounded-full uppercase tracking-[0.15em]">
-                <BookOpen className="w-3 h-3 text-[#bda06d]" /> Exclusive Digital Access
+            <div className="space-y-2">
+              <span className="editorial-script text-2xl sm:text-3xl text-[#c79a68]">
+                Global Release Countdown
               </span>
 
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-black tracking-tight leading-[1.05] uppercase text-[#2b221a]">
-                JUST ELVIS <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2b221a] via-[#bda06d] to-[#2b221a]">JUSTICE</span>
+              <h1 className="editorial-display text-4xl sm:text-5xl md:text-6xl text-[#1d1b18] leading-[1.05]">
+                {activeLaunch.title}
               </h1>
 
-              <motion.p
-                initial="hidden"
-                animate="visible"
-                variants={{ visible: { transition: { staggerChildren: 0.03 } } }}
-                className="text-base md:text-lg font-serif italic text-[#bda06d]"
-              >
-                Masterpiece curated by{' '}
-                {authorName.split('').map((char, index) => (
-                  <motion.span
-                    key={index}
-                    variants={letterVariants}
-                    className="inline-block font-bold"
-                    style={{ whiteSpace: char === ' ' ? 'pre' : 'normal' }}
-                  >
-                    {char}
-                  </motion.span>
-                ))}
-              </motion.p>
-            </div>
-
-            <p className="text-sm md:text-base text-[#2b221a]/70 max-w-xl leading-relaxed font-sans font-light">
-              Prepare to embark on a boundaries-breaking digital literary production. Engineered specifically as a fully integrated global launch—experience the interactive high-fidelity eBook, premium master-class companion audiobooks, and rich dynamic media files delivered straight to your secure terminal instantly upon drop.
-            </p>
-
-            {/* Premium Callout Notification */}
-            <div className="p-4 bg-gradient-to-r from-[#f5eee0] to-[#faf5eb] border border-[#bda06d]/20 rounded-xl max-w-xl flex gap-3 text-xs md:text-sm text-[#2b221a]/80 shadow-[0_4px_20px_rgba(189,160,109,0.05)]">
-              <AlertCircle className="w-5 h-5 text-[#bda06d] shrink-0 mt-0.5" />
-              <p className="leading-relaxed">
-                <strong className="text-[#2b221a] font-medium">Digital Distribution:</strong> No logistics constraints. Available simultaneously worldwide via instant verified secure transmission. Zero delay, zero logistics footprint.
+              <p className="font-serif italic text-lg sm:text-xl text-[#c79a68]">
+                &ldquo;{activeLaunch.quote || activeLaunch.subtitle}&rdquo;
               </p>
             </div>
 
-            {/* Luxury Main CTA Action */}
-            <div className="pt-2">
-              <motion.button
-                whileHover={{ scale: 1.03, y: -2 }}
-                whileTap={{ scale: 0.98 }}
+            <p className="body-text text-sm sm:text-base text-[#77716a] max-w-xl leading-relaxed">
+              {activeLaunch.synopsis?.[0] || activeLaunch.tagline || 'Experience an enduring literary and personal performance production by Dr. Elvis Justice Bedi. Featuring deluxe print editions, interactive eBook downloads, and companion masterclass audiobooks.'}
+            </p>
+
+            <div className="p-4 bg-white border border-[rgba(80,60,40,0.10)] rounded-2xl max-w-xl flex items-start gap-3 shadow-xs">
+              <Sparkles className="w-5 h-5 text-[#c79a68] shrink-0 mt-0.5" />
+              <p className="text-xs text-[#77716a] leading-relaxed">
+                <strong className="text-[#1d1b18] font-semibold">Worldwide Virtual Premiere:</strong> {activeLaunch.launchDateFormatted || 'Coming Soon'}. Register your credentials below to unlock streaming access and receive early bird download certificates.
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-wrap gap-4 items-center">
+              <button
                 onClick={() => setIsModalOpen(true)}
-                className="group inline-flex items-center gap-3 px-8 py-4 bg-[#2b221a] text-[#fbf9f6] rounded-xl font-medium tracking-wide shadow-xl shadow-[#2b221a]/20 hover:bg-[#bda06d] transition-all cursor-pointer text-sm"
+                className="editorial-btn-primary group cursor-pointer"
               >
-                Secure Priority Launch Invitation
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </motion.button>
+                <span>Reserve Priority Launch Seat</span>
+                <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+              </button>
+
+              {showEnterButton && (
+                <button
+                  onClick={onComplete}
+                  className="editorial-btn-secondary cursor-pointer"
+                >
+                  Preview Launch Room
+                </button>
+              )}
             </div>
           </motion.div>
 
-          {/* Visual Media & Dimensional Interactive Timer Column */}
+          {/* Right Media & Countdown Column (5 cols) */}
           <motion.div
-            initial={{ opacity: 0, x: 40 }}
+            initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-5 flex flex-col items-center justify-center space-y-4 w-full"
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="lg:col-span-5 flex flex-col items-center justify-center space-y-6"
           >
-            {/* Enhanced 3D Book Interactive Showcase Container */}
-            <div className="relative w-full max-w-[340px] aspect-[4/5] flex items-center justify-center [perspective:1000px]">
+            {/* 3D Book Showcase */}
+            <div className="relative">
+              {/* Starburst badge */}
+              <div className="gold-seal-badge -top-4 -right-4 shadow-xl">
+                <span>OFFICIAL</span>
+                <span className="text-[10px] tracking-widest font-bold">PREMIERE</span>
+                <span className="text-[7px] text-[#f8f5ef]/90">★ 2026 ★</span>
+              </div>
 
-              {/* Countdown Rotating Orbit Tracker */}
-              <svg viewBox="0 0 320 320" className="absolute w-[110%] h-[110%] -rotate-90 pointer-events-none scale-105 opacity-80">
-                <circle
-                  cx="160"
-                  cy="160"
-                  r={radius * 2.3}
-                  stroke="#e7dbc6"
-                  strokeWidth="2"
-                  fill="transparent"
-                  className="opacity-30"
-                />
-                <motion.circle
-                  cx="160"
-                  cy="160"
-                  r={radius * 2.3}
-                  stroke="#bda06d"
-                  strokeWidth="4"
-                  fill="transparent"
-                  strokeDasharray={circumference * 2.3}
-                  animate={{ strokeDashoffset: strokeDashoffset * 2.3 }}
-                  transition={{ duration: 0.3 }}
-                />
-              </svg>
-
-              {/* Custom Luxury 3D Floating Book Mockup container */}
               <motion.div
                 animate={{
-                  y: [0, -12, 0],
-                  rotateY: [-5, 5, -5],
-                  rotateX: [8, 12, 8]
+                  y: [0, -8, 0],
+                  rotateY: [-3, 3, -3],
                 }}
                 transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-                className="relative w-44 h-64 sm:w-52 sm:h-76 md:w-56 md:h-80 rounded-r-xl overflow-hidden shadow-[20px_25px_45px_-10px_rgba(43,34,26,0.3)] border-y border-r border-[#ffffff]/30 bg-white group"
-                style={{ transformStyle: 'preserve-3d' }}
+                className="relative w-48 h-72 sm:w-56 sm:h-80 rounded-r-xl overflow-hidden shadow-[24px_30px_50px_-8px_rgba(42,33,28,0.3)] border border-[#ffffff]/50 bg-white"
               >
-                {/* Premium Book Spine simulation edge highlight */}
-                <div className="absolute left-0 top-0 bottom-0 w-[6px] bg-gradient-to-r from-black/20 via-transparent to-white/10 z-20 pointer-events-none" />
+                <div className="absolute left-0 top-0 bottom-0 w-[6px] bg-gradient-to-r from-black/25 via-transparent to-white/10 z-20 pointer-events-none" />
                 <Image
-                  src="/book.jpeg"
-                  alt="JUST ELVIS JUSTICE Book Cover"
+                  src={activeLaunch.coverImage || '/book.jpeg'}
+                  alt={`${activeLaunch.title} by ${activeLaunch.author}`}
                   fill
                   priority
-                  className="object-cover group-hover:scale-105 transition-transform duration-700"
+                  className="object-cover"
                 />
               </motion.div>
             </div>
 
-            {/* Premium Minimal Editorial Countdown Grid */}
-            <div className="text-center space-y-4 w-full">
-              <div className="grid grid-cols-4 gap-3 max-w-sm mx-auto px-2">
+            {/* Countdown Clock Grid */}
+            <div className="text-center space-y-3 w-full max-w-sm">
+              <div className="grid grid-cols-4 gap-3">
                 {[
                   { label: 'Days', value: timeLeft.days },
                   { label: 'Hours', value: timeLeft.hours },
                   { label: 'Minutes', value: timeLeft.minutes },
                   { label: 'Seconds', value: timeLeft.seconds }
                 ].map((unit) => (
-                  <div key={unit.label} className="relative group p-3 bg-gradient-to-b from-white to-[#fbf9f6] border border-[#2b221a]/5 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.02)] text-center transition-all duration-300 hover:border-[#bda06d]/30">
-                    <span className="text-xl sm:text-2xl font-mono font-bold tracking-tight text-[#2b221a]">
+                  <div
+                    key={unit.label}
+                    className="p-3 bg-white border border-[rgba(80,60,40,0.10)] rounded-2xl shadow-xs text-center"
+                  >
+                    <span className="text-xl sm:text-2xl font-mono font-bold tracking-tight text-[#1d1b18]">
                       {String(unit.value).padStart(2, '0')}
                     </span>
-                    <span className="text-[9px] uppercase tracking-[0.1em] text-[#2b221a]/50 font-bold block mt-1.5">
+                    <span className="text-[9px] uppercase tracking-wider text-[#c79a68] font-bold block mt-1">
                       {unit.label}
                     </span>
                   </div>
                 ))}
               </div>
-              <p className="text-[10px] uppercase tracking-[0.25em] text-[#2b221a]/40 font-bold px-4 pb-8">
-                Unlocking Internationally On July 21, 2026
+
+              <p className="text-[10px] uppercase tracking-[0.25em] text-[#77716a] font-semibold">
+                {activeLaunch.launchDateFormatted} &bull; {activeLaunch.launchTimeFormatted}
               </p>
             </div>
+
           </motion.div>
         </div>
 
-        {/* Re-designed Translucent Modal Screen */}
+        {/* Modal RSVP */}
         <AnimatePresence>
           {isModalOpen && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1c1611]/60 backdrop-blur-md"
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1d1b18]/60 backdrop-blur-xs"
               onClick={() => setIsModalOpen(false)}
             >
               <motion.div
-                initial={{ scale: 0.96, y: 15 }}
+                initial={{ scale: 0.95, y: 10 }}
                 animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.96, y: 15 }}
-                transition={{ type: "spring", duration: 0.5 }}
+                exit={{ scale: 0.95, y: 10 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-[#fbf9f6] border border-[#2b221a]/10 p-8 shadow-3xl rounded-3xl max-w-md w-full relative text-[#2b221a]"
+                className="bg-[#f8f5ef] border border-[rgba(80,60,40,0.12)] p-8 rounded-3xl max-w-md w-full relative shadow-2xl"
               >
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="absolute top-5 right-5 text-[#2b221a]/40 hover:text-[#2b221a] transition-colors p-1 rounded-full hover:bg-[#2b221a]/5 cursor-pointer"
+                  className="absolute top-5 right-5 w-8 h-8 rounded-full bg-[#f1ece3] text-[#77716a] hover:text-[#1d1b18] flex items-center justify-center text-sm cursor-pointer transition-colors"
                 >
-                  <X className="w-4 h-4" />
+                  ✕
                 </button>
 
                 {!isRsvpSuccess ? (
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <h3 className="text-2xl font-serif font-black tracking-tight text-[#2b221a]">Priority Registry</h3>
-                      <p className="text-xs text-[#2b221a]/60 leading-relaxed font-light">
-                        Register your credentials immediately to guarantee live streaming broadcast entry credentials and access direct distribution pipeline download unlocks.
+                      <span className="editorial-script text-2xl text-[#c79a68]">
+                        Priority Registry
+                      </span>
+                      <h3 className="editorial-heading text-2xl text-[#1d1b18]">
+                        Reserve Launch Access
+                      </h3>
+                      <p className="body-text text-xs leading-relaxed">
+                        Register for <strong>{activeLaunch.title}</strong> to unlock virtual livestream credentials and early bird downloads on launch day.
                       </p>
                     </div>
 
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault()
-                        if (!rsvpName || !rsvpEmail) return
-                        const currentRSVPs = JSON.parse(localStorage.getItem('aurora_rsvps') || '[]')
-                        const newRSVP = {
-                          id: Date.now().toString(),
-                          name: rsvpName,
-                          email: rsvpEmail,
-                          date: new Date().toLocaleDateString(),
-                        }
-                        localStorage.setItem('aurora_rsvps', JSON.stringify([newRSVP, ...currentRSVPs]))
-                        localStorage.setItem('aurora_rsvp_registered', 'true')
-                        setIsRsvpSuccess(true)
-                      }}
-                      className="space-y-5"
-                    >
-                      <div className="space-y-1.5 text-left">
-                        <label className="text-[10px] font-bold text-[#2b221a]/60 uppercase tracking-widest block">Full Legal Name</label>
+                    <form onSubmit={handleModalSubmit} className="space-y-4 text-left">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-[#77716a] uppercase tracking-wider block font-sans">
+                          Full Name
+                        </label>
                         <input
                           type="text"
                           required
                           value={rsvpName}
                           onChange={(e) => setRsvpName(e.target.value)}
-                          placeholder="e.g., Jane Doe"
-                          className="w-full px-4 py-3 bg-[#2b221a]/5 border border-transparent rounded-xl text-sm transition-all focus:outline-none focus:border-[#bda06d] focus:bg-white text-[#2b221a]"
+                          placeholder="e.g. Elvis Reader"
+                          className="w-full px-4 py-2.5 bg-white border border-[rgba(80,60,40,0.15)] rounded-xl text-sm focus:outline-none focus:border-[#c79a68] text-[#1d1b18]"
                         />
                       </div>
 
-                      <div className="space-y-1.5 text-left">
-                        <label className="text-[10px] font-bold text-[#2b221a]/60 uppercase tracking-widest block">Secure Email Delivery Address</label>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-[#77716a] uppercase tracking-wider block font-sans">
+                          Email Delivery Address
+                        </label>
                         <input
                           type="email"
                           required
                           value={rsvpEmail}
                           onChange={(e) => setRsvpEmail(e.target.value)}
                           placeholder="you@domain.com"
-                          className="w-full px-4 py-3 bg-[#2b221a]/5 border border-transparent rounded-xl text-sm transition-all focus:outline-none focus:border-[#bda06d] focus:bg-white text-[#2b221a]"
+                          className="w-full px-4 py-2.5 bg-white border border-[rgba(80,60,40,0.15)] rounded-xl text-sm focus:outline-none focus:border-[#c79a68] text-[#1d1b18]"
                         />
                       </div>
 
                       <button
                         type="submit"
-                        className="w-full py-3.5 bg-[#2b221a] text-[#fbf9f6] rounded-xl text-sm font-semibold hover:bg-[#bda06d] transition-all shadow-lg shadow-[#2b221a]/10 cursor-pointer"
+                        className="editorial-btn-primary w-full py-3 text-xs font-semibold tracking-wider cursor-pointer shadow-md mt-2"
                       >
-                        Verify &amp; Confirm Registration
+                        Confirm Launch RSVP
                       </button>
                     </form>
                   </div>
                 ) : (
                   <div className="text-center py-6 space-y-6">
-                    <div className="w-14 h-14 rounded-full bg-[#bda06d]/10 text-[#bda06d] flex items-center justify-center mx-auto">
+                    <div className="w-14 h-14 rounded-full bg-[#c79a68]/15 text-[#c79a68] flex items-center justify-center mx-auto">
                       <CheckCircle2 className="w-8 h-8" />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="text-xl font-serif font-bold text-[#2b221a]">Credentials Manifested</h3>
-                      <p className="text-xs text-[#2b221a]/60 max-w-xs mx-auto leading-relaxed">
-                        Transmission successfully completed. Secure link assets have been route-mapped to <span className="font-semibold text-[#2b221a]">{rsvpEmail}</span>. See you at launch.
+                      <h3 className="editorial-heading text-2xl text-[#1d1b18]">RSVP Confirmed</h3>
+                      <p className="body-text text-xs max-w-xs mx-auto leading-relaxed">
+                        Your credentials for <strong>{activeLaunch.title}</strong> have been recorded. Confirmation dispatched to <span className="font-semibold text-[#1d1b18]">{rsvpEmail}</span>.
                       </p>
                     </div>
                     <button
@@ -354,9 +336,9 @@ export default function PrelaunchScreen({ onComplete }: PrelaunchScreenProps) {
                         setRsvpName('')
                         setRsvpEmail('')
                       }}
-                      className="px-6 py-2.5 border border-[#2b221a]/20 rounded-xl hover:bg-[#2b221a]/5 text-xs font-semibold transition-all cursor-pointer"
+                      className="editorial-btn-secondary text-xs"
                     >
-                      Return to Dashboard
+                      Return to Countdown
                     </button>
                   </div>
                 )}
@@ -365,11 +347,11 @@ export default function PrelaunchScreen({ onComplete }: PrelaunchScreenProps) {
           )}
         </AnimatePresence>
 
-      </div>
+        {/* Footer info */}
+        <div className="w-full text-center text-[10px] tracking-widest uppercase text-[#77716a] pt-4 border-t border-[rgba(80,60,40,0.08)]">
+          &copy; {new Date().getFullYear()} {activeLaunch.author || 'Dr. Elvis Justice Bedi'} &bull; Official Virtual Premiere Portal
+        </div>
 
-      {/* Sibling Footer on White Background, below the min-h-screen fold */}
-      <div className="w-full bg-white text-center py-8 text-[10px] tracking-widest uppercase text-[#2b221a]/60 border-t border-[#2b221a]/5 z-10 relative">
-        &copy; {new Date().getFullYear()} JUST ELVIS JUSTICE by {authorName}. All Rights Reserved.
       </div>
     </div>
   )
