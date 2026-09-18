@@ -7,7 +7,7 @@ export default function Page() {
 // The storefront, catalogue, and launch experience intentionally share one entry point
 // so the preview stays fast while navigation remains seamless.
 
-// Story / Form is a fictional bookstore brand for this prototype.
+// Serendipity is an independent bookstore brand for this prototype.
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const _designNote = 'Editorial bookstore experience'
