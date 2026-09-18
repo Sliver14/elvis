@@ -3,8 +3,9 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'JUST ELVIS JUSTICE | Dr. Elvis Justice Bedi | Official Book Launch',
-  description: 'Welcome to the official launch portal of JUST ELVIS JUSTICE by Dr. Elvis Justice Bedi. Secure your exclusive pre-order access, explore key lessons, and register for the virtual launch event.',
+  title: 'Story / Form — Books for curious minds',
+  description: 'An independent bookstore for ideas with staying power. Discover Practical Trading Psychology and more.',
+  generator: 'v0.app',
   icons: {
     icon: [
       {
@@ -22,28 +23,12 @@ export const metadata: Metadata = {
     ],
     apple: '/apple-icon.png',
   },
-  openGraph: {
-    title: 'JUST ELVIS JUSTICE | Dr. Elvis Justice Bedi | Official Book Launch',
-    description: 'Welcome to the official launch portal of JUST ELVIS JUSTICE by Dr. Elvis Justice Bedi. Secure your exclusive pre-order access, explore key lessons, and register for the virtual launch event.',
-    siteName: 'JUST ELVIS JUSTICE Book Launch',
-    locale: 'en_US',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'JUST ELVIS JUSTICE | Dr. Elvis Justice Bedi | Official Book Launch',
-    description: 'Welcome to the official launch portal of JUST ELVIS JUSTICE by Dr. Elvis Justice Bedi. Secure your exclusive pre-order access, explore key lessons, and register for the virtual launch event.',
-  },
 }
 
 export const viewport: Viewport = {
   colorScheme: 'light',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-  ],
+  themeColor: '#f5f2ec',
 }
-
-import ClientLayout from '@/components/client-layout'
 
 export default function RootLayout({
   children,
@@ -51,12 +36,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="bg-background">
-      <body className="antialiased bg-background text-foreground">
-        <ClientLayout>
-          {children}
-          {process.env.NODE_ENV === 'production' && <Analytics />}
-        </ClientLayout>
+    <html lang="en">
+      <body className="antialiased">
+        {children}
+        {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
   )
