@@ -62,7 +62,7 @@ const books = [
     price: '$21.00',
     description: 'Notes on showing up for the meaningful work, one ordinary day at a time.',
     bio: 'Jonas Vale is an essayist and teacher interested in creative practice, resilience, and the courage found in ordinary routines. He writes from a small studio by the sea.',
-    image: '/practical-trading-psychology.png',
+    image: '/elvis.jpeg',
   },
 ]
 
