@@ -90,10 +90,49 @@ function Countdown() {
 
 function Nav({ page, onNavigate, onCart, cartCount }: { page: string; onNavigate: (id: string) => void; onCart: () => void; cartCount: number }) {
   const [open, setOpen] = useState(false)
+  const [visible, setVisible] = useState(true)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    let lastScrollY = typeof window !== 'undefined' ? window.scrollY : 0
+    let ticking = false
+
+    const updateHeader = () => {
+      const currentScrollY = window.scrollY
+      setScrolled(currentScrollY > 20)
+
+      if (open) {
+        setVisible(true)
+      } else if (currentScrollY <= 84) {
+        setVisible(true)
+      } else if (currentScrollY > lastScrollY && currentScrollY > 84) {
+        // Scrolling down past header -> hide
+        setVisible(false)
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling up -> show
+        setVisible(true)
+      }
+      lastScrollY = Math.max(0, currentScrollY)
+      ticking = false
+    }
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateHeader)
+        ticking = true
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [open])
+
   const navigate = (id: string) => { onNavigate(id); setOpen(false) }
   const activePage = page.startsWith('details:') ? 'books' : page
   const navItems = [['home', 'Home'], ['books', 'Books'], ['launch', 'Book launch'], ['about', 'About'], ['contact', 'Contact']] as const
-  return <header className="site-header"><div className="header-inner"><button className="wordmark" onClick={() => navigate('home')} aria-label="Go home"><span className="wordmark-mark">S</span><span>SERENDIPITY / <em>ELVIS</em></span></button><nav className={open ? 'nav-links is-open' : 'nav-links'} aria-label="Main navigation">{navItems.map(([id, label]) => <button key={id} className={activePage === id ? 'is-active' : ''} aria-current={activePage === id ? 'page' : undefined} onClick={() => navigate(id)}>{label}</button>)}</nav><div className="header-actions"><button className="icon-button" aria-label="Search"><Search /></button><button className="icon-button bag-button" onClick={onCart} aria-label={`Shopping bag, ${cartCount} items`}><ShoppingBag /><span>{cartCount}</span></button><button className="menu-button" onClick={() => setOpen(!open)} aria-label={open ? 'Close menu' : 'Open menu'}>{open ? <X /> : <Menu />}</button></div></div></header>
+  const headerClass = `site-header ${visible ? 'is-visible' : 'is-hidden'} ${scrolled ? 'is-scrolled' : ''}`
+
+  return <header className={headerClass}><div className="header-inner"><button className="wordmark" onClick={() => navigate('home')} aria-label="Go home"><span className="wordmark-mark">S</span><span>SERENDIPITY / <em>ELVIS</em></span></button><nav className={open ? 'nav-links is-open' : 'nav-links'} aria-label="Main navigation">{navItems.map(([id, label]) => <button key={id} className={activePage === id ? 'is-active' : ''} aria-current={activePage === id ? 'page' : undefined} onClick={() => navigate(id)}>{label}</button>)}</nav><div className="header-actions"><button className="icon-button" aria-label="Search"><Search /></button><button className="icon-button bag-button" onClick={onCart} aria-label={`Shopping bag, ${cartCount} items`}><ShoppingBag /><span>{cartCount}</span></button><button className="menu-button" onClick={() => setOpen(!open)} aria-label={open ? 'Close menu' : 'Open menu'}>{open ? <X /> : <Menu />}</button></div></div></header>
 }
 
 function Newsletter() {
