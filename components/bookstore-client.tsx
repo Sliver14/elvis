@@ -143,7 +143,51 @@ function BookDetails({ book, onBack, onAdd, onNavigate }: { book: typeof books[n
 
 function Cart({ items, onClose, onRemove, onChange }: { items: { book: typeof books[number]; quantity: number }[]; onClose: () => void; onRemove: (id: string) => void; onChange: (id: string, quantity: number) => void }) {
   const total = items.reduce((sum, item) => sum + Number(item.book.price.replace('$', '')) * item.quantity, 0)
-  return <div className="cart-panel" role="dialog" aria-modal="true" aria-label="Shopping cart"><div className="cart-header"><div><p className="eyebrow">Your selection</p><h2>Shopping bag</h2></div><button className="icon-button" onClick={onClose} aria-label="Close shopping bag"><X /></button></div>{items.length ? <><div className="cart-items">{items.map(({ book, quantity }) => <div className="cart-item" key={book.id}><Cover book={book} /><div><h3>{book.title}</h3><p>{book.price}</p><div className="quantity-control"><button onClick={() => onChange(book.id, quantity - 1)} aria-label={`Decrease ${book.title} quantity`}><Minus /></button><span>{quantity}</span><button onClick={() => onChange(book.id, quantity + 1)} aria-label={`Increase ${book.title} quantity`}><Plus /></button></div></div><button className="icon-button" onClick={() => onRemove(book.id)} aria-label={`Remove ${book.title}`}><Trash2 /></button></div>)}</div><div className="cart-footer"><div><span>Total</span><strong>${total.toFixed(2)}</strong></div><button className="button button-dark">Checkout <ArrowRight /></button></div></> : <div className="cart-empty"><ShoppingBag /><p>Your bag is waiting for a good story.</p></div>}</div>
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+  return <>
+    <div className="cart-backdrop" onClick={onClose} aria-hidden="true" />
+    <div className="cart-panel" role="dialog" aria-modal="true" aria-label="Shopping cart">
+      <div className="cart-header">
+        <div>
+          <p className="eyebrow">Your selection</p>
+          <h2>Shopping bag</h2>
+        </div>
+        <button className="icon-button" onClick={onClose} aria-label="Close shopping bag"><X /></button>
+      </div>
+      {items.length ? <>
+        <div className="cart-items">
+          {items.map(({ book, quantity }) => (
+            <div className="cart-item" key={book.id}>
+              <Cover book={book} />
+              <div>
+                <h3>{book.title}</h3>
+                <p>{book.price}</p>
+                <div className="quantity-control">
+                  <button onClick={() => onChange(book.id, quantity - 1)} aria-label={`Decrease ${book.title} quantity`}><Minus /></button>
+                  <span>{quantity}</span>
+                  <button onClick={() => onChange(book.id, quantity + 1)} aria-label={`Increase ${book.title} quantity`}><Plus /></button>
+                </div>
+              </div>
+              <button className="icon-button" onClick={() => onRemove(book.id)} aria-label={`Remove ${book.title}`}><Trash2 /></button>
+            </div>
+          ))}
+        </div>
+        <div className="cart-footer">
+          <div>
+            <span>Total</span>
+            <strong>${total.toFixed(2)}</strong>
+          </div>
+          <button className="button button-dark">Checkout <ArrowRight /></button>
+        </div>
+      </> : <div className="cart-empty"><ShoppingBag /><p>Your bag is waiting for a good story.</p></div>}
+    </div>
+  </>
 }
 
 export default function BookstoreClient() {
