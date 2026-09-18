@@ -45,7 +45,7 @@ export default function Navigation() {
                   Dr. Elvis Justice
                 </span>
                 <span className="text-[9px] uppercase tracking-[0.2em] text-[#c79a68] font-sans font-semibold mt-0.5">
-                  Official Book Launch &amp; Store
+                  Official Book Store
                 </span>
               </div>
             </Link>
@@ -59,11 +59,10 @@ export default function Navigation() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`text-[11px] tracking-wider uppercase px-4 py-1.5 rounded-full font-medium transition-all duration-200 ${
-                    isActive
+                  className={`text-[11px] tracking-wider uppercase px-4 py-1.5 rounded-full font-medium transition-all duration-200 ${isActive
                       ? 'bg-[#2a211c] text-[#f8f5ef] shadow-sm'
                       : 'text-[#77716a] hover:text-[#1d1b18] hover:bg-black/5'
-                  }`}
+                    }`}
                 >
                   {item.name}
                 </Link>
@@ -161,9 +160,8 @@ export default function Navigation() {
                     key={item.name}
                     href={item.href}
                     onClick={() => setIsOpen(false)}
-                    className={`block px-4 py-2.5 text-xs uppercase tracking-wider rounded-xl font-medium transition-colors ${
-                      isActive ? 'bg-[#2a211c] text-[#f8f5ef]' : 'text-[#77716a] hover:bg-[#f1ece3] hover:text-[#1d1b18]'
-                    }`}
+                    className={`block px-4 py-2.5 text-xs uppercase tracking-wider rounded-xl font-medium transition-colors ${isActive ? 'bg-[#2a211c] text-[#f8f5ef]' : 'text-[#77716a] hover:bg-[#f1ece3] hover:text-[#1d1b18]'
+                      }`}
                   >
                     {item.name}
                   </Link>
