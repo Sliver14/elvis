@@ -51,7 +51,7 @@ const books = [
     price: '$19.00',
     description: 'A quiet invitation to notice more, do less, and make room for what matters.',
     bio: 'Mara Linde writes about attention, rest, and the small rituals that help us return to ourselves. She lives between long walks, marked-up notebooks, and quiet rooms.',
-    image: '/practical-trading-psychology.png',
+    image: '/just.jpeg',
   },
   {
     id: 'small-courage',
