@@ -2,7 +2,7 @@ import { Resend } from 'resend'
 
 const resendApiKey = process.env.RESEND_API_KEY || ''
 const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
-const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.ADMIN_EMAIL || 'hello@serendipity.books'
+const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.ADMIN_EMAIL || 'hello@elvisjusticebooks.com'
 
 export const resend = resendApiKey ? new Resend(resendApiKey) : null
 
@@ -104,10 +104,9 @@ export async function sendCustomerBookEmail({
       <div style="padding: 16px; border: 1px solid #ded8cb; background: #faf8f5; border-radius: 4px; margin-bottom: 14px;">
         <h3 style="margin: 0 0 4px; font-size: 18px; color: #281810;">${item.title}</h3>
         <p style="margin: 0 0 10px; font-family: Arial, sans-serif; font-size: 13px; color: #6B3D24;">By ${item.author} · Qty: ${item.quantity} · ${item.price}</p>
-        ${
-          item.pdf_url
-            ? `<a href="${item.pdf_url}" target="_blank" style="display: inline-block; background: #6B3D24; color: #ffffff; padding: 10px 18px; font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; text-decoration: none; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.05em;">Download Your Edition (PDF / Ebook) &rarr;</a>`
-            : `<p style="margin: 0; font-family: Arial, sans-serif; font-size: 12px; color: #8E8E8E;">Digital download link is preparing and will be available in your library.</p>`
+        ${item.pdf_url
+          ? `<a href="${item.pdf_url}" target="_blank" style="display: inline-block; background: #6B3D24; color: #ffffff; padding: 10px 18px; font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; text-decoration: none; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.05em;">Download Your Edition (PDF / Ebook) &rarr;</a>`
+          : `<p style="margin: 0; font-family: Arial, sans-serif; font-size: 12px; color: #8E8E8E;">Digital download link is preparing and will be available in your library.</p>`
         }
       </div>
     `
@@ -140,7 +139,7 @@ export async function sendCustomerBookEmail({
         </p>
 
         <div style="border-top: 1px solid #ded8cb; padding-top: 18px; font-family: Arial, sans-serif; font-size: 11px; color: #8E8E8E; text-align: center;">
-          Serendipity / Elvis · Books for Curious Minds · <a href="mailto:hello@serendipity.books" style="color: #6B3D24;">hello@serendipity.books</a>
+          Serendipity / Elvis · Books for Curious Minds · <a href="mailto:hello@elvisjusticebooks.com" style="color: #6B3D24;">hello@elvisjusticebooks.com</a>
         </div>
       </div>
     </div>

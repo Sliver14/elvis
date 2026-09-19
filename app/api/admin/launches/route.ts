@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       launches: [
         {
           ...DEFAULT_LAUNCH,
-          registrations_count: 89,
+          registrations_count: 0,
           themes: typeof DEFAULT_LAUNCH.themes === 'string' ? JSON.parse(DEFAULT_LAUNCH.themes) : DEFAULT_LAUNCH.themes
         }
       ],
@@ -129,6 +129,83 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PUT(request: NextRequest) {
+  if (!isAuthorizedAdmin(request)) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const sql = getDb()
+  if (!sql) {
+    return NextResponse.json({ success: false, error: 'Database not connected' }, { status: 500 })
+  }
+
+  try {
+    const body = await request.json()
+    const {
+      id,
+      title,
+      author,
+      author_bio,
+      author_image,
+      tagline,
+      intro,
+      description,
+      themes,
+      cover_image,
+      launch_date,
+      is_active,
+    } = body
+
+    if (!id || !title || !author || !cover_image || !launch_date) {
+      return NextResponse.json({
+        success: false,
+        error: 'ID, Title, Author, Cover Image, and Launch Date are required',
+      }, { status: 400 })
+    }
+
+    const themesJson = JSON.stringify(Array.isArray(themes) ? themes : ['Emotional discipline', 'Process over outcome'])
+
+    if (is_active) {
+      // Deactivate all first
+      await sql`UPDATE book_launches SET is_active = false;`
+    }
+
+    const updated = await sql`
+      UPDATE book_launches
+      SET
+        title = ${title},
+        author = ${author},
+        author_bio = ${author_bio || ''},
+        author_image = ${author_image || '/elvis.jpeg'},
+        tagline = ${tagline || ''},
+        intro = ${intro || ''},
+        description = ${description || ''},
+        themes = ${themesJson}::jsonb,
+        cover_image = ${cover_image},
+        launch_date = ${launch_date},
+        is_active = ${Boolean(is_active)},
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${id}
+      RETURNING *;
+    `
+
+    if (!updated.length) {
+      return NextResponse.json({ success: false, error: 'Launch not found' }, { status: 404 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      launch: {
+        ...updated[0],
+        themes: typeof updated[0].themes === 'string' ? JSON.parse(updated[0].themes) : updated[0].themes,
+      }
+    })
+  } catch (error: any) {
+    console.error('Update launch error:', error)
+    return NextResponse.json({ success: false, error: error?.message || 'Failed to update launch' }, { status: 500 })
+  }
+}
+
 export async function PATCH(request: NextRequest) {
   if (!isAuthorizedAdmin(request)) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
@@ -164,3 +241,4 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ success: false, error: error?.message }, { status: 500 })
   }
 }
+

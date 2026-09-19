@@ -12,19 +12,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       stats: {
-        booksCount: 3,
-        subscribersCount: 248,
-        monthlyVisits: 1842,
-        salesCount: 126,
-        revenue: 2964,
-        inquiriesCount: 14,
-        registrationsCount: 89,
+        booksCount: 0,
+        subscribersCount: 0,
+        monthlyVisits: 0,
+        salesCount: 0,
+        revenue: 0,
+        inquiriesCount: 0,
+        registrationsCount: 0,
       },
-      recentActivity: [
-        { type: 'message', title: 'New reader message', desc: 'Reader inquired about international shipping.', time: '10 mins ago' },
-        { type: 'subscriber', title: '18 new subscribers', desc: 'Reading list grew this week.', time: 'Yesterday' },
-      ],
-      source: 'mock'
+      recentActivity: [],
+      source: 'unconfigured'
     })
   }
 
@@ -35,8 +32,8 @@ export async function GET(request: NextRequest) {
       sql`SELECT COUNT(*), COALESCE(SUM(total_amount), 0) as revenue FROM orders WHERE status = 'successful';`,
       sql`SELECT COUNT(*) FROM contact_messages;`,
       sql`SELECT COUNT(*) FROM launch_registrations;`,
-      sql`SELECT reference, customer_name, customer_email, total_amount, created_at FROM orders ORDER BY created_at DESC LIMIT 3;`,
-      sql`SELECT name, email, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 3;`,
+      sql`SELECT reference, customer_name, customer_email, total_amount, created_at FROM orders ORDER BY created_at DESC LIMIT 5;`,
+      sql`SELECT name, email, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 5;`,
     ])
 
     const booksCount = Number(booksRes[0]?.count || 0)
@@ -64,11 +61,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       stats: {
-        booksCount: booksCount || 3,
-        subscribersCount: subscribersCount || 248,
-        monthlyVisits: 1842 + salesCount * 12,
-        salesCount: salesCount,
-        revenue: revenue,
+        booksCount,
+        subscribersCount,
+        monthlyVisits: 0,
+        salesCount,
+        revenue,
         inquiriesCount,
         registrationsCount,
       },
@@ -80,3 +77,4 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: error?.message }, { status: 500 })
   }
 }
+

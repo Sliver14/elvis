@@ -143,7 +143,7 @@ function Cover({ book, className = '' }: { book: Book; className?: string }) {
 
 function Countdown({ targetDate }: { targetDate: string }) {
   const [remaining, setRemaining] = useState(() => Math.max(0, new Date(targetDate || '2026-11-06T09:00:00+01:00').getTime() - Date.now()))
-  
+
   useEffect(() => {
     const target = new Date(targetDate || '2026-11-06T09:00:00+01:00').getTime()
     setRemaining(Math.max(0, target - Date.now()))
@@ -714,7 +714,7 @@ function Contact() {
         <p className="eyebrow">Get in touch</p>
         <h1>Let&apos;s start a <em>conversation.</em></h1>
         <p>Have a question about an order, a recommendation, or a possible collaboration? We&apos;d love to hear from you.</p>
-        <a className="contact-email" href="mailto:hello@serendipity.books">hello@serendipity.books <ArrowRight /></a>
+        <a className="contact-email" href="mailto:hello@elvisjusticebooks.com">hello@elvisjusticebooks.com <ArrowRight /></a>
       </section>
       <section className="contact-form-wrap">
         {sent ? (
@@ -759,7 +759,7 @@ function Footer({ onNavigate }: { onNavigate: (id: string) => void }) {
           <div>
             <p className="footer-label">Say hello</p>
             <button onClick={() => onNavigate('contact')}>Get in touch</button>
-            <a href="mailto:hello@serendipity.books">hello@serendipity.books</a>
+            <a href="mailto:hello@elvisjusticebooks.com">hello@elvisjusticebooks.com</a>
             <p>London · Accra · Online</p>
           </div>
           <div>
@@ -1069,7 +1069,7 @@ function AdminDashboard({
   const [activeTab, setActiveTab] = useState<'overview' | 'books' | 'launches' | 'orders' | 'messages' | 'subscribers'>('overview')
   const [stats, setStats] = useState<any>(null)
   const [recentActivity, setRecentActivity] = useState<any[]>([])
-  
+
   // Launches
   const [launchesList, setLaunchesList] = useState<BookLaunch[]>([])
   const [selectedLaunchRegs, setSelectedLaunchRegs] = useState<any[] | null>(null)
@@ -1083,6 +1083,22 @@ function AdminDashboard({
   const [newLaunchCover, setNewLaunchCover] = useState('/practical-trading-psychology.png')
   const [newLaunchDesc, setNewLaunchDesc] = useState('A practical exploration of the mindset, discipline, and emotional control that shape a trader\'s journey.')
   const [newLaunchActive, setNewLaunchActive] = useState(true)
+
+  // Edit Launch State
+  const [showEditLaunchModal, setShowEditLaunchModal] = useState(false)
+  const [editLaunchId, setEditLaunchId] = useState('')
+  const [editLaunchTitle, setEditLaunchTitle] = useState('')
+  const [editLaunchAuthor, setEditLaunchAuthor] = useState('')
+  const [editLaunchAuthorBio, setEditLaunchAuthorBio] = useState('')
+  const [editLaunchAuthorImage, setEditLaunchAuthorImage] = useState('')
+  const [editLaunchTagline, setEditLaunchTagline] = useState('')
+  const [editLaunchIntro, setEditLaunchIntro] = useState('')
+  const [editLaunchDesc, setEditLaunchDesc] = useState('')
+  const [editLaunchThemes, setEditLaunchThemes] = useState('')
+  const [editLaunchCover, setEditLaunchCover] = useState('')
+  const [editLaunchDate, setEditLaunchDate] = useState('')
+  const [editLaunchActive, setEditLaunchActive] = useState(true)
+  const [savingLaunch, setSavingLaunch] = useState(false)
 
   // Books
   const [showAddBookModal, setShowAddBookModal] = useState(false)
@@ -1227,6 +1243,45 @@ function AdminDashboard({
     }
   }
 
+  // Open Edit Launch Modal with prefilled data
+  const openEditLaunchModal = (launch: BookLaunch) => {
+    setEditLaunchId(launch.id)
+    setEditLaunchTitle(launch.title || '')
+    setEditLaunchAuthor(launch.author || 'Dr Elvis Justice Bedi')
+    setEditLaunchAuthorBio(launch.author_bio || '')
+    setEditLaunchAuthorImage(launch.author_image || '/elvis.jpeg')
+    setEditLaunchTagline(launch.tagline || '')
+    setEditLaunchIntro(launch.intro || '')
+    setEditLaunchDesc(launch.description || '')
+    const themesStr = Array.isArray(launch.themes)
+      ? launch.themes.join(', ')
+      : typeof launch.themes === 'string'
+      ? (() => {
+          try {
+            const parsed = JSON.parse(launch.themes)
+            return Array.isArray(parsed) ? parsed.join(', ') : launch.themes
+          } catch {
+            return launch.themes
+          }
+        })()
+      : ''
+    setEditLaunchThemes(themesStr)
+    setEditLaunchCover(launch.cover_image || '')
+    try {
+      const d = new Date(launch.launch_date)
+      if (!isNaN(d.getTime())) {
+        const localIso = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+        setEditLaunchDate(localIso)
+      } else {
+        setEditLaunchDate('2026-11-06T09:00')
+      }
+    } catch {
+      setEditLaunchDate('2026-11-06T09:00')
+    }
+    setEditLaunchActive(Boolean(launch.is_active))
+    setShowEditLaunchModal(true)
+  }
+
   // Handle Launch Creation
   const handleCreateLaunch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -1261,6 +1316,49 @@ function AdminDashboard({
       }
     } catch (err: any) {
       alert(err.message)
+    }
+  }
+
+  // Handle Launch Update (Edit active or existing launch)
+  const handleUpdateLaunch = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editLaunchTitle || !editLaunchDate || !editLaunchId) return
+
+    setSavingLaunch(true)
+    const themesArray = editLaunchThemes.split(',').map((t) => t.trim()).filter(Boolean)
+
+    try {
+      const res = await fetch('/api/admin/launches', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editLaunchId,
+          title: editLaunchTitle,
+          author: editLaunchAuthor,
+          author_bio: editLaunchAuthorBio,
+          author_image: editLaunchAuthorImage || '/elvis.jpeg',
+          tagline: editLaunchTagline,
+          intro: editLaunchIntro || editLaunchDesc,
+          description: editLaunchDesc,
+          themes: themesArray,
+          cover_image: editLaunchCover || '/practical-trading-psychology.png',
+          launch_date: new Date(editLaunchDate).toISOString(),
+          is_active: editLaunchActive,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        showToast(`Book Launch "${editLaunchTitle}" updated successfully!`)
+        setShowEditLaunchModal(false)
+        onRefreshLaunch()
+        loadAdminData()
+      } else {
+        alert(data.error || 'Failed to update launch')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Failed to update launch')
+    } finally {
+      setSavingLaunch(false)
     }
   }
 
@@ -1320,7 +1418,7 @@ function AdminDashboard({
           <h1>Good morning, <em>Elvis.</em></h1>
         </div>
         <div className="admin-topbar-actions">
-          <button className="text-button" onClick={onRefreshBooks}><RefreshIcon /> Refresh</button>
+          <button className="text-button" onClick={() => { onRefreshBooks(); onRefreshLaunch(); loadAdminData(); }}><RefreshIcon /> Refresh</button>
           <button className="button button-dark" onClick={onLogout}><LogOut /> Sign out</button>
         </div>
       </div>
@@ -1342,32 +1440,32 @@ function AdminDashboard({
             <article>
               <span><BookOpen /></span>
               <p>Books in collection</p>
-              <strong>{String(stats?.booksCount || booksList.length).padStart(2, '0')}</strong>
-              <small>+1 this season</small>
+              <strong>{String(stats?.booksCount ?? booksList.length).padStart(2, '0')}</strong>
+              <small>Live catalog</small>
             </article>
             <article>
               <span><Users /></span>
               <p>Reader subscribers</p>
-              <strong>{stats?.subscribersCount || 248}</strong>
-              <small>Growing reading list</small>
+              <strong>{stats?.subscribersCount ?? subscribersList.length ?? 0}</strong>
+              <small>Active reading list</small>
             </article>
             <article>
               <span><Rocket /></span>
               <p>Launch registrants</p>
-              <strong>{stats?.registrationsCount || 89}</strong>
-              <small>Active launch queue</small>
+              <strong>{stats?.registrationsCount ?? 0}</strong>
+              <small>Launch waitlist</small>
             </article>
             <article>
               <span><ShoppingBag /></span>
               <p>Completed orders</p>
-              <strong>{stats?.salesCount || ordersList.length}</strong>
+              <strong>{stats?.salesCount ?? ordersList.length ?? 0}</strong>
               <small>Automated Paystack</small>
             </article>
             <article>
               <span><span className="admin-currency">$</span></span>
               <p>Total Revenue</p>
-              <strong>${(stats?.revenue || 2964).toLocaleString()}</strong>
-              <small>Resend ebook delivery</small>
+              <strong>${Number(stats?.revenue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+              <small>Ebook sales</small>
             </article>
           </div>
 
@@ -1378,17 +1476,35 @@ function AdminDashboard({
                   <p className="eyebrow">Active Book Launch</p>
                   <h2>{activeLaunch.title}</h2>
                 </div>
-                <button className="button button-dark" onClick={() => setActiveTab('launches')}>
-                  Manage Launches <ArrowRight />
-                </button>
+                <div className="admin-header-actions">
+                  <button className="button button-dark btn-sm" onClick={() => openEditLaunchModal(activeLaunch)}>
+                    <Settings2 /> Edit Active Launch
+                  </button>
+                  <button className="button button-light btn-sm" onClick={() => setActiveTab('launches')}>
+                    All Launches <ArrowRight />
+                  </button>
+                </div>
               </div>
               <div className="active-launch-card">
                 <img src={activeLaunch.cover_image} alt={activeLaunch.title} className="active-launch-thumb" />
-                <div>
-                  <p className="launch-badge">CURRENT STOREFRONT LAUNCH</p>
+                <div className="active-launch-body">
+                  <div className="active-launch-top">
+                    <span className="launch-badge">CURRENT STOREFRONT LAUNCH</span>
+                    <button className="button button-light btn-sm" onClick={() => openEditLaunchModal(activeLaunch)}>
+                      <Settings2 /> Edit Details
+                    </button>
+                  </div>
                   <h3>{activeLaunch.title}</h3>
                   <p className="launch-card-meta">Author: {activeLaunch.author} · Target: {new Date(activeLaunch.launch_date).toLocaleDateString()}</p>
                   <p className="launch-card-tagline">{activeLaunch.tagline}</p>
+                  <div className="active-launch-actions">
+                    <button className="button button-dark btn-sm" onClick={() => openEditLaunchModal(activeLaunch)}>
+                      <Settings2 /> Update Launch Information
+                    </button>
+                    <button className="button button-light btn-sm" onClick={() => handleViewRegistrations(activeLaunch.id, activeLaunch.title)}>
+                      <Users /> View Waitlist ({activeLaunch.registrations_count || stats?.registrationsCount || 0})
+                    </button>
+                  </div>
                 </div>
               </div>
             </section>
@@ -1400,7 +1516,7 @@ function AdminDashboard({
                   <h2>Live feed</h2>
                 </div>
               </div>
-              {recentActivity.length ? (
+              {recentActivity && recentActivity.length > 0 ? (
                 recentActivity.map((item, idx) => (
                   <div className="activity-item" key={idx}>
                     <span>{item.type === 'order' ? <ShoppingBag /> : <Mail />}</span>
@@ -1412,7 +1528,7 @@ function AdminDashboard({
                   </div>
                 ))
               ) : (
-                <p className="admin-empty-sub">No recent events recorded yet.</p>
+                <p className="admin-empty-sub">No recent transactions or messages recorded yet.</p>
               )}
             </section>
           </div>
@@ -1492,7 +1608,7 @@ function AdminDashboard({
           </div>
 
           <p className="admin-desc-note">
-            Creating a new launch dynamically configures its database tracking table, updates the public countdown, and seamlessly swaps the storefront Book Launch page.
+            Manage your book launches, customize live countdowns, update book titles, author profiles, cover artwork, and key themes across the entire storefront in real-time.
           </p>
 
           <div className="admin-table-wrap">
@@ -1533,9 +1649,14 @@ function AdminDashboard({
                       <strong>{launch.registrations_count || 0} readers</strong>
                     </td>
                     <td>
-                      <button className="button button-light btn-sm" onClick={() => handleViewRegistrations(launch.id, launch.title)}>
-                        <Users /> View Registrants
-                      </button>
+                      <div className="table-actions-cell">
+                        <button className="button button-light btn-sm" onClick={() => openEditLaunchModal(launch)}>
+                          <Settings2 /> Edit Details
+                        </button>
+                        <button className="button button-light btn-sm" onClick={() => handleViewRegistrations(launch.id, launch.title)}>
+                          <Users /> Registrants ({launch.registrations_count || 0})
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1572,28 +1693,36 @@ function AdminDashboard({
                 </tr>
               </thead>
               <tbody>
-                {ordersList.map((order) => (
-                  <tr key={order.id || order.reference}>
-                    <td><code>{order.reference}</code></td>
-                    <td>
-                      <strong>{order.customer_name || 'Reader'}</strong>
-                      <p className="table-sub">{order.customer_email}</p>
+                {ordersList.length ? (
+                  ordersList.map((order) => (
+                    <tr key={order.id || order.reference}>
+                      <td><code>{order.reference}</code></td>
+                      <td>
+                        <strong>{order.customer_name || 'Reader'}</strong>
+                        <p className="table-sub">{order.customer_email}</p>
+                      </td>
+                      <td><strong>${Number(order.total_amount).toFixed(2)}</strong></td>
+                      <td>
+                        <span className="table-sub">
+                          {Array.isArray(order.items) ? order.items.map((i: any) => `${i.title} (x${i.quantity || 1})`).join(', ') : '1 Book'}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`status-badge status-${order.status}`}>{order.status}</span>
+                      </td>
+                      <td>
+                        {order.pdf_sent ? <span className="badge-sent"><Check /> Sent via Resend</span> : <span className="table-sub">Pending</span>}
+                      </td>
+                      <td>{new Date(order.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} style={{ textAlign: 'center', padding: '30px', color: 'var(--muted)' }}>
+                      No customer orders recorded yet.
                     </td>
-                    <td><strong>${Number(order.total_amount).toFixed(2)}</strong></td>
-                    <td>
-                      <span className="table-sub">
-                        {Array.isArray(order.items) ? order.items.map((i: any) => `${i.title} (x${i.quantity || 1})`).join(', ') : '1 Book'}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`status-badge status-${order.status}`}>{order.status}</span>
-                    </td>
-                    <td>
-                      {order.pdf_sent ? <span className="badge-sent"><Check /> Sent via Resend</span> : <span className="table-sub">Pending</span>}
-                    </td>
-                    <td>{new Date(order.created_at).toLocaleDateString()}</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -1624,14 +1753,22 @@ function AdminDashboard({
                 </tr>
               </thead>
               <tbody>
-                {messagesList.map((msg) => (
-                  <tr key={msg.id}>
-                    <td><strong>{msg.name}</strong></td>
-                    <td><a href={`mailto:${msg.email}`} className="table-link">{msg.email}</a></td>
-                    <td><p className="message-bubble">{msg.message}</p></td>
-                    <td>{new Date(msg.created_at).toLocaleDateString()}</td>
+                {messagesList.length ? (
+                  messagesList.map((msg) => (
+                    <tr key={msg.id}>
+                      <td><strong>{msg.name}</strong></td>
+                      <td><a href={`mailto:${msg.email}`} className="table-link">{msg.email}</a></td>
+                      <td><p className="message-bubble">{msg.message}</p></td>
+                      <td>{new Date(msg.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} style={{ textAlign: 'center', padding: '30px', color: 'var(--muted)' }}>
+                      No reader messages received yet.
+                    </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -1661,13 +1798,21 @@ function AdminDashboard({
                 </tr>
               </thead>
               <tbody>
-                {subscribersList.map((sub, idx) => (
-                  <tr key={sub.id || idx}>
-                    <td>#{sub.id || idx + 1}</td>
-                    <td><strong>{sub.email}</strong></td>
-                    <td>{new Date(sub.created_at || Date.now()).toLocaleDateString()}</td>
+                {subscribersList.length ? (
+                  subscribersList.map((sub, idx) => (
+                    <tr key={sub.id || idx}>
+                      <td>#{sub.id || idx + 1}</td>
+                      <td><strong>{sub.email}</strong></td>
+                      <td>{new Date(sub.created_at || Date.now()).toLocaleDateString()}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={3} style={{ textAlign: 'center', padding: '30px', color: 'var(--muted)' }}>
+                      No newsletter subscribers yet.
+                    </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -1727,6 +1872,88 @@ function AdminDashboard({
               <div className="admin-modal-actions">
                 <button type="button" className="text-button" onClick={() => setShowAddBookModal(false)}>Cancel</button>
                 <button type="submit" className="button button-dark">Save Book <ArrowRight /></button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: EDIT BOOK LAUNCH (UPDATE ACTIVE LAUNCH DETAILS) */}
+      {showEditLaunchModal && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal-card">
+            <div className="admin-modal-header">
+              <div>
+                <p className="eyebrow">Launch Editor</p>
+                <h3>Edit Book Launch Details</h3>
+              </div>
+              <button className="icon-button" onClick={() => setShowEditLaunchModal(false)}><X /></button>
+            </div>
+            <form onSubmit={handleUpdateLaunch} className="admin-modal-form">
+              <label>
+                Launch Title
+                <input required value={editLaunchTitle} onChange={(e) => setEditLaunchTitle(e.target.value)} placeholder="e.g. Practical Trading Psychology" />
+              </label>
+              <div className="form-row-2">
+                <label>
+                  Author Name
+                  <input required value={editLaunchAuthor} onChange={(e) => setEditLaunchAuthor(e.target.value)} />
+                </label>
+                <label>
+                  Launch Date & Time (Countdown Target)
+                  <input required type="datetime-local" value={editLaunchDate} onChange={(e) => setEditLaunchDate(e.target.value)} />
+                </label>
+              </div>
+              <label>
+                Author Bio
+                <textarea rows={2} value={editLaunchAuthorBio} onChange={(e) => setEditLaunchAuthorBio(e.target.value)} placeholder="Author biography..." />
+              </label>
+              <div className="cloudinary-upload-box">
+                <label className="cloudinary-label">
+                  <UploadCloud /> Upload Author Photo (Cloudinary)
+                  <input type="file" accept="image/*" onChange={(e) => handleCloudinaryUpload(e, setEditLaunchAuthorImage)} />
+                </label>
+                {editLaunchAuthorImage && (
+                  <div className="cover-preview-row">
+                    <img src={editLaunchAuthorImage} alt="Author preview" className="cover-preview-img" style={{ borderRadius: '50%' }} />
+                    <span>{editLaunchAuthorImage.slice(0, 45)}...</span>
+                  </div>
+                )}
+              </div>
+              <label>
+                Tagline (appears in hero & launch countdown banner)
+                <textarea rows={2} value={editLaunchTagline} onChange={(e) => setEditLaunchTagline(e.target.value)} placeholder="Process over profit.&#10;Win in the mind first." />
+              </label>
+              <label>
+                Key Takeaways / Themes (comma-separated)
+                <input value={editLaunchThemes} onChange={(e) => setEditLaunchThemes(e.target.value)} placeholder="Emotional discipline, Process over outcome, Managing psychology, Building consistency" />
+              </label>
+              <label>
+                About Book Description
+                <textarea rows={3} value={editLaunchDesc} onChange={(e) => setEditLaunchDesc(e.target.value)} placeholder="Detailed description of the book..." />
+              </label>
+              <div className="cloudinary-upload-box">
+                <label className="cloudinary-label">
+                  <UploadCloud /> Upload Book Cover to Cloudinary
+                  <input type="file" accept="image/*" onChange={(e) => handleCloudinaryUpload(e, setEditLaunchCover)} />
+                </label>
+                {uploadingImage && <p className="uploading-text"><Loader2 className="animate-spin" /> Uploading to Cloudinary CDN...</p>}
+                {editLaunchCover && (
+                  <div className="cover-preview-row">
+                    <img src={editLaunchCover} alt="Cover preview" className="cover-preview-img" />
+                    <span>{editLaunchCover.slice(0, 45)}...</span>
+                  </div>
+                )}
+              </div>
+              <label className="checkbox-label admin-checkbox">
+                <input type="checkbox" checked={editLaunchActive} onChange={(e) => setEditLaunchActive(e.target.checked)} />
+                <span>Keep as ACTIVE Book Launch on the live storefront</span>
+              </label>
+              <div className="admin-modal-actions">
+                <button type="button" className="text-button" onClick={() => setShowEditLaunchModal(false)} disabled={savingLaunch}>Cancel</button>
+                <button type="submit" className="button button-dark" disabled={savingLaunch}>
+                  {savingLaunch ? <><Loader2 className="animate-spin" /> Saving...</> : <>Save Changes <ArrowRight /></>}
+                </button>
               </div>
             </form>
           </div>
@@ -1898,7 +2125,7 @@ export default function BookstoreClient() {
     refreshLaunch()
 
     // Initialize database in background
-    fetch('/api/init').catch(() => {})
+    fetch('/api/init').catch(() => { })
 
     // Check payment return params
     if (typeof window !== 'undefined') {
