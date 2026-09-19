@@ -158,3 +158,83 @@ export async function sendCustomerBookEmail({
     return { success: false, error }
   }
 }
+
+interface LaunchConfirmationEmailParams {
+  readerEmail: string
+  readerName: string
+  launchTitle: string
+  authorName?: string
+  launchDate?: string
+}
+
+/**
+ * Send an automated priority confirmation/welcome email to the reader upon book launch registration
+ */
+export async function sendLaunchConfirmationEmail({
+  readerEmail,
+  readerName,
+  launchTitle,
+  authorName = 'Dr Elvis Justice Bedi',
+  launchDate,
+}: LaunchConfirmationEmailParams) {
+  if (!resend) {
+    console.log(`[Resend Mock Launch Confirmation] To: ${readerEmail} | Reader: ${readerName} | Launch: ${launchTitle}`)
+    return { success: true, mocked: true }
+  }
+
+  const dateString = launchDate
+    ? new Date(launchDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : 'Coming Soon'
+
+  const html = `
+    <div style="font-family: Georgia, 'Times New Roman', serif; background-color: #F7F6F3; padding: 40px 20px; color: #281810;">
+      <div style="max-width: 600px; margin: auto; background: #ffffff; border: 1px solid #ded8cb; padding: 40px; border-radius: 4px; box-shadow: 0 10px 30px rgba(40,24,16,0.06);">
+        <div style="border-bottom: 1px solid #ded8cb; padding-bottom: 22px; margin-bottom: 24px;">
+          <span style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #8E8E8E;">SERENDIPITY / ELVIS · EXCLUSIVE PRIORITY ACCESS</span>
+          <h1 style="font-size: 28px; color: #281810; margin: 10px 0 0; font-weight: 400;">Priority Access Confirmed</h1>
+        </div>
+        <p style="font-family: Arial, sans-serif; font-size: 15px; color: #4a382c; line-height: 1.6;">
+          Hello ${readerName},<br/><br/>
+          You are officially on the priority reader list for <strong>${launchTitle}</strong> by <strong>${authorName}</strong>.
+        </p>
+
+        <div style="padding: 20px; border: 1px solid #ded8cb; background: #faf8f5; border-radius: 4px; margin: 24px 0;">
+          <p style="margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #B57A4B; font-weight: bold;">Upcoming Release</p>
+          <h3 style="margin: 0 0 8px; font-size: 20px; color: #281810;">${launchTitle}</h3>
+          <p style="margin: 0; font-family: Arial, sans-serif; font-size: 13px; color: #6B3D24;">Target Launch Date: <strong>${dateString}</strong></p>
+        </div>
+
+        <p style="font-family: Arial, sans-serif; font-size: 14px; color: #4a382c; line-height: 1.6;">
+          Here is what you can look forward to as a registered reader:
+        </p>
+        <ul style="font-family: Arial, sans-serif; font-size: 13px; color: #4a382c; line-height: 1.8; padding-left: 20px; margin-bottom: 26px;">
+          <li>Instant notification the moment digital copies become available.</li>
+          <li>Exclusive excerpt previews and author reflections from ${authorName}.</li>
+          <li>Early reader access and priority ordering privileges.</li>
+        </ul>
+
+        <p style="font-family: Georgia, serif; font-size: 15px; font-style: italic; color: #6B3D24; margin-bottom: 30px;">
+          &ldquo;Process over profit. Win in the mind first.&rdquo;
+        </p>
+
+        <div style="border-top: 1px solid #ded8cb; padding-top: 18px; font-family: Arial, sans-serif; font-size: 11px; color: #8E8E8E; text-align: center;">
+          Serendipity / Elvis · Books for Curious Minds · <a href="mailto:hello@elvisjusticebooks.com" style="color: #6B3D24;">hello@elvisjusticebooks.com</a> · You can unsubscribe at any time.
+        </div>
+      </div>
+    </div>
+  `
+
+  try {
+    const result = await resend.emails.send({
+      from: `Serendipity / Elvis <${resendFromEmail}>`,
+      to: [readerEmail],
+      subject: `Priority Access Confirmed: ${launchTitle} by ${authorName}`,
+      html,
+    })
+    return { success: true, data: result }
+  } catch (error) {
+    console.error('Failed to send launch confirmation email via Resend:', error)
+    return { success: false, error }
+  }
+}
+

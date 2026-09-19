@@ -478,6 +478,7 @@ function Launch({ launch, onNavigate }: { launch: BookLaunch; onNavigate: (id: s
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [agreedUpdates, setAgreedUpdates] = useState(true)
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -493,6 +494,9 @@ function Launch({ launch, onNavigate }: { launch: BookLaunch; onNavigate: (id: s
           phone,
           launch_id: launch.id,
           launch_title: launch.title,
+          launch_date: launch.launch_date,
+          author_name: launch.author,
+          agreed_updates: agreedUpdates,
         }),
       })
       setRegistered(true)
@@ -632,7 +636,11 @@ function Launch({ launch, onNavigate }: { launch: BookLaunch; onNavigate: (id: s
               <input type="tel" placeholder="+44 ..." value={phone} onChange={(e) => setPhone(e.target.value)} />
             </label>
             <label className="checkbox-label">
-              <input type="checkbox" required />
+              <input
+                type="checkbox"
+                checked={agreedUpdates}
+                onChange={(e) => setAgreedUpdates(e.target.checked)}
+              />
               <span>I agree to receive launch updates and understand I can unsubscribe at any time.</span>
             </label>
             <button className="button button-dark" type="submit" disabled={loading}>
