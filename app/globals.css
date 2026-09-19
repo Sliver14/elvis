@@ -946,31 +946,15 @@ img,
   pointer-events: none;
 }
 
-.catalog-grid .card-cover-wrap {
-  padding-inline: 50px;
+.book-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
 }
 
-.book-description {
-  max-width: 280px;
-  line-height: 1.5;
-}
-
-.book-card-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 14px;
-}
-
-.add-book-button {
-  font-size: 11px;
-  padding: 9px 12px;
-}
-
-.add-book-button svg, .detail-purchase svg {
-  width: 15px;
-  height: 15px;
+.book-card-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
 }
 
 .empty-state {

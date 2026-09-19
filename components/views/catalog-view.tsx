@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, ChevronDown, Search, ShoppingBag } from 'lucide-react'
+import { ArrowRight, ChevronDown, Search } from 'lucide-react'
 import { useStore } from '@/components/store-provider'
 import { Cover } from '@/components/book-cover'
 
 export function CatalogView() {
-  const { booksList, addToCart } = useStore()
+  const { booksList } = useStore()
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All books')
 
@@ -53,32 +53,26 @@ export function CatalogView() {
       </div>
 
       {filtered.length ? (
-        <div className="book-grid catalog-grid">
+        <div className="book-grid">
           {filtered.map((book) => (
-            <article className="book-card" key={book.id}>
-              <Link href={`/books/${book.id}`} className="card-cover-wrap" aria-label={`View ${book.title}`}>
-                <Cover book={book} />
-                <span className="card-category">{book.category}</span>
-              </Link>
-              <div className="book-card-meta">
-                <h3>
-                  <Link href={`/books/${book.id}`} className="book-title-link">
-                    {book.title}
-                  </Link>
-                </h3>
-                <p>{book.author}</p>
-                <p className="book-description">{book.description}</p>
-                <div className="book-card-actions">
-                  <span>{book.price}</span>
-                  <Link href={`/books/${book.id}`} className="text-button">
-                    View details <ArrowRight />
-                  </Link>
-                  <button className="button button-dark add-book-button" onClick={() => addToCart(book)}>
-                    <ShoppingBag /> Add to cart
-                  </button>
+            <Link href={`/books/${book.id}`} key={book.id} className="book-card-link">
+              <article className="book-card">
+                <div className="card-cover-wrap">
+                  <Cover book={book} />
+                  <span className="card-category">{book.category}</span>
                 </div>
-              </div>
-            </article>
+                <div className="book-card-meta">
+                  <h3>{book.title}</h3>
+                  <p>{book.author}</p>
+                  <div>
+                    <span>{book.price}</span>
+                    <span className="round-arrow" aria-label={`View ${book.title}`}>
+                      <ArrowRight />
+                    </span>
+                  </div>
+                </div>
+              </article>
+            </Link>
           ))}
         </div>
       ) : (
