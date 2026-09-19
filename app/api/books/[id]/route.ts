@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { isAuthorizedAdmin } from '@/lib/auth'
 
+const AUTHOR_NAME = 'Dr Elvis Justice Bedi'
+const AUTHOR_IMAGE = '/elvis.jpeg'
+const AUTHOR_BIO =
+  'Dr Elvis Justice Bedi is a trader, educator, and author dedicated to helping people understand the psychology behind financial decision-making. Through his work in trading and education, he explores discipline, emotional control, self-awareness, and the habits that turn uncertainty into a more thoughtful process. Practical Trading Psychology brings together his belief that lasting progress begins with mastering the mind before pursuing the outcome.'
+
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!isAuthorizedAdmin(request)) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
@@ -15,18 +20,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
   try {
     const body = await request.json()
-    const { title, author, author_image, category, price, description, bio, image, pdf_url, featured } = body
+    const { title, category, price, description, image, pdf_url, featured } = body
 
     const updated = await sql`
       UPDATE books
       SET
         title = COALESCE(${title}, title),
-        author = COALESCE(${author}, author),
-        author_image = COALESCE(${author_image}, author_image),
         category = COALESCE(${category}, category),
         price = COALESCE(${price}, price),
         description = COALESCE(${description}, description),
-        bio = COALESCE(${bio}, bio),
         image = COALESCE(${image}, image),
         pdf_url = COALESCE(${pdf_url}, pdf_url),
         featured = COALESCE(${featured}, featured),
@@ -39,7 +41,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ success: false, error: 'Book not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ success: true, book: updated[0] })
+    const bookObj = {
+      ...updated[0],
+      author: AUTHOR_NAME,
+      author_image: AUTHOR_IMAGE,
+      authorImage: AUTHOR_IMAGE,
+      bio: AUTHOR_BIO,
+    }
+
+    return NextResponse.json({ success: true, book: bookObj })
   } catch (error: any) {
     console.error('Update book error:', error)
     return NextResponse.json({ success: false, error: error?.message || 'Failed to update book' }, { status: 500 })

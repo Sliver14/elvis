@@ -12,7 +12,7 @@ async function check() {
   console.log('=== BOOK LAUNCHES IN DB ===')
   console.log(launches)
 
-  const books = await sql`SELECT id, title, author, price FROM books;`
+  const books = await sql`SELECT id, title, category, price FROM books;`
   console.log('=== BOOKS IN DB ===')
   console.log(books)
 }

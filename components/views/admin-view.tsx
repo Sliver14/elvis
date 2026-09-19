@@ -523,9 +523,6 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: newBookTitle,
-          author: AUTHOR_NAME,
-          author_image: AUTHOR_IMAGE,
-          bio: AUTHOR_BIO,
           category: newBookCategory,
           price: newBookPrice.startsWith('$') ? newBookPrice : `$${newBookPrice}`,
           description: newBookDesc,

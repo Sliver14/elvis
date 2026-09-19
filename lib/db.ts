@@ -53,12 +53,9 @@ export async function initDatabase() {
       CREATE TABLE IF NOT EXISTS books (
         id VARCHAR(255) PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
-        author VARCHAR(255) NOT NULL,
-        author_image TEXT,
         category VARCHAR(100) NOT NULL,
         price VARCHAR(50) NOT NULL,
         description TEXT NOT NULL,
-        bio TEXT,
         image TEXT NOT NULL,
         pdf_url TEXT,
         featured BOOLEAN DEFAULT false,
@@ -66,6 +63,14 @@ export async function initDatabase() {
         updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
       );
     `
+    // Ensure author columns are dropped if previously created
+    try {
+      await sql`ALTER TABLE books DROP COLUMN IF EXISTS author;`
+      await sql`ALTER TABLE books DROP COLUMN IF EXISTS author_image;`
+      await sql`ALTER TABLE books DROP COLUMN IF EXISTS bio;`
+    } catch {
+      // Ignore if columns already removed
+    }
 
     // 2. Book Launches Table
     await sql`
@@ -188,8 +193,8 @@ export async function initDatabase() {
       if (Number(existingBooks[0]?.count || 0) === 0) {
         for (const book of DEFAULT_BOOKS) {
           await sql`
-            INSERT INTO books (id, title, author, author_image, category, price, description, bio, image, pdf_url, featured)
-            VALUES (${book.id}, ${book.title}, ${book.author}, ${book.author_image}, ${book.category}, ${book.price}, ${book.description}, ${book.bio}, ${book.image}, ${book.pdf_url}, ${book.featured})
+            INSERT INTO books (id, title, category, price, description, image, pdf_url, featured)
+            VALUES (${book.id}, ${book.title}, ${book.category}, ${book.price}, ${book.description}, ${book.image}, ${book.pdf_url}, ${book.featured})
             ON CONFLICT (id) DO NOTHING;
           `
         }
