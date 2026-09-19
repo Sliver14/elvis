@@ -135,9 +135,16 @@ export async function initDatabase() {
         name VARCHAR(255) NOT NULL,
         email VARCHAR(255) NOT NULL,
         phone VARCHAR(100),
+        agreed_updates BOOLEAN DEFAULT true,
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
       );
     `
+    // Ensure column exists if table was created previously without it
+    try {
+      await sql`ALTER TABLE launch_registrations ADD COLUMN IF NOT EXISTS agreed_updates BOOLEAN DEFAULT true;`
+    } catch {
+      // Ignore if already present
+    }
 
     // 4. Newsletter Subscribers Table
     await sql`

@@ -485,7 +485,7 @@ function Launch({ launch, onNavigate }: { launch: BookLaunch; onNavigate: (id: s
     if (!name || !email) return
     setLoading(true)
     try {
-      await fetch('/api/launch/register', {
+      const res = await fetch('/api/launch/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -499,10 +499,15 @@ function Launch({ launch, onNavigate }: { launch: BookLaunch; onNavigate: (id: s
           agreed_updates: agreedUpdates,
         }),
       })
-      setRegistered(true)
+      const data = await res.json()
+      if (data.success) {
+        setRegistered(true)
+      } else {
+        alert(data.error || 'Could not complete registration. Please try again.')
+      }
     } catch (err) {
       console.error(err)
-      setRegistered(true)
+      alert('Network error. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -2091,6 +2096,7 @@ function AdminDashboard({
                       <th>Reader Name</th>
                       <th>Email Address</th>
                       <th>Phone</th>
+                      <th>Updates Opt-In</th>
                       <th>Registration Date</th>
                     </tr>
                   </thead>
@@ -2101,6 +2107,13 @@ function AdminDashboard({
                         <td><strong>{r.name}</strong></td>
                         <td><a href={`mailto:${r.email}`} className="table-link">{r.email}</a></td>
                         <td>{r.phone || 'N/A'}</td>
+                        <td>
+                          {r.agreed_updates !== false ? (
+                            <span className="badge-sent">Yes (Opted in)</span>
+                          ) : (
+                            <span className="table-sub">No</span>
+                          )}
+                        </td>
                         <td>{new Date(r.created_at).toLocaleDateString()}</td>
                       </tr>
                     ))}

@@ -11,21 +11,8 @@ export async function GET(request: NextRequest) {
   if (!sql) {
     return NextResponse.json({
       success: true,
-      orders: [
-        {
-          id: 'SEREN-1726000001',
-          reference: 'SEREN-1726000001',
-          customer_email: 'reader@example.com',
-          customer_name: 'David Mills',
-          total_amount: '46.00',
-          currency: 'USD',
-          status: 'successful',
-          pdf_sent: true,
-          items: [{ title: 'Practical Trading Psychology', quantity: 1, price: '$24.00' }, { title: 'The Art of Attention', quantity: 1, price: '$22.00' }],
-          created_at: new Date().toISOString(),
-        }
-      ],
-      source: 'mock'
+      orders: [],
+      source: 'unconfigured'
     })
   }
 
@@ -39,6 +26,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, orders, source: 'neon' })
   } catch (error: any) {
     console.error('Fetch orders error:', error)
-    return NextResponse.json({ success: false, error: error?.message }, { status: 500 })
+    return NextResponse.json({ success: false, error: error?.message, orders: [] }, { status: 500 })
   }
 }

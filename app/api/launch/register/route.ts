@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDb } from '@/lib/db'
+import { getDb, DEFAULT_LAUNCH } from '@/lib/db'
 import { sendAdminNotification, sendLaunchConfirmationEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
@@ -16,23 +16,54 @@ export async function POST(request: NextRequest) {
     let recordId: any = null
 
     if (sql) {
-      // Find active launch id if not provided
+      // 1. Ensure table and column exist
+      try {
+        await sql`
+          CREATE TABLE IF NOT EXISTS launch_registrations (
+            id SERIAL PRIMARY KEY,
+            launch_id VARCHAR(255) NOT NULL REFERENCES book_launches(id) ON DELETE CASCADE,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255) NOT NULL,
+            phone VARCHAR(100),
+            agreed_updates BOOLEAN DEFAULT true,
+            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+          );
+        `
+        await sql`ALTER TABLE launch_registrations ADD COLUMN IF NOT EXISTS agreed_updates BOOLEAN DEFAULT true;`
+      } catch {
+        // Table or column already ready
+      }
+
+      // 2. Resolve a valid launch_id that exists in book_launches
       let effectiveLaunchId = launch_id
+      if (effectiveLaunchId) {
+        const check = await sql`SELECT id FROM book_launches WHERE id = ${effectiveLaunchId} LIMIT 1;`
+        if (!check.length) {
+          effectiveLaunchId = null
+        }
+      }
+
       if (!effectiveLaunchId) {
-        const active = await sql`SELECT id, title FROM book_launches WHERE is_active = true LIMIT 1;`
+        const active = await sql`SELECT id, title FROM book_launches WHERE is_active = true ORDER BY updated_at DESC LIMIT 1;`
         if (active.length) {
           effectiveLaunchId = active[0].id
+        } else {
+          const recent = await sql`SELECT id FROM book_launches ORDER BY created_at DESC LIMIT 1;`
+          if (recent.length) {
+            effectiveLaunchId = recent[0].id
+          } else {
+            // Seed default launch if table empty
+            await sql`
+              INSERT INTO book_launches (id, slug, title, author, author_bio, author_image, tagline, intro, description, themes, cover_image, launch_date, is_active)
+              VALUES (${DEFAULT_LAUNCH.id}, ${DEFAULT_LAUNCH.slug}, ${DEFAULT_LAUNCH.title}, ${DEFAULT_LAUNCH.author}, ${DEFAULT_LAUNCH.author_bio}, ${DEFAULT_LAUNCH.author_image}, ${DEFAULT_LAUNCH.tagline}, ${DEFAULT_LAUNCH.intro}, ${DEFAULT_LAUNCH.description}, ${DEFAULT_LAUNCH.themes}::jsonb, ${DEFAULT_LAUNCH.cover_image}, ${DEFAULT_LAUNCH.launch_date}, ${DEFAULT_LAUNCH.is_active})
+              ON CONFLICT (id) DO NOTHING;
+            `
+            effectiveLaunchId = DEFAULT_LAUNCH.id
+          }
         }
       }
 
       if (effectiveLaunchId) {
-        // Ensure column exists gracefully
-        try {
-          await sql`ALTER TABLE launch_registrations ADD COLUMN IF NOT EXISTS agreed_updates BOOLEAN DEFAULT true;`
-        } catch {
-          // Ignore if already exists
-        }
-
         const result = await sql`
           INSERT INTO launch_registrations (launch_id, name, email, phone, agreed_updates)
           VALUES (${effectiveLaunchId}, ${name}, ${email}, ${phone || ''}, ${isAgreed})

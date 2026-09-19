@@ -11,11 +11,8 @@ export async function GET(request: NextRequest) {
   if (!sql) {
     return NextResponse.json({
       success: true,
-      subscribers: [
-        { id: 1, email: 'elena.read@example.com', created_at: new Date().toISOString() },
-        { id: 2, email: 'investor.mind@example.com', created_at: new Date(Date.now() - 43200000).toISOString() },
-      ],
-      source: 'mock'
+      subscribers: [],
+      source: 'unconfigured'
     })
   }
 
@@ -29,6 +26,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, subscribers, source: 'neon' })
   } catch (error: any) {
     console.error('Fetch subscribers error:', error)
-    return NextResponse.json({ success: false, error: error?.message }, { status: 500 })
+    return NextResponse.json({ success: false, error: error?.message, subscribers: [] }, { status: 500 })
   }
 }
