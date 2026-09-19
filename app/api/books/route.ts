@@ -33,10 +33,13 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { title, author, author_image, category, price, description, bio, image, pdf_url, featured } = body
+    const { title, category, price, description, image, pdf_url, featured } = body
+    const author = body.author || 'Dr Elvis Justice Bedi'
+    const author_image = body.author_image || '/elvis.jpeg'
+    const bio = body.bio || 'Dr Elvis Justice Bedi is a trader, educator, and author dedicated to helping people understand the psychology behind financial decision-making. Through his work in trading and education, he explores discipline, emotional control, self-awareness, and the habits that turn uncertainty into a more thoughtful process. Practical Trading Psychology brings together his belief that lasting progress begins with mastering the mind before pursuing the outcome.'
 
-    if (!title || !author || !category || !price) {
-      return NextResponse.json({ success: false, error: 'Title, Author, Category, and Price are required' }, { status: 400 })
+    if (!title || !category || !price) {
+      return NextResponse.json({ success: false, error: 'Title, Category, and Price are required' }, { status: 400 })
     }
 
     const id = body.id || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') || `book-${Date.now()}`
@@ -47,11 +50,11 @@ export async function POST(request: NextRequest) {
         ${id},
         ${title},
         ${author},
-        ${author_image || '/elvis.jpeg'},
+        ${author_image},
         ${category},
         ${price},
         ${description || ''},
-        ${bio || ''},
+        ${bio},
         ${image || '/practical-trading-psychology.png'},
         ${pdf_url || ''},
         ${Boolean(featured)}

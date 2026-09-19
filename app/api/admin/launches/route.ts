@@ -72,9 +72,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const {
       title,
-      author,
-      author_bio,
-      author_image,
       tagline,
       intro,
       description,
@@ -83,11 +80,14 @@ export async function POST(request: NextRequest) {
       launch_date,
       is_active,
     } = body
+    const author = body.author || 'Dr Elvis Justice Bedi'
+    const author_image = body.author_image || '/elvis.jpeg'
+    const author_bio = body.author_bio || 'Dr Elvis Justice Bedi is a trader, educator, and author dedicated to helping people understand the psychology behind financial decision-making. Through his work in trading and education, he explores discipline, emotional control, self-awareness, and the habits that turn uncertainty into a more thoughtful process. Practical Trading Psychology brings together his belief that lasting progress begins with mastering the mind before pursuing the outcome.'
 
-    if (!title || !author || !cover_image || !launch_date) {
+    if (!title || !cover_image || !launch_date) {
       return NextResponse.json({
         success: false,
-        error: 'Title, Author, Cover Image, and Launch Date are required',
+        error: 'Title, Cover Image, and Launch Date are required',
       }, { status: 400 })
     }
 
@@ -109,8 +109,8 @@ export async function POST(request: NextRequest) {
         ${slug},
         ${title},
         ${author},
-        ${author_bio || ''},
-        ${author_image || '/elvis.jpeg'},
+        ${author_bio},
+        ${author_image},
         ${tagline || 'Process over profit.\nWin in the mind first.'},
         ${intro || ''},
         ${description || ''},
@@ -144,9 +144,6 @@ export async function PUT(request: NextRequest) {
     const {
       id,
       title,
-      author,
-      author_bio,
-      author_image,
       tagline,
       intro,
       description,
@@ -155,11 +152,14 @@ export async function PUT(request: NextRequest) {
       launch_date,
       is_active,
     } = body
+    const author = body.author || 'Dr Elvis Justice Bedi'
+    const author_image = body.author_image || '/elvis.jpeg'
+    const author_bio = body.author_bio || 'Dr Elvis Justice Bedi is a trader, educator, and author dedicated to helping people understand the psychology behind financial decision-making. Through his work in trading and education, he explores discipline, emotional control, self-awareness, and the habits that turn uncertainty into a more thoughtful process. Practical Trading Psychology brings together his belief that lasting progress begins with mastering the mind before pursuing the outcome.'
 
-    if (!id || !title || !author || !cover_image || !launch_date) {
+    if (!id || !title || !cover_image || !launch_date) {
       return NextResponse.json({
         success: false,
-        error: 'ID, Title, Author, Cover Image, and Launch Date are required',
+        error: 'ID, Title, Cover Image, and Launch Date are required',
       }, { status: 400 })
     }
 
@@ -175,8 +175,8 @@ export async function PUT(request: NextRequest) {
       SET
         title = ${title},
         author = ${author},
-        author_bio = ${author_bio || ''},
-        author_image = ${author_image || '/elvis.jpeg'},
+        author_bio = ${author_bio},
+        author_image = ${author_image},
         tagline = ${tagline || ''},
         intro = ${intro || ''},
         description = ${description || ''},
@@ -193,13 +193,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Launch not found' }, { status: 404 })
     }
 
-    return NextResponse.json({
-      success: true,
-      launch: {
-        ...updated[0],
-        themes: typeof updated[0].themes === 'string' ? JSON.parse(updated[0].themes) : updated[0].themes,
-      }
-    })
+    return NextResponse.json({ success: true, launch: updated[0] })
   } catch (error: any) {
     console.error('Update launch error:', error)
     return NextResponse.json({ success: false, error: error?.message || 'Failed to update launch' }, { status: 500 })

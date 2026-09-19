@@ -314,6 +314,11 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
   )
 }
 
+const AUTHOR_NAME = 'Dr Elvis Justice Bedi'
+const AUTHOR_IMAGE = '/elvis.jpeg'
+const AUTHOR_BIO =
+  'Dr Elvis Justice Bedi is a trader, educator, and author dedicated to helping people understand the psychology behind financial decision-making. Through his work in trading and education, he explores discipline, emotional control, self-awareness, and the habits that turn uncertainty into a more thoughtful process. Practical Trading Psychology brings together his belief that lasting progress begins with mastering the mind before pursuing the outcome.'
+
 function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const { booksList, refreshBooks, activeLaunch, refreshLaunch } = useStore()
   const [activeTab, setActiveTab] = useState<'overview' | 'books' | 'launches' | 'orders' | 'messages' | 'subscribers'>('overview')
@@ -326,7 +331,6 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [selectedLaunchTitle, setSelectedLaunchTitle] = useState('')
   const [showNewLaunchModal, setShowNewLaunchModal] = useState(false)
   const [newLaunchTitle, setNewLaunchTitle] = useState('')
-  const [newLaunchAuthor, setNewLaunchAuthor] = useState('Dr Elvis Justice Bedi')
   const [newLaunchTagline, setNewLaunchTagline] = useState('Process over profit.\nWin in the mind first.')
   const [newLaunchDate, setNewLaunchDate] = useState('2026-11-06T09:00')
   const [newLaunchThemes, setNewLaunchThemes] = useState('Emotional discipline, Process over outcome, Managing psychology, Building consistency')
@@ -338,9 +342,6 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [showEditLaunchModal, setShowEditLaunchModal] = useState(false)
   const [editLaunchId, setEditLaunchId] = useState('')
   const [editLaunchTitle, setEditLaunchTitle] = useState('')
-  const [editLaunchAuthor, setEditLaunchAuthor] = useState('')
-  const [editLaunchAuthorBio, setEditLaunchAuthorBio] = useState('')
-  const [editLaunchAuthorImage, setEditLaunchAuthorImage] = useState('')
   const [editLaunchTagline, setEditLaunchTagline] = useState('')
   const [editLaunchIntro, setEditLaunchIntro] = useState('')
   const [editLaunchDesc, setEditLaunchDesc] = useState('')
@@ -353,7 +354,6 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   // Books
   const [showAddBookModal, setShowAddBookModal] = useState(false)
   const [newBookTitle, setNewBookTitle] = useState('')
-  const [newBookAuthor, setNewBookAuthor] = useState('Dr Elvis Justice Bedi')
   const [newBookCategory, setNewBookCategory] = useState('Mind & Money')
   const [newBookPrice, setNewBookPrice] = useState('$24.00')
   const [newBookDesc, setNewBookDesc] = useState('')
@@ -380,6 +380,21 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [confirmAdminPassword, setConfirmAdminPassword] = useState('')
   const [passLoading, setPassLoading] = useState(false)
   const [passError, setPassError] = useState('')
+
+  // Close modals when user presses Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowAddBookModal(false)
+        setShowEditLaunchModal(false)
+        setShowNewLaunchModal(false)
+        setSelectedLaunchRegs(null)
+        setShowChangePasswordModal(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -411,10 +426,10 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         setNewAdminPassword('')
         setConfirmAdminPassword('')
       } else {
-        setPassError(data.error || 'Failed to update password')
+        setPassError(data.error || 'Failed to update password.')
       }
     } catch {
-      setPassError('Connection error updating password')
+      setPassError('Connection error while updating password.')
     } finally {
       setPassLoading(false)
     }
@@ -423,7 +438,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const loadAdminData = async () => {
     setLoadingData(true)
     try {
-      const [statsRes, launchesRes, ordersRes, messagesRes, subsRes] = await Promise.all([
+      const [statsRes, launchesRes, ordersRes, msgsRes, subsRes] = await Promise.all([
         fetch('/api/admin/stats'),
         fetch('/api/admin/launches'),
         fetch('/api/admin/orders'),
@@ -438,15 +453,13 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       }
 
       const launchesData = await launchesRes.json()
-      if (launchesData.success) {
-        setLaunchesList(launchesData.launches || [])
-      }
+      if (launchesData.success) setLaunchesList(launchesData.launches || [])
 
       const ordersData = await ordersRes.json()
       if (ordersData.success) setOrdersList(ordersData.orders || [])
 
-      const messagesData = await messagesRes.json()
-      if (messagesData.success) setMessagesList(messagesData.messages || [])
+      const msgsData = await msgsRes.json()
+      if (msgsData.success) setMessagesList(msgsData.messages || [])
 
       const subsData = await subsRes.json()
       if (subsData.success) setSubscribersList(subsData.subscribers || [])
@@ -499,7 +512,9 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: newBookTitle,
-          author: newBookAuthor,
+          author: AUTHOR_NAME,
+          author_image: AUTHOR_IMAGE,
+          bio: AUTHOR_BIO,
           category: newBookCategory,
           price: newBookPrice.startsWith('$') ? newBookPrice : `$${newBookPrice}`,
           description: newBookDesc,
@@ -542,9 +557,6 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const openEditLaunchModal = (launch: BookLaunch) => {
     setEditLaunchId(launch.id)
     setEditLaunchTitle(launch.title || '')
-    setEditLaunchAuthor(launch.author || 'Dr Elvis Justice Bedi')
-    setEditLaunchAuthorBio(launch.author_bio || '')
-    setEditLaunchAuthorImage(launch.author_image || '/elvis.jpeg')
     setEditLaunchTagline(launch.tagline || '')
     setEditLaunchIntro(launch.intro || '')
     setEditLaunchDesc(launch.description || '')
@@ -589,7 +601,9 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: newLaunchTitle,
-          author: newLaunchAuthor,
+          author: AUTHOR_NAME,
+          author_bio: AUTHOR_BIO,
+          author_image: AUTHOR_IMAGE,
           tagline: newLaunchTagline,
           intro: newLaunchDesc,
           description: newLaunchDesc,
@@ -627,9 +641,9 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         body: JSON.stringify({
           id: editLaunchId,
           title: editLaunchTitle,
-          author: editLaunchAuthor,
-          author_bio: editLaunchAuthorBio,
-          author_image: editLaunchAuthorImage || '/elvis.jpeg',
+          author: AUTHOR_NAME,
+          author_bio: AUTHOR_BIO,
+          author_image: AUTHOR_IMAGE,
           tagline: editLaunchTagline,
           intro: editLaunchIntro || editLaunchDesc,
           description: editLaunchDesc,
@@ -1161,7 +1175,12 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 
       {/* MODAL: ADD BOOK */}
       {showAddBookModal && (
-        <div className="admin-modal-overlay">
+        <div
+          className="admin-modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowAddBookModal(false)
+          }}
+        >
           <div className="admin-modal-card">
             <div className="admin-modal-header">
               <h3>Add New Book to Collection</h3>
@@ -1174,24 +1193,18 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               </label>
               <div className="form-row-2">
                 <label>
-                  Author Name
-                  <input required value={newBookAuthor} onChange={(e) => setNewBookAuthor(e.target.value)} />
-                </label>
-                <label>
                   Category
                   <input required value={newBookCategory} onChange={(e) => setNewBookCategory(e.target.value)} placeholder="e.g. Mind & Money" />
                 </label>
-              </div>
-              <div className="form-row-2">
                 <label>
                   Price
                   <input required value={newBookPrice} onChange={(e) => setNewBookPrice(e.target.value)} placeholder="$24.00" />
                 </label>
-                <label>
-                  Downloadable Ebook / PDF URL
-                  <input value={newBookPdf} onChange={(e) => setNewBookPdf(e.target.value)} placeholder="https://..." />
-                </label>
               </div>
+              <label>
+                Downloadable Ebook / PDF URL
+                <input value={newBookPdf} onChange={(e) => setNewBookPdf(e.target.value)} placeholder="https://..." />
+              </label>
               <label>
                 Description
                 <textarea rows={3} value={newBookDesc} onChange={(e) => setNewBookDesc(e.target.value)} placeholder="Brief summary for catalog..." />
@@ -1220,7 +1233,12 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 
       {/* MODAL: EDIT BOOK LAUNCH */}
       {showEditLaunchModal && (
-        <div className="admin-modal-overlay">
+        <div
+          className="admin-modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !savingLaunch) setShowEditLaunchModal(false)
+          }}
+        >
           <div className="admin-modal-card">
             <div className="admin-modal-header">
               <div>
@@ -1234,32 +1252,10 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 Launch Title
                 <input required value={editLaunchTitle} onChange={(e) => setEditLaunchTitle(e.target.value)} placeholder="e.g. Practical Trading Psychology" />
               </label>
-              <div className="form-row-2">
-                <label>
-                  Author Name
-                  <input required value={editLaunchAuthor} onChange={(e) => setEditLaunchAuthor(e.target.value)} />
-                </label>
-                <label>
-                  Launch Date & Time (Countdown Target)
-                  <input required type="datetime-local" value={editLaunchDate} onChange={(e) => setEditLaunchDate(e.target.value)} />
-                </label>
-              </div>
               <label>
-                Author Bio
-                <textarea rows={2} value={editLaunchAuthorBio} onChange={(e) => setEditLaunchAuthorBio(e.target.value)} placeholder="Author biography..." />
+                Launch Date & Time (Countdown Target)
+                <input required type="datetime-local" value={editLaunchDate} onChange={(e) => setEditLaunchDate(e.target.value)} />
               </label>
-              <div className="cloudinary-upload-box">
-                <label className="cloudinary-label">
-                  <UploadCloud /> Upload Author Photo (Cloudinary)
-                  <input type="file" accept="image/*" onChange={(e) => handleCloudinaryUpload(e, setEditLaunchAuthorImage)} />
-                </label>
-                {editLaunchAuthorImage && (
-                  <div className="cover-preview-row">
-                    <img src={editLaunchAuthorImage} alt="Author preview" className="cover-preview-img" style={{ borderRadius: '50%' }} />
-                    <span>{editLaunchAuthorImage.slice(0, 45)}...</span>
-                  </div>
-                )}
-              </div>
               <label>
                 Tagline (appears in hero & launch countdown banner)
                 <textarea rows={2} value={editLaunchTagline} onChange={(e) => setEditLaunchTagline(e.target.value)} />
@@ -1302,7 +1298,12 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 
       {/* MODAL: CREATE NEW LAUNCH */}
       {showNewLaunchModal && (
-        <div className="admin-modal-overlay">
+        <div
+          className="admin-modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowNewLaunchModal(false)
+          }}
+        >
           <div className="admin-modal-card">
             <div className="admin-modal-header">
               <h3>Create Dynamic Book Launch</h3>
@@ -1313,16 +1314,10 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 Launch Title
                 <input required value={newLaunchTitle} onChange={(e) => setNewLaunchTitle(e.target.value)} placeholder="e.g. Practical Trading Psychology" />
               </label>
-              <div className="form-row-2">
-                <label>
-                  Author Name
-                  <input required value={newLaunchAuthor} onChange={(e) => setNewLaunchAuthor(e.target.value)} />
-                </label>
-                <label>
-                  Launch Date & Time (Countdown Target)
-                  <input required type="datetime-local" value={newLaunchDate} onChange={(e) => setNewLaunchDate(e.target.value)} />
-                </label>
-              </div>
+              <label>
+                Launch Date & Time (Countdown Target)
+                <input required type="datetime-local" value={newLaunchDate} onChange={(e) => setNewLaunchDate(e.target.value)} />
+              </label>
               <label>
                 Tagline (appears in header strip & hero)
                 <textarea rows={2} value={newLaunchTagline} onChange={(e) => setNewLaunchTagline(e.target.value)} />
@@ -1363,7 +1358,12 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 
       {/* MODAL: VIEW LAUNCH REGISTRANTS */}
       {selectedLaunchRegs !== null && (
-        <div className="admin-modal-overlay">
+        <div
+          className="admin-modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedLaunchRegs(null)
+          }}
+        >
           <div className="admin-modal-card wide-modal">
             <div className="admin-modal-header">
               <div>
@@ -1419,7 +1419,12 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 
       {/* MODAL: CHANGE PASSWORD */}
       {showChangePasswordModal && (
-        <div className="admin-modal-overlay">
+        <div
+          className="admin-modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !passLoading) setShowChangePasswordModal(false)
+          }}
+        >
           <div className="admin-modal-card">
             <div className="admin-modal-header">
               <div>
