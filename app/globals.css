@@ -160,27 +160,34 @@ em {
   margin-left: 100px;
 }
 
+.nav-links a,
 .nav-links button {
   border: 0;
   background: none;
   color: var(--muted);
   font-size: 12px;
-  letter-spacing: .04em;
+  font-weight: 500;
+  letter-spacing: .03em;
   text-decoration: none;
   padding: 0;
   transition: color .2s ease;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
 }
 
+.nav-links a:hover,
 .nav-links button:hover {
   color: var(--ink);
 }
 
+.nav-links a.is-active,
 .nav-links button.is-active {
   color: var(--ink);
   font-weight: 700;
-  position: relative;
 }
 
+.nav-links a.is-active::after,
 .nav-links button.is-active::after {
   content: '';
   position: absolute;
@@ -189,6 +196,7 @@ em {
   bottom: -9px;
   height: 2px;
   background: var(--accent);
+  border-radius: 1px;
 }
 
 .header-actions {

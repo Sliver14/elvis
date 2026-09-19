@@ -64,7 +64,7 @@ export function Nav() {
   const navItems = [
     { href: '/', id: 'home', label: 'Home' },
     { href: '/books', id: 'books', label: 'Books' },
-    { href: '/launch', id: 'launch', label: 'Book launch' },
+    { href: '/launch', id: 'launch', label: 'Book Launch' },
     { href: '/about', id: 'about', label: 'About' },
     { href: '/contact', id: 'contact', label: 'Contact' },
   ]
