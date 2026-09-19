@@ -135,8 +135,14 @@ const DEFAULT_LAUNCH: BookLaunch = {
 
 function Cover({ book, className = '' }: { book: Book; className?: string }) {
   return (
-    <div className={`book-cover ${className}`}>
-      <img src={book.image || '/practical-trading-psychology.png'} alt={`${book.title} book cover`} />
+    <div className={`book-cover ${className}`} onContextMenu={(e) => e.preventDefault()}>
+      <img
+        src={book.image || '/practical-trading-psychology.png'}
+        alt={`${book.title} book cover`}
+        draggable={false}
+        onContextMenu={(e) => e.preventDefault()}
+      />
+      <div className="cover-protection-shield" aria-hidden="true" />
     </div>
   )
 }
@@ -315,8 +321,15 @@ function Home({ booksList, launch, onNavigate, onAdd }: { booksList: Book[]; lau
             </button>
           </div>
         </div>
-        <div className="hero-banner-frame">
-          <img src="/elvis-banner.png" alt="Dr Elvis Justice Bedi — Practical Trading Psychology" className="hero-banner-image" />
+        <div className="hero-banner-frame" onContextMenu={(e) => e.preventDefault()}>
+          <img
+            src="/elvis-banner.png"
+            alt="Dr Elvis Justice Bedi — Practical Trading Psychology"
+            className="hero-banner-image"
+            draggable={false}
+            onContextMenu={(e) => e.preventDefault()}
+          />
+          <div className="cover-protection-shield" aria-hidden="true" />
         </div>
       </section>
 
@@ -517,8 +530,14 @@ function Launch({ launch, onNavigate }: { launch: BookLaunch; onNavigate: (id: s
         </div>
         <div className="launch-cover-stage">
           <div className="stage-label">SERENDIPITY / ELVIS<br />FEATURED RELEASE</div>
-          <div className="book-cover launch-cover">
-            <img src={launch.cover_image || '/practical-trading-psychology.png'} alt={launch.title} />
+          <div className="book-cover launch-cover" onContextMenu={(e) => e.preventDefault()}>
+            <img
+              src={launch.cover_image || '/practical-trading-psychology.png'}
+              alt={launch.title}
+              draggable={false}
+              onContextMenu={(e) => e.preventDefault()}
+            />
+            <div className="cover-protection-shield" aria-hidden="true" />
           </div>
         </div>
       </section>
@@ -569,8 +588,14 @@ function Launch({ launch, onNavigate }: { launch: BookLaunch; onNavigate: (id: s
 
       <section className="author-section">
         <div className="section-shell author-inner">
-          <div className="author-photo-frame author-launch-photo-frame">
-            <img src={launch.author_image || '/elvis.jpeg'} alt={launch.author} />
+          <div className="author-photo-frame author-launch-photo-frame" onContextMenu={(e) => e.preventDefault()}>
+            <img
+              src={launch.author_image || '/elvis.jpeg'}
+              alt={launch.author}
+              draggable={false}
+              onContextMenu={(e) => e.preventDefault()}
+            />
+            <div className="cover-protection-shield" aria-hidden="true" />
           </div>
           <div>
             <p className="eyebrow">The author</p>
@@ -666,8 +691,14 @@ function About({ onNavigate }: { onNavigate: (id: string) => void }) {
         <div className="author-bio-grid">
           {DEFAULT_BOOKS.slice(0, 1).map((book) => (
             <article className="author-bio" key={book.author}>
-              <div className="author-photo-frame author-bio-photo-frame">
-                <img src={book.authorImage || '/elvis.jpeg'} alt={book.author} />
+              <div className="author-photo-frame author-bio-photo-frame" onContextMenu={(e) => e.preventDefault()}>
+                <img
+                  src={book.authorImage || '/elvis.jpeg'}
+                  alt={book.author}
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
+                />
+                <div className="cover-protection-shield" aria-hidden="true" />
               </div>
               <div>
                 <p className="author-number">01</p>
@@ -796,8 +827,14 @@ function BookDetails({ book, onBack, onAdd, onNavigate, booksList }: { book: Boo
           <p className="detail-description">{book.description}</p>
           <div className="detail-author-bio">
             <div className="detail-author-header">
-              <div className="author-photo-frame author-detail-photo-frame">
-                <img src={book.authorImage || book.author_image || '/elvis.jpeg'} alt={book.author} />
+              <div className="author-photo-frame author-detail-photo-frame" onContextMenu={(e) => e.preventDefault()}>
+                <img
+                  src={book.authorImage || book.author_image || '/elvis.jpeg'}
+                  alt={book.author}
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
+                />
+                <div className="cover-protection-shield" aria-hidden="true" />
               </div>
               <div>
                 <p className="eyebrow">About the author</p>
@@ -1440,7 +1477,7 @@ function AdminDashboard({
             <article>
               <span><BookOpen /></span>
               <p>Books in collection</p>
-              <strong>{String(stats?.booksCount ?? booksList.length).padStart(2, '0')}</strong>
+              <strong>{String(stats?.booksCount ? stats.booksCount : booksList.length).padStart(2, '0')}</strong>
               <small>Live catalog</small>
             </article>
             <article>
@@ -2138,6 +2175,31 @@ export default function BookstoreClient() {
           setCart([])
         }
       }
+    }
+
+    // Global image protection: prevent right-click context menu and drag-to-download
+    const handleContextMenu = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null
+      if (target && (target.tagName === 'IMG' || target.closest('img, .book-cover, .hero-banner-frame, .author-photo-frame, .card-cover-wrap, .author-launch-photo-frame, .author-bio-photo-frame, .author-detail-photo-frame, .table-book-thumb, .active-launch-thumb'))) {
+        e.preventDefault()
+        return false
+      }
+    }
+
+    const handleDragStart = (e: DragEvent) => {
+      const target = e.target as HTMLElement | null
+      if (target && (target.tagName === 'IMG' || target.closest('img, .book-cover, .hero-banner-frame, .author-photo-frame, .card-cover-wrap, .author-launch-photo-frame, .author-bio-photo-frame, .author-detail-photo-frame, .table-book-thumb, .active-launch-thumb'))) {
+        e.preventDefault()
+        return false
+      }
+    }
+
+    document.addEventListener('contextmenu', handleContextMenu, { capture: true })
+    document.addEventListener('dragstart', handleDragStart, { capture: true })
+
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu, { capture: true })
+      document.removeEventListener('dragstart', handleDragStart, { capture: true })
     }
   }, [])
 

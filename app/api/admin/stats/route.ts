@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDb } from '@/lib/db'
+import { getDb, DEFAULT_BOOKS } from '@/lib/db'
 import { isAuthorizedAdmin } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       stats: {
-        booksCount: 0,
+        booksCount: DEFAULT_BOOKS.length,
         subscribersCount: 0,
         monthlyVisits: 0,
         salesCount: 0,
@@ -36,7 +36,8 @@ export async function GET(request: NextRequest) {
       sql`SELECT name, email, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 5;`,
     ])
 
-    const booksCount = Number(booksRes[0]?.count || 0)
+    const dbBooksCount = Number(booksRes[0]?.count || 0)
+    const booksCount = dbBooksCount > 0 ? dbBooksCount : DEFAULT_BOOKS.length
     const subscribersCount = Number(subsRes[0]?.count || 0)
     const salesCount = Number(ordersRes[0]?.count || 0)
     const revenue = Number(ordersRes[0]?.revenue || 0)
@@ -72,6 +73,7 @@ export async function GET(request: NextRequest) {
       recentActivity,
       source: 'neon'
     })
+
   } catch (error: any) {
     console.error('Fetch admin stats error:', error)
     return NextResponse.json({ success: false, error: error?.message }, { status: 500 })
