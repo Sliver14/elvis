@@ -38,7 +38,7 @@ function RefreshIcon() {
 
 function AdminLogin({ onLogin }: { onLogin: () => void }) {
   const [authMode, setAuthMode] = useState<'login' | 'forgot' | 'verify'>('login')
-  const [email, setEmail] = useState('hello@elvisjusticebooks.com')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [otpCode, setOtpCode] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -163,7 +163,7 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="hello@elvisjusticebooks.com"
+                  placeholder="admin@elvisjusticebooks.com"
                 />
               </label>
               <label>
@@ -216,12 +216,12 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="hello@elvisjusticebooks.com"
+                  placeholder="admin@elvisjusticebooks.com"
                 />
               </label>
               <p className="admin-info-note">
                 <ShieldCheck style={{ width: 14, height: 14, verticalAlign: 'middle', marginRight: 4 }} />
-                Code will be delivered to <strong>{email || 'hello@elvisjusticebooks.com'}</strong>
+                Code will be delivered to <strong>{email || 'your admin email'}</strong>
               </p>
               <button className="button button-dark" type="submit" disabled={loading}>
                 {loading ? <Loader2 className="animate-spin" /> : <>Send Verification Code <ArrowRight /></>}

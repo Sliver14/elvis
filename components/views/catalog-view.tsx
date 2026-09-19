@@ -56,12 +56,16 @@ export function CatalogView() {
         <div className="book-grid catalog-grid">
           {filtered.map((book) => (
             <article className="book-card" key={book.id}>
-              <div className="card-cover-wrap">
+              <Link href={`/books/${book.id}`} className="card-cover-wrap" aria-label={`View ${book.title}`}>
                 <Cover book={book} />
                 <span className="card-category">{book.category}</span>
-              </div>
+              </Link>
               <div className="book-card-meta">
-                <h3>{book.title}</h3>
+                <h3>
+                  <Link href={`/books/${book.id}`} className="book-title-link">
+                    {book.title}
+                  </Link>
+                </h3>
                 <p>{book.author}</p>
                 <p className="book-description">{book.description}</p>
                 <div className="book-card-actions">
