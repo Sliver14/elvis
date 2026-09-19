@@ -43,7 +43,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await fetch('/api/books')
       const data = await res.json()
-      if (data.success && Array.isArray(data.books) && data.books.length > 0) {
+      if (data.success && Array.isArray(data.books)) {
         setBooksList(data.books)
       }
     } catch {

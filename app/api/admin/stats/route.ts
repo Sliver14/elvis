@@ -36,8 +36,7 @@ export async function GET(request: NextRequest) {
       sql`SELECT name, email, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 5;`,
     ])
 
-    const dbBooksCount = Number(booksRes[0]?.count || 0)
-    const booksCount = dbBooksCount > 0 ? dbBooksCount : DEFAULT_BOOKS.length
+    const booksCount = Number(booksRes[0]?.count || 0)
     const subscribersCount = Number(subsRes[0]?.count || 0)
     const salesCount = Number(ordersRes[0]?.count || 0)
     const revenue = Number(ordersRes[0]?.revenue || 0)

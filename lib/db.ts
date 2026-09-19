@@ -212,25 +212,38 @@ export async function initDatabase() {
       // Ignore if columns already exist
     }
 
-    // Seed default books if table is empty
-    const existingBooks = await sql`SELECT COUNT(*) FROM books;`
-    if (Number(existingBooks[0]?.count || 0) === 0) {
-      for (const book of DEFAULT_BOOKS) {
+    // Check if initial seeding has already been performed
+    const seedCheck = await sql`SELECT value FROM admin_settings WHERE key = 'initial_seed_completed';`
+    const hasSeeded = seedCheck.length > 0
+
+    if (!hasSeeded) {
+      // Seed default books only on first run
+      const existingBooks = await sql`SELECT COUNT(*) FROM books;`
+      if (Number(existingBooks[0]?.count || 0) === 0) {
+        for (const book of DEFAULT_BOOKS) {
+          await sql`
+            INSERT INTO books (id, title, author, author_image, category, price, description, bio, image, pdf_url, featured)
+            VALUES (${book.id}, ${book.title}, ${book.author}, ${book.author_image}, ${book.category}, ${book.price}, ${book.description}, ${book.bio}, ${book.image}, ${book.pdf_url}, ${book.featured})
+            ON CONFLICT (id) DO NOTHING;
+          `
+        }
+      }
+
+      // Seed default launch only on first run
+      const existingLaunches = await sql`SELECT COUNT(*) FROM book_launches;`
+      if (Number(existingLaunches[0]?.count || 0) === 0) {
         await sql`
-          INSERT INTO books (id, title, author, author_image, category, price, description, bio, image, pdf_url, featured)
-          VALUES (${book.id}, ${book.title}, ${book.author}, ${book.author_image}, ${book.category}, ${book.price}, ${book.description}, ${book.bio}, ${book.image}, ${book.pdf_url}, ${book.featured})
+          INSERT INTO book_launches (id, slug, title, author, author_bio, author_image, tagline, intro, description, themes, cover_image, launch_date, is_active)
+          VALUES (${DEFAULT_LAUNCH.id}, ${DEFAULT_LAUNCH.slug}, ${DEFAULT_LAUNCH.title}, ${DEFAULT_LAUNCH.author}, ${DEFAULT_LAUNCH.author_bio}, ${DEFAULT_LAUNCH.author_image}, ${DEFAULT_LAUNCH.tagline}, ${DEFAULT_LAUNCH.intro}, ${DEFAULT_LAUNCH.description}, ${DEFAULT_LAUNCH.themes}::jsonb, ${DEFAULT_LAUNCH.cover_image}, ${DEFAULT_LAUNCH.launch_date}, ${DEFAULT_LAUNCH.is_active})
           ON CONFLICT (id) DO NOTHING;
         `
       }
-    }
 
-    // Seed default launch if table is empty
-    const existingLaunches = await sql`SELECT COUNT(*) FROM book_launches;`
-    if (Number(existingLaunches[0]?.count || 0) === 0) {
+      // Mark initial seed as completed so future deletions are permanent
       await sql`
-        INSERT INTO book_launches (id, slug, title, author, author_bio, author_image, tagline, intro, description, themes, cover_image, launch_date, is_active)
-        VALUES (${DEFAULT_LAUNCH.id}, ${DEFAULT_LAUNCH.slug}, ${DEFAULT_LAUNCH.title}, ${DEFAULT_LAUNCH.author}, ${DEFAULT_LAUNCH.author_bio}, ${DEFAULT_LAUNCH.author_image}, ${DEFAULT_LAUNCH.tagline}, ${DEFAULT_LAUNCH.intro}, ${DEFAULT_LAUNCH.description}, ${DEFAULT_LAUNCH.themes}::jsonb, ${DEFAULT_LAUNCH.cover_image}, ${DEFAULT_LAUNCH.launch_date}, ${DEFAULT_LAUNCH.is_active})
-        ON CONFLICT (id) DO NOTHING;
+        INSERT INTO admin_settings (key, value)
+        VALUES ('initial_seed_completed', 'true')
+        ON CONFLICT (key) DO NOTHING;
       `
     }
 

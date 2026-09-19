@@ -775,7 +775,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             <article>
               <span><BookOpen /></span>
               <p>Books in collection</p>
-              <strong>{String(stats?.booksCount ? stats.booksCount : booksList.length).padStart(2, '0')}</strong>
+              <strong>{String(stats?.booksCount !== undefined ? stats.booksCount : booksList.length).padStart(2, '0')}</strong>
               <small>Live catalog</small>
             </article>
             <article>

@@ -14,7 +14,7 @@ export async function GET() {
       FROM books
       ORDER BY created_at ASC;
     `
-    return NextResponse.json({ success: true, books: books.length ? books : DEFAULT_BOOKS, source: 'neon' })
+    return NextResponse.json({ success: true, books: books || [], source: 'neon' })
   } catch (error: any) {
     console.error('Fetch books error:', error)
     return NextResponse.json({ success: true, books: DEFAULT_BOOKS, source: 'fallback_error', error: error?.message })
