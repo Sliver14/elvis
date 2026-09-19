@@ -238,3 +238,121 @@ export async function sendLaunchConfirmationEmail({
   }
 }
 
+interface PasswordResetEmailParams {
+  adminEmail: string
+  resetCode: string
+  expiresMinutes?: number
+}
+
+/**
+ * Send secure 6-digit OTP verification code to admin email via Resend
+ */
+export async function sendAdminPasswordResetEmail({
+  adminEmail,
+  resetCode,
+  expiresMinutes = 15,
+}: PasswordResetEmailParams) {
+  if (!resend) {
+    console.log(`[Resend Mock Password Reset] To: ${adminEmail} | OTP Code: ${resetCode} | Expires: ${expiresMinutes} mins`)
+    return { success: true, mocked: true }
+  }
+
+  const html = `
+    <div style="font-family: Georgia, 'Times New Roman', serif; background-color: #F7F6F3; padding: 40px 20px; color: #281810;">
+      <div style="max-width: 580px; margin: auto; background: #ffffff; border: 1px solid #ded8cb; padding: 40px; border-radius: 4px; box-shadow: 0 10px 30px rgba(40,24,16,0.06);">
+        <div style="border-bottom: 1px solid #ded8cb; padding-bottom: 22px; margin-bottom: 24px;">
+          <span style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #8E8E8E;">SERENDIPITY / ELVIS · ADMIN SECURITY</span>
+          <h1 style="font-size: 26px; color: #281810; margin: 10px 0 0; font-weight: 400;">Admin Password Reset</h1>
+        </div>
+
+        <p style="font-family: Arial, sans-serif; font-size: 15px; color: #4a382c; line-height: 1.6;">
+          Hello Dr Elvis,<br/><br/>
+          A request was received to reset your Serendipity / Elvis administrator account password. Use the verification code below to authorize this change:
+        </p>
+
+        <div style="margin: 32px 0; text-align: center;">
+          <div style="display: inline-block; background: #faf7f2; border: 2px dashed #B57A4B; padding: 18px 36px; border-radius: 6px;">
+            <span style="font-family: 'Courier New', monospace; font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #6B3D24;">${resetCode}</span>
+          </div>
+          <p style="font-family: Arial, sans-serif; font-size: 12px; color: #8E8E8E; margin-top: 10px;">
+            This single-use code is valid for <strong>${expiresMinutes} minutes</strong>.
+          </p>
+        </div>
+
+        <div style="background: #fff8f0; border-left: 4px solid #B57A4B; padding: 14px 18px; margin-bottom: 28px; font-family: Arial, sans-serif; font-size: 13px; color: #6B3D24; line-height: 1.5;">
+          <strong>Security Notice:</strong> If you did not make this request, your account is still secure, but we recommend monitoring your inbox or contacting technical support.
+        </div>
+
+        <div style="border-top: 1px solid #ded8cb; padding-top: 18px; font-family: Arial, sans-serif; font-size: 11px; color: #8E8E8E; text-align: center;">
+          Serendipity / Elvis Bookstore Administration · Secure Authentication Portal
+        </div>
+      </div>
+    </div>
+  `
+
+  try {
+    const result = await resend.emails.send({
+      from: `Serendipity Security <${resendFromEmail}>`,
+      to: [adminEmail],
+      subject: `[Security Alert] Your Admin Password Reset Code: ${resetCode}`,
+      html,
+    })
+    return { success: true, data: result }
+  } catch (error) {
+    console.error('Failed to send admin password reset email via Resend:', error)
+    return { success: false, error }
+  }
+}
+
+/**
+ * Send confirmation alert when password has been successfully changed
+ */
+export async function sendAdminPasswordChangedAlert(adminEmail: string) {
+  if (!resend) {
+    console.log(`[Resend Mock Password Changed Alert] To: ${adminEmail}`)
+    return { success: true, mocked: true }
+  }
+
+  const html = `
+    <div style="font-family: Georgia, 'Times New Roman', serif; background-color: #F7F6F3; padding: 40px 20px; color: #281810;">
+      <div style="max-width: 580px; margin: auto; background: #ffffff; border: 1px solid #ded8cb; padding: 40px; border-radius: 4px; box-shadow: 0 10px 30px rgba(40,24,16,0.06);">
+        <div style="border-bottom: 1px solid #ded8cb; padding-bottom: 22px; margin-bottom: 24px;">
+          <span style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #8E8E8E;">SERENDIPITY / ELVIS · ADMIN SECURITY</span>
+          <h1 style="font-size: 26px; color: #281810; margin: 10px 0 0; font-weight: 400;">Password Updated Successfully</h1>
+        </div>
+
+        <p style="font-family: Arial, sans-serif; font-size: 15px; color: #4a382c; line-height: 1.6;">
+          Hello Dr Elvis,<br/><br/>
+          Your Serendipity / Elvis admin password was successfully changed on <strong>${new Date().toUTCString()}</strong>.
+        </p>
+
+        <div style="background: #f4fbf7; border: 1px solid #c3e6cb; padding: 16px; border-radius: 4px; margin: 24px 0; font-family: Arial, sans-serif; font-size: 13px; color: #155724;">
+          <strong>Status:</strong> Your new administrator password is now active for all admin panel logins.
+        </div>
+
+        <p style="font-family: Arial, sans-serif; font-size: 13px; color: #6B3D24;">
+          If you did not make this change, please reset your password immediately and contact your system administrator.
+        </p>
+
+        <div style="border-top: 1px solid #ded8cb; padding-top: 18px; margin-top: 28px; font-family: Arial, sans-serif; font-size: 11px; color: #8E8E8E; text-align: center;">
+          Serendipity / Elvis Bookstore Administration
+        </div>
+      </div>
+    </div>
+  `
+
+  try {
+    const result = await resend.emails.send({
+      from: `Serendipity Security <${resendFromEmail}>`,
+      to: [adminEmail],
+      subject: `[Security Notice] Your Admin Password Was Changed`,
+      html,
+    })
+    return { success: true, data: result }
+  } catch (error) {
+    console.error('Failed to send admin password changed alert email via Resend:', error)
+    return { success: false, error }
+  }
+}
+
+

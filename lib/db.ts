@@ -183,6 +183,35 @@ export async function initDatabase() {
       );
     `
 
+    // 7. Admin Settings Table (Persisted dynamic settings like Admin Password)
+    await sql`
+      CREATE TABLE IF NOT EXISTS admin_settings (
+        key VARCHAR(100) PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+    `
+
+    // 8. Admin Password Resets Table (Secure OTP tokens with attempt limits)
+    await sql`
+      CREATE TABLE IF NOT EXISTS admin_password_resets (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) NOT NULL,
+        code VARCHAR(10) NOT NULL,
+        attempts INTEGER DEFAULT 0,
+        max_attempts INTEGER DEFAULT 5,
+        expires_at TIMESTAMPTZ NOT NULL,
+        used BOOLEAN DEFAULT false,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+    `
+    try {
+      await sql`ALTER TABLE admin_password_resets ADD COLUMN IF NOT EXISTS attempts INTEGER DEFAULT 0;`
+      await sql`ALTER TABLE admin_password_resets ADD COLUMN IF NOT EXISTS max_attempts INTEGER DEFAULT 5;`
+    } catch {
+      // Ignore if columns already exist
+    }
+
     // Seed default books if table is empty
     const existingBooks = await sql`SELECT COUNT(*) FROM books;`
     if (Number(existingBooks[0]?.count || 0) === 0) {

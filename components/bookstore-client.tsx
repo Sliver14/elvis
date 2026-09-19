@@ -36,7 +36,9 @@ import {
   CheckCircle2,
   Loader2,
   ExternalLink,
-  Tag
+  Tag,
+  KeyRound,
+  ShieldCheck
 } from 'lucide-react'
 
 export interface Book {
@@ -1046,15 +1048,21 @@ function Cart({ items, onClose, onRemove, onChange }: { items: { book: Book; qua
    ========================================================================= */
 
 function AdminLogin({ onNavigate, onLogin }: { onNavigate: (id: string) => void; onLogin: () => void }) {
-  const [email, setEmail] = useState('')
+  const [authMode, setAuthMode] = useState<'login' | 'forgot' | 'verify'>('login')
+  const [email, setEmail] = useState('hello@elvisjusticebooks.com')
   const [password, setPassword] = useState('')
+  const [otpCode, setOtpCode] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [successMsg, setSuccessMsg] = useState('')
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setSuccessMsg('')
     try {
       const res = await fetch('/api/admin/auth', {
         method: 'POST',
@@ -1065,10 +1073,77 @@ function AdminLogin({ onNavigate, onLogin }: { onNavigate: (id: string) => void;
       if (res.ok && data.success) {
         onLogin()
       } else {
-        setError(data.error || 'Invalid credentials')
+        setError(data.error || 'Invalid credentials. Please verify your password.')
       }
     } catch {
-      onLogin()
+      setError('Connection error. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRequestResetCode = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    setSuccessMsg('')
+    try {
+      const res = await fetch('/api/admin/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setSuccessMsg(data.message || `A 6-digit verification code has been dispatched to ${email}`)
+        setAuthMode('verify')
+      } else {
+        setError(data.error || 'Failed to dispatch reset code.')
+      }
+    } catch {
+      setError('Network error sending verification code.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleVerifyAndResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (newPassword !== confirmPassword) {
+      setError('New passwords do not match. Please re-enter.')
+      return
+    }
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters.')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+    setSuccessMsg('')
+    try {
+      const res = await fetch('/api/admin/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          code: otpCode,
+          new_password: newPassword,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setSuccessMsg('Password updated successfully! Sign in with your new password.')
+        setPassword('')
+        setNewPassword('')
+        setConfirmPassword('')
+        setOtpCode('')
+        setAuthMode('login')
+      } else {
+        setError(data.error || 'Invalid or expired code.')
+      }
+    } catch {
+      setError('Network error resetting password.')
     } finally {
       setLoading(false)
     }
@@ -1077,25 +1152,170 @@ function AdminLogin({ onNavigate, onLogin }: { onNavigate: (id: string) => void;
   return (
     <main className="admin-auth-page">
       <div className="admin-auth-card">
-        <div className="admin-auth-mark"><LockKeyhole /></div>
-        <p className="eyebrow">Serendipity / Elvis admin</p>
-        <h1>Welcome <em>back.</em></h1>
-        <p className="admin-auth-copy">Sign in to manage your collection, dynamic launches, orders, and reader conversations.</p>
-        {error && <p className="admin-error-banner">{error}</p>}
-        <form onSubmit={handleSignIn} className="admin-auth-form">
-          <label>
-            Email address
-            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@serendipity.books" />
-          </label>
-          <label>
-            Password
-            <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" />
-          </label>
-          <button className="button button-dark" type="submit" disabled={loading}>
-            {loading ? <Loader2 className="animate-spin" /> : <>Sign in <ArrowRight /></>}
-          </button>
-        </form>
-        <button className="text-button" onClick={() => onNavigate('home')}><ArrowLeft /> Return to storefront</button>
+        <div className="admin-auth-mark">
+          {authMode === 'login' ? <LockKeyhole /> : <KeyRound />}
+        </div>
+        <p className="eyebrow">Serendipity / Elvis Admin</p>
+
+        {/* MODE 1: LOGIN */}
+        {authMode === 'login' && (
+          <>
+            <h1>Welcome <em>back.</em></h1>
+            <p className="admin-auth-copy">Sign in to manage your collection, dynamic launches, orders, and reader conversations.</p>
+            {successMsg && <p className="admin-success-banner"><CheckCircle2 /> {successMsg}</p>}
+            {error && <p className="admin-error-banner">{error}</p>}
+            <form onSubmit={handleSignIn} className="admin-auth-form">
+              <label>
+                Email address
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="hello@elvisjusticebooks.com"
+                />
+              </label>
+              <label>
+                <div className="admin-auth-header-row">
+                  <span>Password</span>
+                  <button
+                    type="button"
+                    className="admin-forgot-btn"
+                    onClick={() => {
+                      setError('')
+                      setSuccessMsg('')
+                      setAuthMode('forgot')
+                    }}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                />
+              </label>
+              <button className="button button-dark" type="submit" disabled={loading}>
+                {loading ? <Loader2 className="animate-spin" /> : <>Sign in <ArrowRight /></>}
+              </button>
+            </form>
+            <button className="text-button" onClick={() => onNavigate('home')}><ArrowLeft /> Return to storefront</button>
+          </>
+        )}
+
+        {/* MODE 2: FORGOT PASSWORD (REQUEST CODE) */}
+        {authMode === 'forgot' && (
+          <>
+            <h1>Reset <em>password.</em></h1>
+            <p className="admin-auth-copy">
+              Enter your admin email. A secure 6-digit verification code will be sent via Resend to authorize your password change.
+            </p>
+            {error && <p className="admin-error-banner">{error}</p>}
+            <form onSubmit={handleRequestResetCode} className="admin-auth-form">
+              <label>
+                Admin email address
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="hello@elvisjusticebooks.com"
+                />
+              </label>
+              <p className="admin-info-note">
+                <ShieldCheck style={{ width: 14, height: 14, verticalAlign: 'middle', marginRight: 4 }} />
+                Code will be delivered to <strong>{email || 'hello@elvisjusticebooks.com'}</strong>
+              </p>
+              <button className="button button-dark" type="submit" disabled={loading}>
+                {loading ? <Loader2 className="animate-spin" /> : <>Send Verification Code <ArrowRight /></>}
+              </button>
+            </form>
+            <button
+              className="text-button"
+              onClick={() => {
+                setError('')
+                setSuccessMsg('')
+                setAuthMode('login')
+              }}
+            >
+              <ArrowLeft /> Back to sign in
+            </button>
+          </>
+        )}
+
+        {/* MODE 3: ENTER OTP & NEW PASSWORD */}
+        {authMode === 'verify' && (
+          <>
+            <h1>Enter <em>code.</em></h1>
+            <p className="admin-auth-copy">
+              A 6-digit verification code has been dispatched to <strong>{email}</strong>. Enter it below with your new password.
+            </p>
+            {successMsg && <p className="admin-success-banner"><CheckCircle2 /> {successMsg}</p>}
+            {error && <p className="admin-error-banner">{error}</p>}
+            <form onSubmit={handleVerifyAndResetPassword} className="admin-auth-form">
+              <label>
+                6-Digit Verification Code
+                <input
+                  type="text"
+                  required
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                  placeholder="000000"
+                  className="admin-otp-input"
+                />
+              </label>
+              <label>
+                New Password (minimum 6 characters)
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Create strong new password"
+                />
+              </label>
+              <label>
+                Confirm New Password
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Re-enter new password"
+                />
+              </label>
+              <button className="button button-dark" type="submit" disabled={loading}>
+                {loading ? <Loader2 className="animate-spin" /> : <>Update & Activate Password <ArrowRight /></>}
+              </button>
+            </form>
+            <div className="admin-card-actions">
+              <button
+                className="admin-forgot-btn"
+                onClick={handleRequestResetCode}
+                disabled={loading}
+              >
+                Resend code
+              </button>
+              <button
+                className="text-button"
+                onClick={() => {
+                  setError('')
+                  setSuccessMsg('')
+                  setAuthMode('login')
+                }}
+              >
+                <ArrowLeft /> Back to sign in
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </main>
   )
@@ -1171,6 +1391,53 @@ function AdminDashboard({
   const showToast = (msg: string) => {
     setToastMsg(msg)
     setTimeout(() => setToastMsg(''), 4000)
+  }
+
+  // Change Password State
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false)
+  const [currPassword, setCurrPassword] = useState('')
+  const [newAdminPassword, setNewAdminPassword] = useState('')
+  const [confirmAdminPassword, setConfirmAdminPassword] = useState('')
+  const [passLoading, setPassLoading] = useState(false)
+  const [passError, setPassError] = useState('')
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (newAdminPassword !== confirmAdminPassword) {
+      setPassError('New passwords do not match. Please re-enter.')
+      return
+    }
+    if (newAdminPassword.length < 6) {
+      setPassError('New password must be at least 6 characters.')
+      return
+    }
+
+    setPassLoading(true)
+    setPassError('')
+    try {
+      const res = await fetch('/api/admin/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          current_password: currPassword,
+          new_password: newAdminPassword,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        showToast('Admin password updated successfully! A security notice was sent to your email.')
+        setShowChangePasswordModal(false)
+        setCurrPassword('')
+        setNewAdminPassword('')
+        setConfirmAdminPassword('')
+      } else {
+        setPassError(data.error || 'Failed to update password')
+      }
+    } catch {
+      setPassError('Connection error updating password')
+    } finally {
+      setPassLoading(false)
+    }
   }
 
   // Fetch admin stats and collections
@@ -1469,6 +1736,7 @@ function AdminDashboard({
         </div>
         <div className="admin-topbar-actions">
           <button className="text-button" onClick={() => { onRefreshBooks(); onRefreshLaunch(); loadAdminData(); }}><RefreshIcon /> Refresh</button>
+          <button className="button button-light btn-sm" onClick={() => { setPassError(''); setShowChangePasswordModal(true); }}><KeyRound /> Change Password</button>
           <button className="button button-dark" onClick={onLogout}><LogOut /> Sign out</button>
         </div>
       </div>
@@ -2127,6 +2395,66 @@ function AdminDashboard({
         </div>
       )}
 
+      {/* MODAL: CHANGE PASSWORD */}
+      {showChangePasswordModal && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal-card">
+            <div className="admin-modal-header">
+              <div>
+                <p className="eyebrow">Admin Security</p>
+                <h3>Change Administrator Password</h3>
+              </div>
+              <button className="icon-button" onClick={() => setShowChangePasswordModal(false)}><X /></button>
+            </div>
+            {passError && <p className="admin-error-banner">{passError}</p>}
+            <form onSubmit={handleChangePassword} className="admin-modal-form">
+              <label>
+                Current Password
+                <input
+                  type="password"
+                  required
+                  value={currPassword}
+                  onChange={(e) => setCurrPassword(e.target.value)}
+                  placeholder="Enter current password"
+                />
+              </label>
+              <label>
+                New Password (minimum 6 characters)
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={newAdminPassword}
+                  onChange={(e) => setNewAdminPassword(e.target.value)}
+                  placeholder="Enter new strong password"
+                />
+              </label>
+              <label>
+                Confirm New Password
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={confirmAdminPassword}
+                  onChange={(e) => setConfirmAdminPassword(e.target.value)}
+                  placeholder="Re-enter new password"
+                />
+              </label>
+              <p className="admin-info-note">
+                <ShieldCheck style={{ width: 14, height: 14, verticalAlign: 'middle', marginRight: 4 }} />
+                A security alert will be sent to <strong>hello@elvisjusticebooks.com</strong> once changed.
+              </p>
+              <div className="admin-modal-actions">
+                <button type="button" className="text-button" onClick={() => setShowChangePasswordModal(false)}>Cancel</button>
+                <button type="submit" className="button button-dark" disabled={passLoading}>
+                  {passLoading ? <Loader2 className="animate-spin" /> : <>Update Password <ArrowRight /></>}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <button className="admin-storefront-link" onClick={() => onNavigate('home')}><ArrowLeft /> Back to storefront</button>
     </main>
   )
@@ -2185,7 +2513,7 @@ export default function BookstoreClient() {
     // Initialize database in background
     fetch('/api/init').catch(() => { })
 
-    // Check payment return params
+    // Check payment return params and initialize navigation from URL hash
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
       const ref = params.get('ref') || params.get('reference')
@@ -2196,6 +2524,38 @@ export default function BookstoreClient() {
           setCart([])
         }
       }
+
+      // 1. Sync initial page from URL hash on load/refresh
+      const initialHash = window.location.hash.replace(/^#/, '')
+      if (initialHash) {
+        if (['home', 'books', 'launch', 'about', 'contact', 'admin', 'admin-login'].includes(initialHash) || initialHash.startsWith('details:')) {
+          setPage(initialHash)
+        }
+      }
+
+      // 2. Check existing active admin session from cookie
+      fetch('/api/admin/auth')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.authenticated) {
+            setAdminAuthenticated(true)
+          }
+        })
+        .catch(() => { })
+
+      // 3. Listen for browser back/forward and hash changes
+      const handleHashChange = () => {
+        const currentHash = window.location.hash.replace(/^#/, '')
+        if (currentHash) {
+          if (['home', 'books', 'launch', 'about', 'contact', 'admin', 'admin-login'].includes(currentHash) || currentHash.startsWith('details:')) {
+            setPage(currentHash)
+          }
+        } else {
+          setPage('home')
+        }
+      }
+
+      window.addEventListener('hashchange', handleHashChange)
     }
 
     // Global image protection: prevent right-click context menu and drag-to-download
@@ -2221,6 +2581,9 @@ export default function BookstoreClient() {
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu, { capture: true })
       document.removeEventListener('dragstart', handleDragStart, { capture: true })
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('hashchange', () => {})
+      }
     }
   }, [])
 
@@ -2241,21 +2604,27 @@ export default function BookstoreClient() {
   }
 
   const onNavigate = (id: string) => {
-    setPage(id === 'books' || id === 'launch' || id === 'about' || id === 'contact' || id === 'admin-login' || id === 'admin' || id.startsWith('details:') ? id : 'home')
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    const validTarget = id === 'books' || id === 'launch' || id === 'about' || id === 'contact' || id === 'admin-login' || id === 'admin' || id.startsWith('details:') ? id : 'home'
+    setPage(validTarget)
+    if (typeof window !== 'undefined') {
+      window.location.hash = validTarget
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
   }
 
   const selectedBook = page.startsWith('details:') ? booksList.find((book) => book.id === page.slice(8)) : undefined
 
-  if (page === 'admin-login') {
-    return <AdminLogin onNavigate={onNavigate} onLogin={() => { setAdminAuthenticated(true); onNavigate('admin') }} />
-  }
-
-  if (page === 'admin') {
+  if (page === 'admin-login' || page === 'admin') {
     return adminAuthenticated ? (
       <AdminDashboard
         onNavigate={onNavigate}
-        onLogout={() => { setAdminAuthenticated(false); onNavigate('admin-login') }}
+        onLogout={async () => {
+          try {
+            await fetch('/api/admin/auth', { method: 'DELETE' })
+          } catch {}
+          setAdminAuthenticated(false)
+          onNavigate('admin')
+        }}
         booksList={booksList}
         onRefreshBooks={refreshBooks}
         activeLaunch={activeLaunch}

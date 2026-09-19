@@ -1930,6 +1930,84 @@ img,
   border-color: var(--accent);
 }
 
+.admin-auth-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-forgot-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 11px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  margin-top: 2px;
+  text-align: right;
+  transition: opacity 0.2s;
+}
+
+.admin-forgot-btn:hover {
+  opacity: 0.8;
+}
+
+.admin-otp-input {
+  font-family: 'Courier New', Courier, monospace !important;
+  font-size: 24px !important;
+  letter-spacing: 8px !important;
+  text-align: center !important;
+  font-weight: 700 !important;
+  color: var(--primary) !important;
+  background: #faf7f2 !important;
+  border: 1px dashed var(--accent) !important;
+}
+
+.admin-success-banner {
+  background: #f4fbf7;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: 2px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-error-banner {
+  background: #fdf3f2;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: 2px;
+  margin-bottom: 16px;
+}
+
+.admin-info-note {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 10px 14px;
+  margin-top: 6px;
+}
+
+.admin-card-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
 .admin-demo-note {
   color: var(--muted);
   font-size: 11px;
