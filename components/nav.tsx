@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, Search, ShoppingBag, X } from 'lucide-react'
@@ -12,6 +12,7 @@ export function Nav() {
   const [open, setOpen] = useState(false)
   const [visible, setVisible] = useState(true)
   const [scrolled, setScrolled] = useState(false)
+  const navRef = useRef<HTMLElement>(null)
 
   // Don't render customer nav on admin page if desired, or let it render
   const isAdmin = pathname?.startsWith('/admin')
@@ -48,6 +49,38 @@ export function Nav() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [open])
 
+  // Close mobile navigation on click outside & on Escape key
+  useEffect(() => {
+    if (!open) return
+
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open])
+
+  // Close mobile nav on route change
+  useEffect(() => {
+    setOpen(false)
+  }, [pathname])
+
   if (isAdmin) return null
 
   const getActiveTab = () => {
@@ -74,48 +107,57 @@ export function Nav() {
   }`
 
   return (
-    <header className={headerClass}>
-      <div className="header-inner">
-        <Link href="/" className="wordmark" onClick={() => setOpen(false)} aria-label="Go home">
-          <span className="wordmark-mark">S</span>
-          <span>SERENDIPITY / <em>ELVIS</em></span>
-        </Link>
-
-        <nav className={open ? 'nav-links is-open' : 'nav-links'} aria-label="Main navigation">
-          {navItems.map((item) => (
-            <Link
-              key={item.id}
-              href={item.href}
-              className={activeTab === item.id ? 'is-active' : ''}
-              aria-current={activeTab === item.id ? 'page' : undefined}
-              onClick={() => setOpen(false)}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="header-actions">
-          <Link href="/books" className="icon-button" aria-label="Search">
-            <Search />
+    <>
+      <header className={headerClass} ref={navRef}>
+        <div className="header-inner">
+          <Link href="/" className="wordmark" onClick={() => setOpen(false)} aria-label="Go home">
+            <span className="wordmark-mark">S</span>
+            <span>SERENDIPITY / <em>ELVIS</em></span>
           </Link>
-          <button
-            className="icon-button bag-button"
-            onClick={() => setCartOpen(true)}
-            aria-label={`Shopping bag, ${cartCount} items`}
-          >
-            <ShoppingBag />
-            <span>{cartCount}</span>
-          </button>
-          <button
-            className="menu-button"
-            onClick={() => setOpen(!open)}
-            aria-label={open ? 'Close menu' : 'Open menu'}
-          >
-            {open ? <X /> : <Menu />}
-          </button>
+
+          <nav className={open ? 'nav-links is-open' : 'nav-links'} aria-label="Main navigation">
+            {navItems.map((item) => (
+              <Link
+                key={item.id}
+                href={item.href}
+                className={activeTab === item.id ? 'is-active' : ''}
+                aria-current={activeTab === item.id ? 'page' : undefined}
+                onClick={() => setOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="header-actions">
+            <Link href="/books" className="icon-button" aria-label="Search">
+              <Search />
+            </Link>
+            <button
+              className="icon-button bag-button"
+              onClick={() => setCartOpen(true)}
+              aria-label={`Shopping bag, ${cartCount} items`}
+            >
+              <ShoppingBag />
+              <span>{cartCount}</span>
+            </button>
+            <button
+              className="menu-button"
+              onClick={() => setOpen(!open)}
+              aria-label={open ? 'Close menu' : 'Open menu'}
+            >
+              {open ? <X /> : <Menu />}
+            </button>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+      {open && (
+        <div
+          className="mobile-nav-backdrop"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+    </>
   )
 }

@@ -63,9 +63,9 @@ export function LaunchView() {
           <h1>{activeLaunch.title}</h1>
           <p className="launch-author">By {activeLaunch.author}</p>
           {activeLaunch.tagline && (
-            <p className="launch-tagline" style={{ whiteSpace: 'pre-line' }}>
+            <h2 className="launch-tagline" style={{ whiteSpace: 'pre-line' }}>
               {activeLaunch.tagline}
-            </p>
+            </h2>
           )}
           <p className="hero-intro">{activeLaunch.intro || activeLaunch.description}</p>
           <div className="hero-actions">
