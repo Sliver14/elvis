@@ -2281,15 +2281,33 @@ input, textarea, select {
     right: 0;
     background: var(--paper);
     border-bottom: 1px solid var(--line);
-    padding: 25px 20px;
+    padding: 30px 20px;
     flex-direction: column;
-    gap: 17px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 20px;
     margin: 0;
     z-index: 101;
-    box-shadow: 0 12px 28px rgba(40, 24, 16, 0.1);
+    box-shadow: 0 14px 32px rgba(40, 24, 16, 0.12);
   }
   .nav-links.is-open {
     display: flex;
+  }
+  .nav-links a,
+  .nav-links button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 14px;
+    padding: 4px 12px;
+  }
+  .nav-links a.is-active::after,
+  .nav-links button.is-active::after {
+    left: 12px;
+    right: 12px;
+    bottom: -6px;
   }
   .menu-button {
     display: block;
