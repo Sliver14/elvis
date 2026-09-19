@@ -16,7 +16,7 @@ export async function GET() {
 
   try {
     const launches = await sql`
-      SELECT id, slug, title, author, author_bio, author_image, tagline, intro, description, themes, cover_image, launch_date, is_active, created_at
+      SELECT id, slug, title, tagline, intro, description, themes, cover_image, launch_date, is_active, created_at
       FROM book_launches
       WHERE is_active = true
       ORDER BY updated_at DESC
@@ -26,7 +26,7 @@ export async function GET() {
     if (!launches.length) {
       // If none active, return the most recent one or fallback
       const recent = await sql`
-        SELECT id, slug, title, author, author_bio, author_image, tagline, intro, description, themes, cover_image, launch_date, is_active, created_at
+        SELECT id, slug, title, tagline, intro, description, themes, cover_image, launch_date, is_active, created_at
         FROM book_launches
         ORDER BY created_at DESC
         LIMIT 1;
@@ -37,6 +37,9 @@ export async function GET() {
           success: true,
           launch: {
             ...item,
+            author: 'Dr Elvis Justice Bedi',
+            author_bio: DEFAULT_LAUNCH.author_bio,
+            author_image: DEFAULT_LAUNCH.author_image,
             themes: typeof item.themes === 'string' ? JSON.parse(item.themes) : item.themes
           },
           source: 'neon'
@@ -58,6 +61,9 @@ export async function GET() {
       success: true,
       launch: {
         ...activeLaunch,
+        author: 'Dr Elvis Justice Bedi',
+        author_bio: DEFAULT_LAUNCH.author_bio,
+        author_image: DEFAULT_LAUNCH.author_image,
         themes: typeof activeLaunch.themes === 'string' ? JSON.parse(activeLaunch.themes) : activeLaunch.themes
       },
       source: 'neon'

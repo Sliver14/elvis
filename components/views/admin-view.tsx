@@ -337,6 +337,9 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [newLaunchCover, setNewLaunchCover] = useState('/practical-trading-psychology.png')
   const [newLaunchDesc, setNewLaunchDesc] = useState('A practical exploration of the mindset, discipline, and emotional control that shape a trader\'s journey.')
   const [newLaunchActive, setNewLaunchActive] = useState(true)
+  const [savingNewLaunch, setSavingNewLaunch] = useState(false)
+  const [activatingLaunchId, setActivatingLaunchId] = useState<string | null>(null)
+  const [loadingRegsId, setLoadingRegsId] = useState<string | null>(null)
 
   // Edit Launch State
   const [showEditLaunchModal, setShowEditLaunchModal] = useState(false)
@@ -360,12 +363,14 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [newBookCover, setNewBookCover] = useState('')
   const [newBookPdf, setNewBookPdf] = useState('')
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [savingBook, setSavingBook] = useState(false)
 
   // Data lists
   const [ordersList, setOrdersList] = useState<any[]>([])
   const [messagesList, setMessagesList] = useState<any[]>([])
   const [subscribersList, setSubscribersList] = useState<any[]>([])
-  const [, setLoadingData] = useState(false)
+  const [loadingData, setLoadingData] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
   const [toastMsg, setToastMsg] = useState('')
 
   const showToast = (msg: string) => {
@@ -381,6 +386,10 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [passLoading, setPassLoading] = useState(false)
   const [passError, setPassError] = useState('')
 
+  // Delete Book State & Confirmation Modal
+  const [bookToDelete, setBookToDelete] = useState<{ id: string; title: string } | null>(null)
+  const [deletingBook, setDeletingBook] = useState(false)
+
   // Close modals when user presses Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -390,6 +399,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         setShowNewLaunchModal(false)
         setSelectedLaunchRegs(null)
         setShowChangePasswordModal(false)
+        setBookToDelete(null)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -506,6 +516,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const handleCreateBook = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newBookTitle || !newBookPrice) return
+    setSavingBook(true)
     try {
       const res = await fetch('/api/books', {
         method: 'POST',
@@ -537,20 +548,29 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       }
     } catch (err: any) {
       alert(err.message)
+    } finally {
+      setSavingBook(false)
     }
   }
 
-  const handleDeleteBook = async (id: string, title: string) => {
-    if (!confirm(`Are you sure you want to delete "${title}"?`)) return
+  const confirmDeleteBook = async () => {
+    if (!bookToDelete) return
+    setDeletingBook(true)
     try {
-      const res = await fetch(`/api/books/${id}`, { method: 'DELETE' })
-      if (res.ok) {
-        showToast(`Book "${title}" deleted.`)
+      const res = await fetch(`/api/books/${bookToDelete.id}`, { method: 'DELETE' })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.success !== false) {
+        showToast(`Book "${bookToDelete.title}" deleted permanently.`)
+        setBookToDelete(null)
         refreshBooks()
         loadAdminData()
+      } else {
+        alert(data.error || 'Failed to delete book')
       }
     } catch (err: any) {
-      alert(err.message)
+      alert(err.message || 'Connection error while deleting book.')
+    } finally {
+      setDeletingBook(false)
     }
   }
 
@@ -593,6 +613,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     e.preventDefault()
     if (!newLaunchTitle || !newLaunchDate) return
 
+    setSavingNewLaunch(true)
     const themesArray = newLaunchThemes.split(',').map((t) => t.trim()).filter(Boolean)
 
     try {
@@ -624,6 +645,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       }
     } catch (err: any) {
       alert(err.message)
+    } finally {
+      setSavingNewLaunch(false)
     }
   }
 
@@ -670,6 +693,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   }
 
   const handleToggleLaunch = async (launchId: string, title: string) => {
+    setActivatingLaunchId(launchId)
     try {
       const res = await fetch('/api/admin/launches', {
         method: 'PATCH',
@@ -683,11 +707,14 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       }
     } catch (err: any) {
       alert(err.message)
+    } finally {
+      setActivatingLaunchId(null)
     }
   }
 
   const handleViewRegistrations = async (launchId: string, title: string) => {
     setSelectedLaunchTitle(title)
+    setLoadingRegsId(launchId)
     try {
       const res = await fetch(`/api/admin/launches/${launchId}/registrations`)
       const data = await res.json()
@@ -696,6 +723,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       }
     } catch (err) {
       console.error(err)
+    } finally {
+      setLoadingRegsId(null)
     }
   }
 
@@ -737,13 +766,18 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         <div className="admin-topbar-actions">
           <button
             className="text-button"
-            onClick={() => {
-              refreshBooks()
-              refreshLaunch()
-              loadAdminData()
+            disabled={refreshing}
+            onClick={async () => {
+              setRefreshing(true)
+              try {
+                await Promise.all([refreshBooks(), refreshLaunch(), loadAdminData()])
+                showToast('Storefront & dashboard data refreshed!')
+              } finally {
+                setRefreshing(false)
+              }
             }}
           >
-            <RefreshIcon /> Refresh
+            {refreshing ? <Loader2 className="animate-spin" size={14} /> : <RefreshIcon />} {refreshing ? 'Refreshing...' : 'Refresh'}
           </button>
           <button
             className="button button-light btn-sm"
@@ -936,7 +970,12 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                       )}
                     </td>
                     <td>
-                      <button className="table-delete-btn" onClick={() => handleDeleteBook(book.id, book.title)} aria-label="Delete">
+                      <button
+                        className="table-delete-btn"
+                        onClick={() => setBookToDelete({ id: book.id, title: book.title })}
+                        aria-label={`Delete ${book.title}`}
+                        title="Delete book"
+                      >
                         <Trash2 />
                       </button>
                     </td>
@@ -985,8 +1024,12 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                       {launch.is_active ? (
                         <span className="badge-active"><Check /> ACTIVE ON STORE</span>
                       ) : (
-                        <button className="text-button" onClick={() => handleToggleLaunch(launch.id, launch.title)}>
-                          Set Active
+                        <button
+                          className="text-button"
+                          disabled={activatingLaunchId === launch.id}
+                          onClick={() => handleToggleLaunch(launch.id, launch.title)}
+                        >
+                          {activatingLaunchId === launch.id ? <><Loader2 className="animate-spin" size={13} /> Activating...</> : 'Set Active'}
                         </button>
                       )}
                     </td>
@@ -1007,8 +1050,16 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                         <button className="button button-light btn-sm" onClick={() => openEditLaunchModal(launch)}>
                           <Settings2 /> Edit Details
                         </button>
-                        <button className="button button-light btn-sm" onClick={() => handleViewRegistrations(launch.id, launch.title)}>
-                          <Users /> Registrants ({launch.registrations_count || 0})
+                        <button
+                          className="button button-light btn-sm"
+                          disabled={loadingRegsId === launch.id}
+                          onClick={() => handleViewRegistrations(launch.id, launch.title)}
+                        >
+                          {loadingRegsId === launch.id ? (
+                            <><Loader2 className="animate-spin" size={13} /> Loading...</>
+                          ) : (
+                            <><Users /> Registrants ({launch.registrations_count || 0})</>
+                          )}
                         </button>
                       </div>
                     </td>
@@ -1223,8 +1274,10 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 )}
               </div>
               <div className="admin-modal-actions">
-                <button type="button" className="text-button" onClick={() => setShowAddBookModal(false)}>Cancel</button>
-                <button type="submit" className="button button-dark">Save Book <ArrowRight /></button>
+                <button type="button" className="text-button" onClick={() => setShowAddBookModal(false)} disabled={savingBook}>Cancel</button>
+                <button type="submit" className="button button-dark" disabled={savingBook || uploadingImage}>
+                  {savingBook ? <><Loader2 className="animate-spin" size={16} /> Saving Book...</> : <>Save Book <ArrowRight /></>}
+                </button>
               </div>
             </form>
           </div>
@@ -1245,7 +1298,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 <p className="eyebrow">Launch Editor</p>
                 <h3>Edit Book Launch Details</h3>
               </div>
-              <button className="icon-button" onClick={() => setShowEditLaunchModal(false)}><X /></button>
+              <button className="icon-button" onClick={() => setShowEditLaunchModal(false)} disabled={savingLaunch}><X /></button>
             </div>
             <form onSubmit={handleUpdateLaunch} className="admin-modal-form">
               <label>
@@ -1287,8 +1340,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               </label>
               <div className="admin-modal-actions">
                 <button type="button" className="text-button" onClick={() => setShowEditLaunchModal(false)} disabled={savingLaunch}>Cancel</button>
-                <button type="submit" className="button button-dark" disabled={savingLaunch}>
-                  {savingLaunch ? <><Loader2 className="animate-spin" /> Saving...</> : <>Save Changes <ArrowRight /></>}
+                <button type="submit" className="button button-dark" disabled={savingLaunch || uploadingImage}>
+                  {savingLaunch ? <><Loader2 className="animate-spin" size={16} /> Saving Changes...</> : <>Save Changes <ArrowRight /></>}
                 </button>
               </div>
             </form>
@@ -1301,13 +1354,13 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         <div
           className="admin-modal-overlay"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setShowNewLaunchModal(false)
+            if (e.target === e.currentTarget && !savingNewLaunch) setShowNewLaunchModal(false)
           }}
         >
           <div className="admin-modal-card">
             <div className="admin-modal-header">
               <h3>Create Dynamic Book Launch</h3>
-              <button className="icon-button" onClick={() => setShowNewLaunchModal(false)}><X /></button>
+              <button className="icon-button" onClick={() => setShowNewLaunchModal(false)} disabled={savingNewLaunch}><X /></button>
             </div>
             <form onSubmit={handleCreateLaunch} className="admin-modal-form">
               <label>
@@ -1348,8 +1401,10 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 <span>Immediately set as the ACTIVE Book Launch on the live storefront</span>
               </label>
               <div className="admin-modal-actions">
-                <button type="button" className="text-button" onClick={() => setShowNewLaunchModal(false)}>Cancel</button>
-                <button type="submit" className="button button-dark">Create & Deploy Launch <ArrowRight /></button>
+                <button type="button" className="text-button" onClick={() => setShowNewLaunchModal(false)} disabled={savingNewLaunch}>Cancel</button>
+                <button type="submit" className="button button-dark" disabled={savingNewLaunch || uploadingImage}>
+                  {savingNewLaunch ? <><Loader2 className="animate-spin" size={16} /> Creating Launch...</> : <>Create & Deploy Launch <ArrowRight /></>}
+                </button>
               </div>
             </form>
           </div>
@@ -1478,6 +1533,64 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: CONFIRM DELETE BOOK */}
+      {bookToDelete && (
+        <div
+          className="admin-modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !deletingBook) setBookToDelete(null)
+          }}
+        >
+          <div className="admin-modal-card" style={{ maxWidth: '480px' }}>
+            <div className="admin-modal-header" style={{ borderBottom: 'none', paddingBottom: 0, marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '50%',
+                  background: 'rgba(180, 40, 40, 0.1)',
+                  color: '#b42828',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <Trash2 size={20} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.25rem', margin: 0, fontFamily: 'var(--serif)' }}>Delete Book</h3>
+                </div>
+              </div>
+              <button className="icon-button" onClick={() => setBookToDelete(null)} disabled={deletingBook}><X /></button>
+            </div>
+            
+            <p style={{ color: 'var(--muted)', fontSize: '0.95rem', lineHeight: 1.5, margin: '8px 0 24px' }}>
+              Are you sure you want to delete <strong style={{ color: 'var(--foreground)' }}>&quot;{bookToDelete.title}&quot;</strong>? This action will permanently remove the book from your live bookstore collection and database.
+            </p>
+
+            <div className="admin-modal-actions" style={{ marginTop: '0', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => setBookToDelete(null)}
+                disabled={deletingBook}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="button button-dark"
+                style={{ background: '#b42828', borderColor: '#b42828', color: '#fff', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                disabled={deletingBook}
+                onClick={confirmDeleteBook}
+              >
+                {deletingBook ? <><Loader2 className="animate-spin" size={16} /> Deleting...</> : <><Trash2 size={16} /> Yes, Delete Book</>}
+              </button>
+            </div>
           </div>
         </div>
       )}

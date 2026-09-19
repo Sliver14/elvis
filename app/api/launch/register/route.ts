@@ -54,8 +54,8 @@ export async function POST(request: NextRequest) {
           } else {
             // Seed default launch if table empty
             await sql`
-              INSERT INTO book_launches (id, slug, title, author, author_bio, author_image, tagline, intro, description, themes, cover_image, launch_date, is_active)
-              VALUES (${DEFAULT_LAUNCH.id}, ${DEFAULT_LAUNCH.slug}, ${DEFAULT_LAUNCH.title}, ${DEFAULT_LAUNCH.author}, ${DEFAULT_LAUNCH.author_bio}, ${DEFAULT_LAUNCH.author_image}, ${DEFAULT_LAUNCH.tagline}, ${DEFAULT_LAUNCH.intro}, ${DEFAULT_LAUNCH.description}, ${DEFAULT_LAUNCH.themes}::jsonb, ${DEFAULT_LAUNCH.cover_image}, ${DEFAULT_LAUNCH.launch_date}, ${DEFAULT_LAUNCH.is_active})
+              INSERT INTO book_launches (id, slug, title, tagline, intro, description, themes, cover_image, launch_date, is_active)
+              VALUES (${DEFAULT_LAUNCH.id}, ${DEFAULT_LAUNCH.slug}, ${DEFAULT_LAUNCH.title}, ${DEFAULT_LAUNCH.tagline}, ${DEFAULT_LAUNCH.intro}, ${DEFAULT_LAUNCH.description}, ${DEFAULT_LAUNCH.themes}::jsonb, ${DEFAULT_LAUNCH.cover_image}, ${DEFAULT_LAUNCH.launch_date}, ${DEFAULT_LAUNCH.is_active})
               ON CONFLICT (id) DO NOTHING;
             `
             effectiveLaunchId = DEFAULT_LAUNCH.id

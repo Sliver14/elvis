@@ -73,9 +73,6 @@ export async function initDatabase() {
         id VARCHAR(255) PRIMARY KEY,
         slug VARCHAR(255) UNIQUE NOT NULL,
         title VARCHAR(255) NOT NULL,
-        author VARCHAR(255) NOT NULL,
-        author_bio TEXT,
-        author_image TEXT,
         tagline TEXT,
         intro TEXT,
         description TEXT,
@@ -87,6 +84,14 @@ export async function initDatabase() {
         updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
       );
     `
+    // Ensure author columns are dropped if previously created
+    try {
+      await sql`ALTER TABLE book_launches DROP COLUMN IF EXISTS author;`
+      await sql`ALTER TABLE book_launches DROP COLUMN IF EXISTS author_bio;`
+      await sql`ALTER TABLE book_launches DROP COLUMN IF EXISTS author_image;`
+    } catch {
+      // Ignore if columns already removed
+    }
 
     // 3. Launch Registrations Table
     await sql`
@@ -194,8 +199,8 @@ export async function initDatabase() {
       const existingLaunches = await sql`SELECT COUNT(*) FROM book_launches;`
       if (Number(existingLaunches[0]?.count || 0) === 0) {
         await sql`
-          INSERT INTO book_launches (id, slug, title, author, author_bio, author_image, tagline, intro, description, themes, cover_image, launch_date, is_active)
-          VALUES (${DEFAULT_LAUNCH.id}, ${DEFAULT_LAUNCH.slug}, ${DEFAULT_LAUNCH.title}, ${DEFAULT_LAUNCH.author}, ${DEFAULT_LAUNCH.author_bio}, ${DEFAULT_LAUNCH.author_image}, ${DEFAULT_LAUNCH.tagline}, ${DEFAULT_LAUNCH.intro}, ${DEFAULT_LAUNCH.description}, ${DEFAULT_LAUNCH.themes}::jsonb, ${DEFAULT_LAUNCH.cover_image}, ${DEFAULT_LAUNCH.launch_date}, ${DEFAULT_LAUNCH.is_active})
+          INSERT INTO book_launches (id, slug, title, tagline, intro, description, themes, cover_image, launch_date, is_active)
+          VALUES (${DEFAULT_LAUNCH.id}, ${DEFAULT_LAUNCH.slug}, ${DEFAULT_LAUNCH.title}, ${DEFAULT_LAUNCH.tagline}, ${DEFAULT_LAUNCH.intro}, ${DEFAULT_LAUNCH.description}, ${DEFAULT_LAUNCH.themes}::jsonb, ${DEFAULT_LAUNCH.cover_image}, ${DEFAULT_LAUNCH.launch_date}, ${DEFAULT_LAUNCH.is_active})
           ON CONFLICT (id) DO NOTHING;
         `
       }

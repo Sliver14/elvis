@@ -1,11 +1,21 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, ArrowRight, ShoppingBag } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Loader2, ShoppingBag } from 'lucide-react'
 import { useStore } from '@/components/store-provider'
 import { Cover } from '@/components/book-cover'
+
 export function BookDetailsView({ bookId }: { bookId: string }) {
-  const { booksList, addToCart } = useStore()
+  const { booksList, addToCart, loadingBooks } = useStore()
+
+  if (loadingBooks) {
+    return (
+      <main className="section-shell detail-page" style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px' }}>
+        <Loader2 className="animate-spin" style={{ width: 32, height: 32, color: 'var(--color-accent)' }} />
+        <p style={{ color: 'var(--color-muted)', fontSize: '0.9rem' }}>Loading book details...</p>
+      </main>
+    )
+  }
 
   const book = booksList.find((b) => b.id === bookId)
 

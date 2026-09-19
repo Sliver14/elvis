@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, ChevronDown, Search } from 'lucide-react'
+import { ArrowRight, ChevronDown, Loader2, Search } from 'lucide-react'
 import { useStore } from '@/components/store-provider'
 import { Cover } from '@/components/book-cover'
 
 export function CatalogView() {
-  const { booksList } = useStore()
+  const { booksList, loadingBooks } = useStore()
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All books')
 
@@ -52,7 +52,12 @@ export function CatalogView() {
         </label>
       </div>
 
-      {filtered.length ? (
+      {loadingBooks ? (
+        <div style={{ minHeight: '35vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px' }}>
+          <Loader2 className="animate-spin" style={{ width: 32, height: 32, color: 'var(--color-accent)' }} />
+          <p style={{ color: 'var(--color-muted)', fontSize: '0.9rem', letterSpacing: '0.04em' }}>Loading books...</p>
+        </div>
+      ) : filtered.length ? (
         <div className="book-grid">
           {filtered.map((book) => (
             <Link href={`/books/${book.id}`} key={book.id} className="book-card-link">

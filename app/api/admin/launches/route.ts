@@ -28,9 +28,6 @@ export async function GET(request: NextRequest) {
         bl.id,
         bl.slug,
         bl.title,
-        bl.author,
-        bl.author_bio,
-        bl.author_image,
         bl.tagline,
         bl.intro,
         bl.description,
@@ -48,6 +45,9 @@ export async function GET(request: NextRequest) {
 
     const formatted = launches.map((l: any) => ({
       ...l,
+      author: 'Dr Elvis Justice Bedi',
+      author_bio: DEFAULT_LAUNCH.author_bio,
+      author_image: DEFAULT_LAUNCH.author_image,
       themes: typeof l.themes === 'string' ? JSON.parse(l.themes) : l.themes,
     }))
 
@@ -80,9 +80,6 @@ export async function POST(request: NextRequest) {
       launch_date,
       is_active,
     } = body
-    const author = body.author || 'Dr Elvis Justice Bedi'
-    const author_image = body.author_image || '/elvis.jpeg'
-    const author_bio = body.author_bio || 'Dr Elvis Justice Bedi is a trader, educator, and author dedicated to helping people understand the psychology behind financial decision-making. Through his work in trading and education, he explores discipline, emotional control, self-awareness, and the habits that turn uncertainty into a more thoughtful process. Practical Trading Psychology brings together his belief that lasting progress begins with mastering the mind before pursuing the outcome.'
 
     if (!title || !cover_image || !launch_date) {
       return NextResponse.json({
@@ -102,15 +99,12 @@ export async function POST(request: NextRequest) {
 
     const newLaunch = await sql`
       INSERT INTO book_launches (
-        id, slug, title, author, author_bio, author_image, tagline, intro, description, themes, cover_image, launch_date, is_active
+        id, slug, title, tagline, intro, description, themes, cover_image, launch_date, is_active
       )
       VALUES (
         ${id},
         ${slug},
         ${title},
-        ${author},
-        ${author_bio},
-        ${author_image},
         ${tagline || 'Process over profit.\nWin in the mind first.'},
         ${intro || ''},
         ${description || ''},
@@ -122,7 +116,15 @@ export async function POST(request: NextRequest) {
       RETURNING *;
     `
 
-    return NextResponse.json({ success: true, launch: newLaunch[0] }, { status: 201 })
+    const launchObj = {
+      ...newLaunch[0],
+      author: 'Dr Elvis Justice Bedi',
+      author_bio: DEFAULT_LAUNCH.author_bio,
+      author_image: DEFAULT_LAUNCH.author_image,
+      themes: typeof newLaunch[0].themes === 'string' ? JSON.parse(newLaunch[0].themes) : newLaunch[0].themes,
+    }
+
+    return NextResponse.json({ success: true, launch: launchObj }, { status: 201 })
   } catch (error: any) {
     console.error('Create launch error:', error)
     return NextResponse.json({ success: false, error: error?.message || 'Failed to create launch' }, { status: 500 })
@@ -152,9 +154,6 @@ export async function PUT(request: NextRequest) {
       launch_date,
       is_active,
     } = body
-    const author = body.author || 'Dr Elvis Justice Bedi'
-    const author_image = body.author_image || '/elvis.jpeg'
-    const author_bio = body.author_bio || 'Dr Elvis Justice Bedi is a trader, educator, and author dedicated to helping people understand the psychology behind financial decision-making. Through his work in trading and education, he explores discipline, emotional control, self-awareness, and the habits that turn uncertainty into a more thoughtful process. Practical Trading Psychology brings together his belief that lasting progress begins with mastering the mind before pursuing the outcome.'
 
     if (!id || !title || !cover_image || !launch_date) {
       return NextResponse.json({
@@ -174,9 +173,6 @@ export async function PUT(request: NextRequest) {
       UPDATE book_launches
       SET
         title = ${title},
-        author = ${author},
-        author_bio = ${author_bio},
-        author_image = ${author_image},
         tagline = ${tagline || ''},
         intro = ${intro || ''},
         description = ${description || ''},
@@ -193,7 +189,15 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Launch not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ success: true, launch: updated[0] })
+    const launchObj = {
+      ...updated[0],
+      author: 'Dr Elvis Justice Bedi',
+      author_bio: DEFAULT_LAUNCH.author_bio,
+      author_image: DEFAULT_LAUNCH.author_image,
+      themes: typeof updated[0].themes === 'string' ? JSON.parse(updated[0].themes) : updated[0].themes,
+    }
+
+    return NextResponse.json({ success: true, launch: launchObj })
   } catch (error: any) {
     console.error('Update launch error:', error)
     return NextResponse.json({ success: false, error: error?.message || 'Failed to update launch' }, { status: 500 })
@@ -229,7 +233,19 @@ export async function PATCH(request: NextRequest) {
       RETURNING *;
     `
 
-    return NextResponse.json({ success: true, launch: updated[0] })
+    if (!updated.length) {
+      return NextResponse.json({ success: false, error: 'Launch not found' }, { status: 404 })
+    }
+
+    const launchObj = {
+      ...updated[0],
+      author: 'Dr Elvis Justice Bedi',
+      author_bio: DEFAULT_LAUNCH.author_bio,
+      author_image: DEFAULT_LAUNCH.author_image,
+      themes: typeof updated[0].themes === 'string' ? JSON.parse(updated[0].themes) : updated[0].themes,
+    }
+
+    return NextResponse.json({ success: true, launch: launchObj })
   } catch (error: any) {
     console.error('Toggle launch active error:', error)
     return NextResponse.json({ success: false, error: error?.message }, { status: 500 })

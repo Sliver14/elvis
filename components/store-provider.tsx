@@ -13,6 +13,7 @@ interface StoreContextType {
   setCartOpen: (open: boolean) => void
   cartCount: number
   booksList: Book[]
+  loadingBooks: boolean
   setBooksList: React.Dispatch<React.SetStateAction<Book[]>>
   activeLaunch: BookLaunch
   setActiveLaunch: React.Dispatch<React.SetStateAction<BookLaunch>>
@@ -36,6 +37,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<{ book: Book; quantity: number }[]>([])
   const [cartOpen, setCartOpen] = useState(false)
   const [booksList, setBooksList] = useState<Book[]>([])
+  const [loadingBooks, setLoadingBooks] = useState(true)
   const [activeLaunch, setActiveLaunch] = useState<BookLaunch>(DEFAULT_LAUNCH)
   const [orderSuccessRef, setOrderSuccessRef] = useState('')
 
@@ -48,6 +50,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       }
     } catch {
       // Keep existing list
+    } finally {
+      setLoadingBooks(false)
     }
   }
 
@@ -152,6 +156,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         setCartOpen,
         cartCount,
         booksList,
+        loadingBooks,
         setBooksList,
         activeLaunch,
         setActiveLaunch,

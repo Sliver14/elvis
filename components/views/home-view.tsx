@@ -30,7 +30,7 @@ export function HomeView() {
         <div className="hero-banner-frame" onContextMenu={(e) => e.preventDefault()}>
           <img
             src="/elvis-banner.png"
-            alt="Dr Elvis Justice Bedi — Practical Trading Psychology"
+            alt="Dr Elvis Justice Bedi — SERENDIPITY"
             className="hero-banner-image"
             draggable={false}
             onContextMenu={(e) => e.preventDefault()}
@@ -39,29 +39,31 @@ export function HomeView() {
         </div>
       </section>
 
-      <section className="launch-strip">
-        <div className="section-shell launch-strip-inner">
-          <div>
-            <p className="eyebrow">Coming soon</p>
-            <h2>{activeLaunch.title}</h2>
-            <p>{activeLaunch.tagline?.split('\n')[0] || 'Process over profit. Win in the mind first.'}</p>
+      {activeLaunch && (
+        <section className="launch-strip">
+          <div className="section-shell launch-strip-inner">
+            <div>
+              <p className="eyebrow">Coming soon</p>
+              <h2>{activeLaunch.title || 'Practical Trading Psychology'}</h2>
+              <p>{activeLaunch.tagline?.split('\n')[0] || activeLaunch.intro || 'Process over profit. Win in the mind first.'}</p>
+            </div>
+            <div className="launch-date">
+              <Clock3 />
+              <span>
+                Launching{' '}
+                {activeLaunch.launch_date ? new Date(activeLaunch.launch_date).toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric',
+                }) : 'November 6, 2026'}
+              </span>
+            </div>
+            <Link href="/launch" className="button button-light">
+              View launch <ArrowRight />
+            </Link>
           </div>
-          <div className="launch-date">
-            <Clock3 />
-            <span>
-              Launching{' '}
-              {new Date(activeLaunch.launch_date).toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-              })}
-            </span>
-          </div>
-          <Link href="/launch" className="button button-light">
-            View launch <ArrowRight />
-          </Link>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section id="books" className="section-shell collection">
         <div className="section-heading">

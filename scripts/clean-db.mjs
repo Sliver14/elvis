@@ -52,9 +52,9 @@ async function cleanAndReset() {
 
   await sql`
     INSERT INTO book_launches (
-      id, slug, title, author, author_bio, author_image, tagline, intro, description, themes, cover_image, launch_date, is_active
+      id, slug, title, tagline, intro, description, themes, cover_image, launch_date, is_active
     ) VALUES (
-      ${launchId}, ${slug}, ${title}, ${author}, ${authorBio}, ${authorImage}, ${tagline}, ${intro}, ${description}, ${themes}::jsonb, ${coverImage}, ${launchDate}, ${isActive}
+      ${launchId}, ${slug}, ${title}, ${tagline}, ${intro}, ${description}, ${themes}::jsonb, ${coverImage}, ${launchDate}, ${isActive}
     );
   `
   console.log('✓ Seeded active launch: Practical Trading Psychology')
