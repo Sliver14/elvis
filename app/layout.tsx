@@ -1,6 +1,9 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { StoreProvider } from '@/components/store-provider'
+import { Nav } from '@/components/nav'
+import { Footer } from '@/components/footer'
 
 export const metadata: Metadata = {
   title: 'SERENDIPITY / ELVIS — Books for curious minds',
@@ -21,7 +24,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        {children}
+        <StoreProvider>
+          <Nav />
+          {children}
+          <Footer />
+        </StoreProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
