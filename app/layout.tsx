@@ -5,7 +5,7 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'SERENDIPITY / ELVIS — Books for curious minds',
   description: 'An independent bookstore for ideas with staying power. Discover Practical Trading Psychology and more.',
-  generator: 'v0.app',
+  generator: 'insightnovatech.com',
 }
 
 export const viewport: Viewport = {
