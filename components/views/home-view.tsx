@@ -73,28 +73,40 @@ export function HomeView() {
             View all books <ArrowRight />
           </Link>
         </div>
-        <div className="book-grid">
-          {booksList.map((book) => (
-            <Link href={`/books/${book.id}`} key={book.id} className="book-card-link">
-              <article className="book-card">
-                <div className="card-cover-wrap">
-                  <Cover book={book} />
-                  <span className="card-category">{book.category}</span>
-                </div>
-                <div className="book-card-meta">
-                  <h3>{book.title}</h3>
-                  <p>{book.author}</p>
-                  <div>
-                    <span>{book.price}</span>
-                    <span className="round-arrow" aria-label={`View ${book.title}`}>
-                      <ArrowRight />
-                    </span>
+        {booksList.length > 0 ? (
+          <div className="book-grid">
+            {booksList.map((book) => (
+              <Link href={`/books/${book.id}`} key={book.id} className="book-card-link">
+                <article className="book-card">
+                  <div className="card-cover-wrap">
+                    <Cover book={book} />
+                    <span className="card-category">{book.category}</span>
                   </div>
-                </div>
-              </article>
+                  <div className="book-card-meta">
+                    <h3>{book.title}</h3>
+                    <p>{book.author}</p>
+                    <div>
+                      <span>{book.price}</span>
+                      <span className="round-arrow" aria-label={`View ${book.title}`}>
+                        <ArrowRight />
+                      </span>
+                    </div>
+                  </div>
+                </article>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state" style={{ padding: '3.5rem 1.5rem', textAlign: 'center', background: 'var(--color-surface)', borderRadius: '12px', border: '1px solid var(--color-border)' }}>
+            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: 'var(--color-primary)' }}>New Titles Coming Soon</h3>
+            <p style={{ color: 'var(--color-muted)', maxWidth: '440px', margin: '0 auto 1.5rem' }}>
+              Our curated catalog is being updated. Explore our featured book launch in the meantime.
+            </p>
+            <Link href="/launch" className="button button-dark" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+              Explore the Book Launch <ArrowRight size={16} />
             </Link>
-          ))}
-        </div>
+          </div>
+        )}
       </section>
 
       <section className="quote-band">

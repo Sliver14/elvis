@@ -12,48 +12,9 @@ export function getDb() {
 
 export const isDbConfigured = Boolean(databaseUrl)
 
-// Initial default seed books
-export const DEFAULT_BOOKS = [
-  {
-    id: 'practical-trading-psychology',
-    title: 'Practical Trading Psychology',
-    author: 'Dr Elvis Justice Bedi',
-    author_image: '/elvis.jpeg',
-    category: 'Mind & Money',
-    price: '$24.00',
-    description: 'A thoughtful guide to the emotional discipline and clear process behind better trading decisions.',
-    bio: 'Dr Elvis Justice Bedi is a trader, educator, and author dedicated to helping people understand the psychology behind financial decision-making. Through his work in trading and education, he explores discipline, emotional control, self-awareness, and the habits that turn uncertainty into a more thoughtful process.',
-    image: '/practical-trading-psychology.png',
-    pdf_url: '',
-    featured: true,
-  },
-  {
-    id: 'the-art-of-attention',
-    title: 'The Art of Attention',
-    author: 'Mara Linde',
-    author_image: '/elvis.jpeg',
-    category: 'Mindfulness',
-    price: '$22.00',
-    description: 'How to stay with the things that matter in a noisy, fast-moving world.',
-    bio: 'Mara Linde writes on focus, culture, and quiet disciplines. Her work helps readers step back from digital distraction to cultivate sustained presence.',
-    image: '/just.jpeg',
-    pdf_url: '',
-    featured: false,
-  },
-  {
-    id: 'small-courage',
-    title: 'Small Courage',
-    author: 'Daniel Vance',
-    author_image: '/elvis.jpeg',
-    category: 'Personal Growth',
-    price: '$20.00',
-    description: 'Everyday brave decisions that quietly compound over a lifetime.',
-    bio: 'Daniel Vance is an essayist and mentor exploring how micro-commitments shape character, resilience, and personal transformation over time.',
-    image: '/elvis.jpeg',
-    pdf_url: '',
-    featured: false,
-  }
-]
+// Initial default seed books (empty for production)
+export const DEFAULT_BOOKS: any[] = []
+
 
 export const DEFAULT_LAUNCH = {
   id: 'practical-trading-psychology-launch',

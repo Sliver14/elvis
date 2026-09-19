@@ -4,12 +4,10 @@ import Link from 'next/link'
 import { ArrowLeft, ArrowRight, ShoppingBag } from 'lucide-react'
 import { useStore } from '@/components/store-provider'
 import { Cover } from '@/components/book-cover'
-import { DEFAULT_BOOKS } from '@/lib/types'
-
 export function BookDetailsView({ bookId }: { bookId: string }) {
   const { booksList, addToCart } = useStore()
 
-  const book = booksList.find((b) => b.id === bookId) || DEFAULT_BOOKS.find((b) => b.id === bookId)
+  const book = booksList.find((b) => b.id === bookId)
 
   if (!book) {
     return (
@@ -59,7 +57,7 @@ export function BookDetailsView({ bookId }: { bookId: string }) {
                 <h3>{book.author}</h3>
               </div>
             </div>
-            <p>{book.bio || DEFAULT_BOOKS[0].bio}</p>
+            <p>{book.bio || ''}</p>
           </div>
           <div className="detail-purchase">
             <strong>{book.price}</strong>

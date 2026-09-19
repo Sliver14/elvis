@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDb, DEFAULT_BOOKS } from '@/lib/db'
+import { getDb } from '@/lib/db'
 import { isAuthorizedAdmin } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       stats: {
-        booksCount: DEFAULT_BOOKS.length,
+        booksCount: 0,
         subscribersCount: 0,
         monthlyVisits: 0,
         salesCount: 0,

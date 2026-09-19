@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
-import { DEFAULT_BOOKS } from '@/lib/types'
 
 export function AboutView() {
   return (
@@ -61,30 +60,30 @@ export function AboutView() {
           <h2>Meet the <em>author.</em></h2>
         </div>
         <div className="author-bio-grid">
-          {DEFAULT_BOOKS.slice(0, 1).map((book) => (
-            <article className="author-bio" key={book.author}>
-              <div
-                className="author-photo-frame author-bio-photo-frame"
+          <article className="author-bio">
+            <div
+              className="author-photo-frame author-bio-photo-frame"
+              onContextMenu={(e) => e.preventDefault()}
+            >
+              <img
+                src="/elvis.jpeg"
+                alt="Dr Elvis Justice Bedi"
+                draggable={false}
                 onContextMenu={(e) => e.preventDefault()}
-              >
-                <img
-                  src={book.authorImage || '/elvis.jpeg'}
-                  alt={book.author}
-                  draggable={false}
-                  onContextMenu={(e) => e.preventDefault()}
-                />
-                <div className="cover-protection-shield" aria-hidden="true" />
-              </div>
-              <div>
-                <p className="author-number">01</p>
-                <h3>{book.author}</h3>
-                <p>{book.bio}</p>
-                <Link href={`/books/${book.id}`} className="text-button">
-                  Read their book <ArrowRight />
-                </Link>
-              </div>
-            </article>
-          ))}
+              />
+              <div className="cover-protection-shield" aria-hidden="true" />
+            </div>
+            <div>
+              <p className="author-number">01</p>
+              <h3>Dr Elvis Justice Bedi</h3>
+              <p>
+                Dr Elvis Justice Bedi is a trader, educator, and author dedicated to helping people understand the psychology behind financial decision-making. Through his work in trading and education, he explores discipline, emotional control, self-awareness, and the habits that turn uncertainty into a more thoughtful process. Practical Trading Psychology brings together his belief that lasting progress begins with mastering the mind before pursuing the outcome.
+              </p>
+              <Link href="/launch" className="text-button">
+                Explore the Book Launch <ArrowRight />
+              </Link>
+            </div>
+          </article>
         </div>
       </section>
     </main>

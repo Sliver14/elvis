@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDb, DEFAULT_BOOKS } from '@/lib/db'
+import { getDb } from '@/lib/db'
 import { isAuthorizedAdmin } from '@/lib/auth'
 
 export async function GET() {
   const sql = getDb()
   if (!sql) {
-    return NextResponse.json({ success: true, books: DEFAULT_BOOKS, source: 'fallback' })
+    return NextResponse.json({ success: true, books: [], source: 'fallback' })
   }
 
   try {
@@ -17,7 +17,7 @@ export async function GET() {
     return NextResponse.json({ success: true, books: books || [], source: 'neon' })
   } catch (error: any) {
     console.error('Fetch books error:', error)
-    return NextResponse.json({ success: true, books: DEFAULT_BOOKS, source: 'fallback_error', error: error?.message })
+    return NextResponse.json({ success: true, books: [], source: 'fallback_error', error: error?.message })
   }
 }
 

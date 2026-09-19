@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { CheckCircle2, X, ShoppingBag } from 'lucide-react'
-import { Book, BookLaunch, DEFAULT_BOOKS, DEFAULT_LAUNCH } from '@/lib/types'
+import { Book, BookLaunch, DEFAULT_LAUNCH } from '@/lib/types'
 import { CartDrawer } from './cart-drawer'
 
 interface StoreContextType {
@@ -35,7 +35,7 @@ export function useStore() {
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<{ book: Book; quantity: number }[]>([])
   const [cartOpen, setCartOpen] = useState(false)
-  const [booksList, setBooksList] = useState<Book[]>(DEFAULT_BOOKS)
+  const [booksList, setBooksList] = useState<Book[]>([])
   const [activeLaunch, setActiveLaunch] = useState<BookLaunch>(DEFAULT_LAUNCH)
   const [orderSuccessRef, setOrderSuccessRef] = useState('')
 
