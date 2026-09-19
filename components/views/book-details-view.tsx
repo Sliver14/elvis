@@ -82,25 +82,28 @@ export function BookDetailsView({ bookId }: { bookId: string }) {
         </div>
         <div className="book-grid related-book-grid">
           {recommendations.map((recommended) => (
-            <article className="book-card" key={recommended.id}>
-              <Link
-                href={`/books/${recommended.id}`}
-                className="related-book-cover"
-                aria-label={`View ${recommended.title}`}
-              >
-                <Cover book={recommended} />
-              </Link>
-              <div className="book-card-meta">
-                <h3>{recommended.title}</h3>
-                <p>{recommended.author}</p>
-                <div className="book-card-actions">
-                  <span>{recommended.price}</span>
-                  <button className="button button-dark add-book-button" onClick={() => addToCart(recommended)}>
-                    <ShoppingBag /> Add to cart
-                  </button>
+            <Link
+              href={`/books/${recommended.id}`}
+              key={recommended.id}
+              className="book-card-link"
+            >
+              <article className="book-card">
+                <div className="card-cover-wrap">
+                  <Cover book={recommended} />
+                  <span className="card-category">{recommended.category}</span>
                 </div>
-              </div>
-            </article>
+                <div className="book-card-meta">
+                  <h3>{recommended.title}</h3>
+                  <p>{recommended.author}</p>
+                  <div>
+                    <span>{recommended.price}</span>
+                    <span className="round-arrow" aria-label={`View ${recommended.title}`}>
+                      <ArrowRight />
+                    </span>
+                  </div>
+                </div>
+              </article>
+            </Link>
           ))}
         </div>
       </section>
