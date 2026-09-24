@@ -1074,7 +1074,7 @@ img,
 
 .countdown-section h2 {
   font-size: 43px;
-  max-width: 430px;
+  max-width: 560px;
   color: var(--white);
 }
 
@@ -1719,7 +1719,7 @@ img,
   background: rgba(40, 24, 16, 0.45);
   backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
-  z-index: 25;
+  z-index: 1000;
   cursor: pointer;
   animation: cartFadeIn .2s ease;
 }
@@ -1735,7 +1735,7 @@ img,
   width: min(440px, 100%);
   background: var(--paper);
   border-left: 1px solid var(--line);
-  z-index: 30;
+  z-index: 1001;
   box-shadow: -15px 0 45px rgba(40, 24, 16, 0.16);
   padding: 30px;
   display: flex;
@@ -2934,7 +2934,7 @@ input, textarea, select {
   background: rgba(40, 24, 16, 0.6);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  z-index: 50;
+  z-index: 2000;
   display: grid;
   place-items: center;
   padding: 20px;

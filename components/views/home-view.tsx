@@ -49,7 +49,7 @@ export function HomeView() {
             </div>
             <div className="launch-date">
               <Clock3 />
-              <span>
+              <span suppressHydrationWarning>
                 Launching{' '}
                 {activeLaunch.launch_date ? new Date(activeLaunch.launch_date).toLocaleDateString('en-US', {
                   month: 'long',

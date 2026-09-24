@@ -104,11 +104,11 @@ export function LaunchView() {
       <section className="countdown-section">
         <div className="section-shell countdown-inner">
           <div>
-            <p className="eyebrow">The launch</p>
-            <h2>Make room for a better <em>process.</em></h2>
+            <p className="eyebrow">Countdown to Release</p>
+            <h2>Counting down to <em>{activeLaunch.title || 'the next release'}.</em></h2>
           </div>
           <div>
-            <p className="countdown-note">
+            <p className="countdown-note" suppressHydrationWarning>
               Launching{' '}
               {new Date(activeLaunch.launch_date).toLocaleDateString('en-US', {
                 month: 'long',
