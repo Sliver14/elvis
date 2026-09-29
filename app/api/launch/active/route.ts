@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
-import { getDb, DEFAULT_LAUNCH } from '@/lib/db'
+import { getDb, DEFAULT_LAUNCH, getPaymentSettings } from '@/lib/db'
 
 export async function GET() {
+  const settings = await getPaymentSettings()
   const sql = getDb()
   if (!sql) {
     return NextResponse.json({
@@ -10,6 +11,7 @@ export async function GET() {
         ...DEFAULT_LAUNCH,
         themes: typeof DEFAULT_LAUNCH.themes === 'string' ? JSON.parse(DEFAULT_LAUNCH.themes) : DEFAULT_LAUNCH.themes
       },
+      settings,
       source: 'fallback'
     })
   }
@@ -42,6 +44,7 @@ export async function GET() {
             author_image: DEFAULT_LAUNCH.author_image,
             themes: typeof item.themes === 'string' ? JSON.parse(item.themes) : item.themes
           },
+          settings,
           source: 'neon'
         })
       }
@@ -52,6 +55,7 @@ export async function GET() {
           ...DEFAULT_LAUNCH,
           themes: typeof DEFAULT_LAUNCH.themes === 'string' ? JSON.parse(DEFAULT_LAUNCH.themes) : DEFAULT_LAUNCH.themes
         },
+        settings,
         source: 'fallback'
       })
     }
@@ -66,6 +70,7 @@ export async function GET() {
         author_image: DEFAULT_LAUNCH.author_image,
         themes: typeof activeLaunch.themes === 'string' ? JSON.parse(activeLaunch.themes) : activeLaunch.themes
       },
+      settings,
       source: 'neon'
     })
   } catch (error: any) {
@@ -76,6 +81,7 @@ export async function GET() {
         ...DEFAULT_LAUNCH,
         themes: typeof DEFAULT_LAUNCH.themes === 'string' ? JSON.parse(DEFAULT_LAUNCH.themes) : DEFAULT_LAUNCH.themes
       },
+      settings,
       source: 'fallback_error',
       error: error?.message
     })

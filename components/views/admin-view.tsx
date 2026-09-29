@@ -3,38 +3,64 @@
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
+  Banknote,
   BarChart3,
+  Bitcoin,
   BookOpen,
   Check,
   CheckCircle2,
+  Clock,
+  Copy,
   Download,
+  ExternalLink,
+  Eye,
+  FileCheck,
+  FileText,
+  Filter,
+  Image as ImageIcon,
   KeyRound,
   Loader2,
   LockKeyhole,
   LogOut,
   Mail,
+  Maximize2,
+  Package,
   Plus,
+  RefreshCw,
   Rocket,
+  Search,
   Settings2,
+  ShieldAlert,
   ShieldCheck,
   ShoppingBag,
+  Smartphone,
+  Sparkles,
   Trash2,
+  Truck,
   UploadCloud,
   Users,
+  Wallet,
   X,
+  XCircle,
+  ZoomIn,
 } from 'lucide-react'
-import { Book, BookLaunch } from '@/lib/types'
+import {
+  Book,
+  BookLaunch,
+  BookFormat,
+  PaymentMethodType,
+  PaymentStatus,
+  FulfilmentStatus,
+  PaymentSettings,
+  BookPreview,
+  PreviewChapter,
+  DEFAULT_PAYMENT_SETTINGS,
+  DEFAULT_BOOK_PREVIEW,
+} from '@/lib/types'
 import { useStore } from '@/components/store-provider'
-
-function RefreshIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-    </svg>
-  )
-}
 
 function AdminLogin({ onLogin }: { onLogin: () => void }) {
   const [authMode, setAuthMode] = useState<'login' | 'forgot' | 'verify'>('login')
@@ -149,104 +175,91 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
         {/* MODE 1: LOGIN */}
         {authMode === 'login' && (
           <>
-            <h1>Welcome <em>back.</em></h1>
-            <p className="admin-auth-copy">
-              Sign in to manage your collection, dynamic launches, orders, and reader conversations.
-            </p>
-            {successMsg && <p className="admin-success-banner"><CheckCircle2 /> {successMsg}</p>}
+            <h2>Administrator Portal</h2>
+            <p className="admin-auth-sub">Enter your credentials to access the book launch and presale control center.</p>
             {error && <p className="admin-error-banner">{error}</p>}
+            {successMsg && <p className="admin-success-banner"><CheckCircle2 /> {successMsg}</p>}
             <form onSubmit={handleSignIn} className="admin-auth-form">
               <label>
-                Email address
+                Admin Email
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@elvisjusticebooks.com"
+                  placeholder="hello@elvisjusticebooks.com"
                 />
               </label>
               <label>
-                <div className="admin-auth-header-row">
-                  <span>Password</span>
-                  <button
-                    type="button"
-                    className="admin-forgot-btn"
-                    onClick={() => {
-                      setError('')
-                      setSuccessMsg('')
-                      setAuthMode('forgot')
-                    }}
-                  >
-                    Forgot password?
-                  </button>
-                </div>
+                Password
                 <input
                   type="password"
                   required
-                  minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder="Enter administrator password"
                 />
               </label>
               <button className="button button-dark" type="submit" disabled={loading}>
-                {loading ? <Loader2 className="animate-spin" /> : <>Sign in <ArrowRight /></>}
+                {loading ? <Loader2 className="animate-spin" /> : <>Sign in to Portal <ArrowRight /></>}
               </button>
             </form>
-            <Link href="/" className="text-button">
-              <ArrowLeft /> Return to storefront
-            </Link>
+            <div className="admin-card-actions">
+              <button
+                className="admin-forgot-btn"
+                onClick={() => {
+                  setError('')
+                  setSuccessMsg('')
+                  setAuthMode('forgot')
+                }}
+              >
+                Forgot Password?
+              </button>
+            </div>
           </>
         )}
 
         {/* MODE 2: FORGOT PASSWORD */}
         {authMode === 'forgot' && (
           <>
-            <h1>Reset <em>password.</em></h1>
-            <p className="admin-auth-copy">
-              Enter your admin email. A secure 6-digit verification code will be sent via Resend to authorize your password change.
-            </p>
+            <h2>Reset Password</h2>
+            <p className="admin-auth-sub">We will dispatch a secure 6-digit OTP code to your registered email address.</p>
             {error && <p className="admin-error-banner">{error}</p>}
             <form onSubmit={handleRequestResetCode} className="admin-auth-form">
               <label>
-                Admin email address
+                Admin Email Address
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@elvisjusticebooks.com"
+                  placeholder="hello@elvisjusticebooks.com"
                 />
               </label>
-              <p className="admin-info-note">
-                <ShieldCheck style={{ width: 14, height: 14, verticalAlign: 'middle', marginRight: 4 }} />
-                Code will be delivered to <strong>{email || 'your admin email'}</strong>
-              </p>
               <button className="button button-dark" type="submit" disabled={loading}>
                 {loading ? <Loader2 className="animate-spin" /> : <>Send Verification Code <ArrowRight /></>}
               </button>
             </form>
-            <button
-              className="text-button"
-              onClick={() => {
-                setError('')
-                setSuccessMsg('')
-                setAuthMode('login')
-              }}
-            >
-              <ArrowLeft /> Back to sign in
-            </button>
+            <div className="admin-card-actions">
+              <button
+                className="text-button"
+                onClick={() => {
+                  setError('')
+                  setSuccessMsg('')
+                  setAuthMode('login')
+                }}
+              >
+                <ArrowLeft /> Back to sign in
+              </button>
+            </div>
           </>
         )}
 
-        {/* MODE 3: ENTER OTP & NEW PASSWORD */}
+        {/* MODE 3: VERIFY OTP */}
         {authMode === 'verify' && (
           <>
-            <h1>Enter <em>code.</em></h1>
-            <p className="admin-auth-copy">
-              A 6-digit verification code has been dispatched to <strong>{email}</strong>. Enter it below with your new password.
-            </p>
+            <h2>Enter 6-Digit Code</h2>
+            <p className="admin-auth-sub">Check your inbox for the OTP verification code dispatched to <strong>{email}</strong>.</p>
             {successMsg && <p className="admin-success-banner"><CheckCircle2 /> {successMsg}</p>}
             {error && <p className="admin-error-banner">{error}</p>}
             <form onSubmit={handleVerifyAndResetPassword} className="admin-auth-form">
@@ -321,11 +334,64 @@ const AUTHOR_BIO =
 
 function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const { booksList, refreshBooks, activeLaunch, refreshLaunch } = useStore()
-  const [activeTab, setActiveTab] = useState<'overview' | 'books' | 'launches' | 'orders' | 'messages' | 'subscribers'>('overview')
+  
+  // Navigation Tabs
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'presales' | 'payment-settings' | 'preview-editor' | 'audit-logs' | 'launches' | 'books' | 'messages' | 'subscribers'
+  >('overview')
+
   const [stats, setStats] = useState<any>(null)
   const [recentActivity, setRecentActivity] = useState<any[]>([])
 
-  // Launches
+  // Presales State & Orders
+  const [presalesList, setPresalesList] = useState<any[]>([])
+  const [presaleStats, setPresaleStats] = useState<any>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterPaymentStatus, setFilterPaymentStatus] = useState('all')
+  const [filterFulfilmentStatus, setFilterFulfilmentStatus] = useState('all')
+  const [filterPaymentMethod, setFilterPaymentMethod] = useState('all')
+  const [filterFormat, setFilterFormat] = useState('all')
+  const [selectedOrder, setSelectedOrder] = useState<any | null>(null)
+
+  // Receipt Inspection & Lightbox Modal
+  const [viewingReceiptModal, setViewingReceiptModal] = useState<{
+    url: string
+    orderNumber?: string
+    customerName?: string
+    referenceNumber?: string
+    submittedAt?: string
+  } | null>(null)
+
+  // Payment Verification Modals
+  const [orderToVerify, setOrderToVerify] = useState<any | null>(null)
+  const [verifyNote, setVerifyNote] = useState('')
+  const [verifyingPayment, setVerifyingPayment] = useState(false)
+
+  // Payment Rejection Modal
+  const [orderToReject, setOrderToReject] = useState<any | null>(null)
+  const [rejectionReason, setRejectionReason] = useState('')
+  const [rejectingPayment, setRejectingPayment] = useState(false)
+
+  // Fulfilment Update Modal
+  const [orderForFulfilment, setOrderForFulfilment] = useState<any | null>(null)
+  const [newFulfilmentStatus, setNewFulfilmentStatus] = useState<FulfilmentStatus>('Confirmed')
+  const [trackingReference, setTrackingReference] = useState('')
+  const [courierName, setCourierName] = useState('SpeedPost / DHL')
+  const [updatingFulfilment, setUpdatingFulfilment] = useState(false)
+
+  // Payment Settings State
+  const [paymentSettings, setPaymentSettings] = useState<PaymentSettings>(DEFAULT_PAYMENT_SETTINGS)
+  const [savingSettings, setSavingSettings] = useState(false)
+
+  // Preview Editor State
+  const [bookPreview, setBookPreview] = useState<BookPreview>(DEFAULT_BOOK_PREVIEW)
+  const [editingChapter, setEditingChapter] = useState<PreviewChapter | null>(null)
+  const [savingPreview, setSavingPreview] = useState(false)
+
+  // Audit Logs
+  const [auditLogs, setAuditLogs] = useState<any[]>([])
+
+  // Launches & Books
   const [launchesList, setLaunchesList] = useState<BookLaunch[]>([])
   const [selectedLaunchRegs, setSelectedLaunchRegs] = useState<any[] | null>(null)
   const [selectedLaunchTitle, setSelectedLaunchTitle] = useState('')
@@ -338,15 +404,12 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [newLaunchDesc, setNewLaunchDesc] = useState('A practical exploration of the mindset, discipline, and emotional control that shape a trader\'s journey.')
   const [newLaunchActive, setNewLaunchActive] = useState(true)
   const [savingNewLaunch, setSavingNewLaunch] = useState(false)
-  const [activatingLaunchId, setActivatingLaunchId] = useState<string | null>(null)
-  const [loadingRegsId, setLoadingRegsId] = useState<string | null>(null)
 
   // Edit Launch State
   const [showEditLaunchModal, setShowEditLaunchModal] = useState(false)
   const [editLaunchId, setEditLaunchId] = useState('')
   const [editLaunchTitle, setEditLaunchTitle] = useState('')
   const [editLaunchTagline, setEditLaunchTagline] = useState('')
-  const [editLaunchIntro, setEditLaunchIntro] = useState('')
   const [editLaunchDesc, setEditLaunchDesc] = useState('')
   const [editLaunchThemes, setEditLaunchThemes] = useState('')
   const [editLaunchCover, setEditLaunchCover] = useState('')
@@ -365,20 +428,18 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [uploadingImage, setUploadingImage] = useState(false)
   const [savingBook, setSavingBook] = useState(false)
 
-  // Data lists
-  const [ordersList, setOrdersList] = useState<any[]>([])
+  // Other Lists
   const [messagesList, setMessagesList] = useState<any[]>([])
   const [subscribersList, setSubscribersList] = useState<any[]>([])
   const [loadingData, setLoadingData] = useState(false)
-  const [refreshing, setRefreshing] = useState(false)
   const [toastMsg, setToastMsg] = useState('')
 
   const showToast = (msg: string) => {
     setToastMsg(msg)
-    setTimeout(() => setToastMsg(''), 4000)
+    setTimeout(() => setToastMsg(''), 4500)
   }
 
-  // Change Password State
+  // Change Password
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false)
   const [currPassword, setCurrPassword] = useState('')
   const [newAdminPassword, setNewAdminPassword] = useState('')
@@ -386,26 +447,262 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [passLoading, setPassLoading] = useState(false)
   const [passError, setPassError] = useState('')
 
-  // Delete Book State & Confirmation Modal
+  // Delete Book State
   const [bookToDelete, setBookToDelete] = useState<{ id: string; title: string } | null>(null)
   const [deletingBook, setDeletingBook] = useState(false)
 
-  // Close modals when user presses Escape
+  // Load All Admin Data
+  const loadAdminData = async () => {
+    setLoadingData(true)
+    try {
+      const [
+        statsRes,
+        presalesRes,
+        launchesRes,
+        msgsRes,
+        subsRes,
+        settingsRes,
+        previewRes,
+        auditRes,
+      ] = await Promise.all([
+        fetch('/api/admin/stats'),
+        fetch(`/api/admin/presales?search=${encodeURIComponent(searchQuery)}&payment_status=${filterPaymentStatus}&fulfilment_status=${filterFulfilmentStatus}&payment_method=${filterPaymentMethod}&book_format=${filterFormat}`),
+        fetch('/api/admin/launches'),
+        fetch('/api/admin/messages'),
+        fetch('/api/admin/subscribers'),
+        fetch('/api/admin/settings/payments'),
+        fetch('/api/admin/preview'),
+        fetch('/api/admin/audit-logs'),
+      ])
+
+      const statsData = await statsRes.json()
+      if (statsData.success) {
+        setStats(statsData.stats)
+        setRecentActivity(statsData.recentActivity || [])
+      }
+
+      const presalesData = await presalesRes.json()
+      if (presalesData.success) {
+        setPresalesList(presalesData.orders || [])
+        setPresaleStats(presalesData.stats || null)
+      }
+
+      const launchesData = await launchesRes.json()
+      if (launchesData.success) setLaunchesList(launchesData.launches || [])
+
+      const msgsData = await msgsRes.json()
+      if (msgsData.success) setMessagesList(msgsData.messages || [])
+
+      const subsData = await subsRes.json()
+      if (subsData.success) setSubscribersList(subsData.subscribers || [])
+
+      const settingsData = await settingsRes.json()
+      if (settingsData.success && settingsData.settings) {
+        setPaymentSettings(settingsData.settings)
+      }
+
+      const previewData = await previewRes.json()
+      if (previewData.success && previewData.preview) {
+        setBookPreview(previewData.preview)
+      }
+
+      const auditData = await auditRes.json()
+      if (auditData.success && auditData.logs) {
+        setAuditLogs(auditData.logs)
+      }
+    } catch (e) {
+      console.error('Error loading admin data:', e)
+    } finally {
+      setLoadingData(false)
+    }
+  }
+
+  useEffect(() => {
+    loadAdminData()
+  }, [searchQuery, filterPaymentStatus, filterFulfilmentStatus, filterPaymentMethod, filterFormat])
+
+  // Close receipt lightbox with ESC key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setShowAddBookModal(false)
-        setShowEditLaunchModal(false)
-        setShowNewLaunchModal(false)
-        setSelectedLaunchRegs(null)
-        setShowChangePasswordModal(false)
-        setBookToDelete(null)
+      if (e.key === 'Escape' && viewingReceiptModal) {
+        setViewingReceiptModal(null)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [viewingReceiptModal])
 
+  // Payment Verification Handler
+  const handleConfirmPayment = async () => {
+    if (!orderToVerify) return
+    setVerifyingPayment(true)
+    try {
+      const res = await fetch('/api/admin/payments/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order_id: orderToVerify.id,
+          reference_note: verifyNote,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        showToast(`Payment confirmed for Order #${orderToVerify.order_number}! Customer email sent.`)
+        setOrderToVerify(null)
+        setVerifyNote('')
+        if (selectedOrder?.id === orderToVerify.id) {
+          setSelectedOrder({ ...selectedOrder, payment_status: 'Confirmed' })
+        }
+        loadAdminData()
+      } else {
+        alert(data.error || 'Failed to verify payment')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Error connecting to server')
+    } finally {
+      setVerifyingPayment(false)
+    }
+  }
+
+  // Payment Rejection Handler
+  const handleRejectPayment = async () => {
+    if (!orderToReject) return
+    if (!rejectionReason.trim()) {
+      alert('Please specify a rejection reason for the customer.')
+      return
+    }
+    setRejectingPayment(true)
+    try {
+      const res = await fetch('/api/admin/payments/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order_id: orderToReject.id,
+          rejection_reason: rejectionReason,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        showToast(`Order #${orderToReject.order_number} marked as Rejected. Customer was emailed.`)
+        setOrderToReject(null)
+        setRejectionReason('')
+        if (selectedOrder?.id === orderToReject.id) {
+          setSelectedOrder({ ...selectedOrder, payment_status: 'Rejected', rejection_reason: rejectionReason })
+        }
+        loadAdminData()
+      } else {
+        alert(data.error || 'Failed to reject payment')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Error connecting to server')
+    } finally {
+      setRejectingPayment(false)
+    }
+  }
+
+  // Fulfilment Update Handler
+  const handleUpdateFulfilment = async () => {
+    if (!orderForFulfilment) return
+    setUpdatingFulfilment(true)
+    try {
+      const res = await fetch(`/api/admin/orders/${orderForFulfilment.id}/fulfilment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fulfilment_status: newFulfilmentStatus,
+          tracking_reference: trackingReference,
+          courier_name: courierName,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        showToast(`Fulfilment status for #${orderForFulfilment.order_number} updated to ${newFulfilmentStatus}.`)
+        setOrderForFulfilment(null)
+        loadAdminData()
+      } else {
+        alert(data.error || 'Failed to update fulfilment')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Error')
+    } finally {
+      setUpdatingFulfilment(false)
+    }
+  }
+
+  // Save Payment & Presale Settings
+  const handleSavePaymentSettings = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSavingSettings(true)
+    try {
+      const res = await fetch('/api/admin/settings/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings: paymentSettings }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        showToast('Payment methods, crypto wallets, and presale pricing saved successfully!')
+      } else {
+        alert(data.error || 'Failed to save settings')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Network error')
+    } finally {
+      setSavingSettings(false)
+    }
+  }
+
+  // Save Book Preview Content
+  const handleSaveBookPreview = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSavingPreview(true)
+    try {
+      const res = await fetch('/api/admin/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ preview: bookPreview }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        showToast('Public book preview chapters and excerpts updated!')
+      } else {
+        alert(data.error || 'Failed to save preview')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Network error')
+    } finally {
+      setSavingPreview(false)
+    }
+  }
+
+  // Cloudinary Upload
+  const handleCloudinaryUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setUrlCallback: (url: string) => void
+  ) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingImage(true)
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (res.ok && data.url) {
+        setUrlCallback(data.url)
+        showToast('Image uploaded successfully!')
+      } else {
+        alert(data.error || 'Upload failed')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Upload error')
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
+  // Password Change
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
     if (newAdminPassword !== confirmAdminPassword) {
@@ -445,111 +742,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     }
   }
 
-  const loadAdminData = async () => {
-    setLoadingData(true)
-    try {
-      const [statsRes, launchesRes, ordersRes, msgsRes, subsRes] = await Promise.all([
-        fetch('/api/admin/stats'),
-        fetch('/api/admin/launches'),
-        fetch('/api/admin/orders'),
-        fetch('/api/admin/messages'),
-        fetch('/api/admin/subscribers'),
-      ])
-
-      const statsData = await statsRes.json()
-      if (statsData.success) {
-        setStats(statsData.stats)
-        setRecentActivity(statsData.recentActivity || [])
-      }
-
-      const launchesData = await launchesRes.json()
-      if (launchesData.success) setLaunchesList(launchesData.launches || [])
-
-      const ordersData = await ordersRes.json()
-      if (ordersData.success) setOrdersList(ordersData.orders || [])
-
-      const msgsData = await msgsRes.json()
-      if (msgsData.success) setMessagesList(msgsData.messages || [])
-
-      const subsData = await subsRes.json()
-      if (subsData.success) setSubscribersList(subsData.subscribers || [])
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoadingData(false)
-    }
-  }
-
-  useEffect(() => {
-    loadAdminData()
-  }, [])
-
-  const handleCloudinaryUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    setUrlCallback: (url: string) => void
-  ) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploadingImage(true)
-    const formData = new FormData()
-    formData.append('file', file)
-
-    try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      })
-      const data = await res.json()
-      if (res.ok && data.url) {
-        setUrlCallback(data.url)
-        showToast('Image uploaded to Cloudinary successfully!')
-      } else {
-        alert(data.error || 'Upload failed')
-      }
-    } catch (err: any) {
-      alert(err.message || 'Image upload failed')
-    } finally {
-      setUploadingImage(false)
-    }
-  }
-
-  const handleCreateBook = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newBookTitle || !newBookPrice) return
-    setSavingBook(true)
-    try {
-      const res = await fetch('/api/books', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: newBookTitle,
-          category: newBookCategory,
-          price: newBookPrice.startsWith('$') ? newBookPrice : `$${newBookPrice}`,
-          description: newBookDesc,
-          image: newBookCover || '/practical-trading-psychology.png',
-          pdf_url: newBookPdf,
-        }),
-      })
-      const data = await res.json()
-      if (res.ok && data.success) {
-        showToast(`Book "${newBookTitle}" added to collection!`)
-        setShowAddBookModal(false)
-        setNewBookTitle('')
-        setNewBookDesc('')
-        setNewBookCover('')
-        setNewBookPdf('')
-        refreshBooks()
-        loadAdminData()
-      } else {
-        alert(data.error || 'Failed to add book')
-      }
-    } catch (err: any) {
-      alert(err.message)
-    } finally {
-      setSavingBook(false)
-    }
-  }
-
+  // Delete Book
   const confirmDeleteBook = async () => {
     if (!bookToDelete) return
     setDeletingBook(true)
@@ -565,182 +758,32 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         alert(data.error || 'Failed to delete book')
       }
     } catch (err: any) {
-      alert(err.message || 'Connection error while deleting book.')
+      alert(err.message || 'Connection error')
     } finally {
       setDeletingBook(false)
     }
   }
 
-  const openEditLaunchModal = (launch: BookLaunch) => {
-    setEditLaunchId(launch.id)
-    setEditLaunchTitle(launch.title || '')
-    setEditLaunchTagline(launch.tagline || '')
-    setEditLaunchIntro(launch.intro || '')
-    setEditLaunchDesc(launch.description || '')
-    const themesStr = Array.isArray(launch.themes)
-      ? launch.themes.join(', ')
-      : typeof launch.themes === 'string'
-      ? (() => {
-          try {
-            const parsed = JSON.parse(launch.themes)
-            return Array.isArray(parsed) ? parsed.join(', ') : launch.themes
-          } catch {
-            return launch.themes
-          }
-        })()
-      : ''
-    setEditLaunchThemes(themesStr)
-    setEditLaunchCover(launch.cover_image || '')
-    try {
-      const d = new Date(launch.launch_date)
-      if (!isNaN(d.getTime())) {
-        const localIso = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
-        setEditLaunchDate(localIso)
-      } else {
-        setEditLaunchDate('2026-11-06T09:00')
-      }
-    } catch {
-      setEditLaunchDate('2026-11-06T09:00')
-    }
-    setEditLaunchActive(Boolean(launch.is_active))
-    setShowEditLaunchModal(true)
-  }
-
-  const handleCreateLaunch = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newLaunchTitle || !newLaunchDate) return
-
-    setSavingNewLaunch(true)
-    const themesArray = newLaunchThemes.split(',').map((t) => t.trim()).filter(Boolean)
-
-    try {
-      const res = await fetch('/api/admin/launches', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: newLaunchTitle,
-          author: AUTHOR_NAME,
-          author_bio: AUTHOR_BIO,
-          author_image: AUTHOR_IMAGE,
-          tagline: newLaunchTagline,
-          intro: newLaunchDesc,
-          description: newLaunchDesc,
-          themes: themesArray,
-          cover_image: newLaunchCover || '/practical-trading-psychology.png',
-          launch_date: new Date(newLaunchDate).toISOString(),
-          is_active: newLaunchActive,
-        }),
-      })
-      const data = await res.json()
-      if (res.ok && data.success) {
-        showToast(`New Book Launch "${newLaunchTitle}" created and activated!`)
-        setShowNewLaunchModal(false)
-        refreshLaunch()
-        loadAdminData()
-      } else {
-        alert(data.error || 'Failed to create launch')
-      }
-    } catch (err: any) {
-      alert(err.message)
-    } finally {
-      setSavingNewLaunch(false)
-    }
-  }
-
-  const handleUpdateLaunch = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!editLaunchTitle || !editLaunchDate || !editLaunchId) return
-
-    setSavingLaunch(true)
-    const themesArray = editLaunchThemes.split(',').map((t) => t.trim()).filter(Boolean)
-
-    try {
-      const res = await fetch('/api/admin/launches', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: editLaunchId,
-          title: editLaunchTitle,
-          author: AUTHOR_NAME,
-          author_bio: AUTHOR_BIO,
-          author_image: AUTHOR_IMAGE,
-          tagline: editLaunchTagline,
-          intro: editLaunchIntro || editLaunchDesc,
-          description: editLaunchDesc,
-          themes: themesArray,
-          cover_image: editLaunchCover || '/practical-trading-psychology.png',
-          launch_date: new Date(editLaunchDate).toISOString(),
-          is_active: editLaunchActive,
-        }),
-      })
-      const data = await res.json()
-      if (res.ok && data.success) {
-        showToast(`Book Launch "${editLaunchTitle}" updated successfully!`)
-        setShowEditLaunchModal(false)
-        refreshLaunch()
-        loadAdminData()
-      } else {
-        alert(data.error || 'Failed to update launch')
-      }
-    } catch (err: any) {
-      alert(err.message || 'Failed to update launch')
-    } finally {
-      setSavingLaunch(false)
-    }
-  }
-
-  const handleToggleLaunch = async (launchId: string, title: string) => {
-    setActivatingLaunchId(launchId)
-    try {
-      const res = await fetch('/api/admin/launches', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ launch_id: launchId, is_active: true }),
-      })
-      if (res.ok) {
-        showToast(`"${title}" is now the active Book Launch on storefront!`)
-        refreshLaunch()
-        loadAdminData()
-      }
-    } catch (err: any) {
-      alert(err.message)
-    } finally {
-      setActivatingLaunchId(null)
-    }
-  }
-
-  const handleViewRegistrations = async (launchId: string, title: string) => {
-    setSelectedLaunchTitle(title)
-    setLoadingRegsId(launchId)
-    try {
-      const res = await fetch(`/api/admin/launches/${launchId}/registrations`)
-      const data = await res.json()
-      if (data.success) {
-        setSelectedLaunchRegs(data.registrations || [])
-      }
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoadingRegsId(null)
-    }
-  }
-
-  const exportCsv = (rows: any[], filename: string) => {
+  // CSV Export Utility
+  const exportCsv = (rows: any[], filename = 'export.csv') => {
     if (!rows.length) return
-    const headers = Object.keys(rows[0]).join(',')
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [
-        headers,
-        ...rows.map((r) =>
-          Object.values(r)
-            .map((v) => `"${String(v).replace(/"/g, '""')}"`)
-            .join(',')
-        ),
-      ].join('\n')
-    const encodedUri = encodeURI(csvContent)
+    const keys = Object.keys(rows[0])
+    const csvContent = [
+      keys.join(','),
+      ...rows.map((row) =>
+        keys
+          .map((k) => {
+            const val = typeof row[k] === 'object' ? JSON.stringify(row[k]) : String(row[k] ?? '')
+            return `"${val.replace(/"/g, '""')}"`
+          })
+          .join(',')
+      ),
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
+    link.href = url
     link.setAttribute('download', filename)
     document.body.appendChild(link)
     link.click()
@@ -748,188 +791,1074 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   }
 
   return (
-    <main className="admin-page section-shell">
+    <main className="admin-dashboard-page">
+      {/* Toast Notification */}
       {toastMsg && (
-        <div className="admin-toast-banner">
-          <CheckCircle2 /> {toastMsg}
+        <div className="admin-toast">
+          <CheckCircle2 size={16} /> {toastMsg}
         </div>
       )}
 
-      <div className="admin-topbar">
-        <div>
-          <p className="eyebrow">Serendipity / Elvis Admin Control Center</p>
-          <h1>Good morning, <em>Elvis.</em></h1>
+      {/* Top Admin Header */}
+      <header className="admin-header">
+        <div className="admin-header-title">
+          <span className="wordmark-mark">S</span>
+          <div>
+            <h1>Dr. Elvis Justice Bedi Admin Portal</h1>
+            <p className="admin-sub">
+              Book Launch, Presale Management & Verified Payment Engine · v2.0
+            </p>
+          </div>
         </div>
-        <div className="admin-topbar-actions">
+        <div className="admin-header-controls">
           <button
-            className="text-button"
-            disabled={refreshing}
-            onClick={async () => {
-              setRefreshing(true)
-              try {
-                await Promise.all([refreshBooks(), refreshLaunch(), loadAdminData()])
-                showToast('Storefront & dashboard data refreshed!')
-              } finally {
-                setRefreshing(false)
-              }
-            }}
+            className="button button-light btn-sm"
+            onClick={loadAdminData}
+            disabled={loadingData}
           >
-            {refreshing ? <Loader2 className="animate-spin" size={14} /> : <RefreshIcon />} {refreshing ? 'Refreshing...' : 'Refresh'}
+            <RefreshCw size={14} className={loadingData ? 'animate-spin' : ''} /> Refresh Data
           </button>
           <button
             className="button button-light btn-sm"
-            onClick={() => {
-              setPassError('')
-              setShowChangePasswordModal(true)
-            }}
+            onClick={() => setShowChangePasswordModal(true)}
           >
-            <KeyRound /> Change Password
+            <KeyRound size={14} /> Security & Password
           </button>
-          <button className="button button-dark" onClick={onLogout}>
-            <LogOut /> Sign out
+          <button className="button button-dark btn-sm" onClick={onLogout}>
+            <LogOut size={14} /> Sign out
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Admin Navigation Tabs */}
-      <div className="admin-tabs">
-        <button className={activeTab === 'overview' ? 'is-active' : ''} onClick={() => setActiveTab('overview')}>
-          <BarChart3 /> Overview
+      <nav className="admin-tabs-nav" aria-label="Admin Sections">
+        <button
+          className={activeTab === 'overview' ? 'is-active' : ''}
+          onClick={() => setActiveTab('overview')}
+        >
+          <BarChart3 size={15} /> Overview & Analytics
         </button>
-        <button className={activeTab === 'books' ? 'is-active' : ''} onClick={() => setActiveTab('books')}>
-          <BookOpen /> Books ({booksList.length})
+        <button
+          className={activeTab === 'presales' ? 'is-active' : ''}
+          onClick={() => setActiveTab('presales')}
+        >
+          <ShoppingBag size={15} /> Presale Orders ({presalesList.length})
+          {presaleStats?.under_review > 0 && (
+            <span className="tab-pill-badge">{presaleStats.under_review}</span>
+          )}
         </button>
-        <button className={activeTab === 'launches' ? 'is-active' : ''} onClick={() => setActiveTab('launches')}>
-          <Rocket /> Book Launches ({launchesList.length})
+        <button
+          className={activeTab === 'payment-settings' ? 'is-active' : ''}
+          onClick={() => setActiveTab('payment-settings')}
+        >
+          <Wallet size={15} /> Payment Methods & Pricing
         </button>
-        <button className={activeTab === 'orders' ? 'is-active' : ''} onClick={() => setActiveTab('orders')}>
-          <ShoppingBag /> Orders ({ordersList.length})
+        <button
+          className={activeTab === 'preview-editor' ? 'is-active' : ''}
+          onClick={() => setActiveTab('preview-editor')}
+        >
+          <BookOpen size={15} /> Book Preview Editor
         </button>
-        <button className={activeTab === 'messages' ? 'is-active' : ''} onClick={() => setActiveTab('messages')}>
-          <Mail /> Inquiries ({messagesList.length})
+        <button
+          className={activeTab === 'audit-logs' ? 'is-active' : ''}
+          onClick={() => setActiveTab('audit-logs')}
+        >
+          <ShieldCheck size={15} /> Audit Trail ({auditLogs.length})
         </button>
-        <button className={activeTab === 'subscribers' ? 'is-active' : ''} onClick={() => setActiveTab('subscribers')}>
-          <Users /> Reading List ({subscribersList.length})
+        <button
+          className={activeTab === 'launches' ? 'is-active' : ''}
+          onClick={() => setActiveTab('launches')}
+        >
+          <Rocket size={15} /> Book Launches ({launchesList.length})
         </button>
-      </div>
+        <button
+          className={activeTab === 'books' ? 'is-active' : ''}
+          onClick={() => setActiveTab('books')}
+        >
+          <BookOpen size={15} /> Books Catalog ({booksList.length})
+        </button>
+        <button
+          className={activeTab === 'messages' ? 'is-active' : ''}
+          onClick={() => setActiveTab('messages')}
+        >
+          <Mail size={15} /> Messages ({messagesList.length})
+        </button>
+        <button
+          className={activeTab === 'subscribers' ? 'is-active' : ''}
+          onClick={() => setActiveTab('subscribers')}
+        >
+          <Users size={15} /> Subscribers ({subscribersList.length})
+        </button>
+      </nav>
 
-      {/* TAB: OVERVIEW */}
+      {/* ================= TAB: OVERVIEW ================= */}
       {activeTab === 'overview' && (
-        <>
+        <div className="admin-tab-content">
+          {/* Key Financial & Order Metrics */}
           <div className="admin-stats">
-            <article>
-              <span><BookOpen /></span>
-              <p>Books in collection</p>
-              <strong>{String(stats?.booksCount !== undefined ? stats.booksCount : booksList.length).padStart(2, '0')}</strong>
-              <small>Live catalog</small>
+            <article className="stat-card">
+              <span className="stat-icon"><ShoppingBag /></span>
+              <p>Total Presale Orders</p>
+              <strong>{presaleStats?.total_orders ?? presalesList.length}</strong>
+              <small>All editions registered</small>
             </article>
-            <article>
-              <span><Users /></span>
-              <p>Reader subscribers</p>
-              <strong>{stats?.subscribersCount ?? subscribersList.length ?? 0}</strong>
-              <small>Active reading list</small>
+            <article className="stat-card stat-alert-card">
+              <span className="stat-icon stat-icon-amber"><AlertCircle /></span>
+              <p>Payments Awaiting Review</p>
+              <strong style={{ color: '#d97706' }}>{presaleStats?.under_review ?? 0}</strong>
+              <small>Action needed in Queue</small>
             </article>
-            <article>
-              <span><Rocket /></span>
-              <p>Launch registrants</p>
+            <article className="stat-card">
+              <span className="stat-icon stat-icon-green"><CheckCircle2 /></span>
+              <p>Confirmed Preorders</p>
+              <strong style={{ color: '#16a34a' }}>{presaleStats?.confirmed_count ?? 0}</strong>
+              <small>Verified payments</small>
+            </article>
+            <article className="stat-card stat-revenue-card">
+              <span className="stat-icon"><span className="admin-currency">$</span></span>
+              <p>Verified Net Revenue</p>
+              <strong>
+                ${Number(presaleStats?.verified_revenue ?? 0).toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </strong>
+              <small>Confirmed payments only</small>
+            </article>
+            <article className="stat-card">
+              <span className="stat-icon"><Users /></span>
+              <p>Waitlist Registrants</p>
               <strong>{stats?.registrationsCount ?? 0}</strong>
-              <small>Launch waitlist</small>
-            </article>
-            <article>
-              <span><ShoppingBag /></span>
-              <p>Completed orders</p>
-              <strong>{stats?.salesCount ?? ordersList.length ?? 0}</strong>
-              <small>Automated Paystack</small>
-            </article>
-            <article>
-              <span><span className="admin-currency">$</span></span>
-              <p>Total Revenue</p>
-              <strong>${Number(stats?.revenue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-              <small>Ebook sales</small>
+              <small>Launch notification list</small>
             </article>
           </div>
 
+          {/* Quick Review Queue + Launch Status */}
           <div className="admin-content-grid">
+            {/* Quick Action Payment Queue */}
             <section className="admin-panel">
               <div className="admin-panel-heading">
                 <div>
-                  <p className="eyebrow">Active Book Launch</p>
+                  <p className="eyebrow">Attention Required</p>
+                  <h2>Payment Verification Queue</h2>
+                </div>
+                <button className="button button-light btn-sm" onClick={() => setActiveTab('presales')}>
+                  View All Orders <ArrowRight size={13} />
+                </button>
+              </div>
+
+              {presalesList.filter((o) => o.payment_status === 'Proof Submitted' || o.payment_status === 'Under Review').length > 0 ? (
+                <div className="admin-table-wrap">
+                  <table className="admin-data-table">
+                    <thead>
+                      <tr>
+                        <th>Order</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                        <th>Payment Method</th>
+                        <th>Evidence</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {presalesList
+                        .filter((o) => o.payment_status === 'Proof Submitted' || o.payment_status === 'Under Review')
+                        .slice(0, 5)
+                        .map((o) => (
+                          <tr key={o.id}>
+                            <td><code>{o.order_number}</code></td>
+                            <td>
+                              <strong>{o.customer_name}</strong>
+                              <p className="table-sub">{o.customer_email}</p>
+                            </td>
+                            <td><strong>${Number(o.total_amount).toFixed(2)} USD</strong></td>
+                            <td style={{ textTransform: 'capitalize' }}>
+                              {o.payment_method?.replace(/_/g, ' ')}
+                            </td>
+                            <td>
+                              {o.proofs && o.proofs.length > 0 ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  <span className="badge-sent">
+                                    <FileCheck size={12} /> {o.proofs.length} Proof(s)
+                                  </span>
+                                  {o.proofs.some((p: any) => p.receipt_url) && (
+                                    <button
+                                      type="button"
+                                      className="table-receipt-chip"
+                                      title="Inspect receipt screenshot"
+                                      onClick={() => {
+                                        const p = o.proofs.find((item: any) => item.receipt_url)
+                                        if (p) {
+                                          setViewingReceiptModal({
+                                            url: p.receipt_url,
+                                            orderNumber: o.order_number,
+                                            customerName: o.customer_name,
+                                            referenceNumber: p.reference_number || p.transaction_hash,
+                                            submittedAt: p.submitted_at,
+                                          })
+                                        }
+                                      }}
+                                    >
+                                      <ImageIcon size={10} /> View Receipt
+                                    </button>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="table-sub">None</span>
+                              )}
+                            </td>
+                            <td>
+                              <div className="table-action-btns">
+                                <button
+                                  className="button button-dark btn-sm"
+                                  onClick={() => setOrderToVerify(o)}
+                                >
+                                  Verify
+                                </button>
+                                <button
+                                  className="button button-light btn-sm"
+                                  onClick={() => setOrderToReject(o)}
+                                >
+                                  Reject
+                                </button>
+                                <button
+                                  className="icon-button"
+                                  title="Inspect full details"
+                                  onClick={() => setSelectedOrder(o)}
+                                >
+                                  <Eye size={15} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="admin-empty-state-box">
+                  <CheckCircle2 size={32} color="#16a34a" />
+                  <p>All submitted payment proofs have been verified! No pending items in queue.</p>
+                </div>
+              )}
+            </section>
+
+            {/* Active Book Launch Summary Card */}
+            <section className="admin-panel">
+              <div className="admin-panel-heading">
+                <div>
+                  <p className="eyebrow">Current Featured Release</p>
                   <h2>{activeLaunch.title}</h2>
                 </div>
-                <div className="admin-header-actions">
-                  <button className="button button-dark btn-sm" onClick={() => openEditLaunchModal(activeLaunch)}>
-                    <Settings2 /> Edit Active Launch
-                  </button>
-                  <button className="button button-light btn-sm" onClick={() => setActiveTab('launches')}>
-                    All Launches <ArrowRight />
-                  </button>
-                </div>
+                <button className="button button-light btn-sm" onClick={() => setActiveTab('launches')}>
+                  Edit Launch <Settings2 size={13} />
+                </button>
               </div>
               <div className="active-launch-card">
                 <img src={activeLaunch.cover_image} alt={activeLaunch.title} className="active-launch-thumb" />
                 <div className="active-launch-body">
                   <div className="active-launch-top">
-                    <span className="launch-badge">CURRENT STOREFRONT LAUNCH</span>
-                    <button className="button button-light btn-sm" onClick={() => openEditLaunchModal(activeLaunch)}>
-                      <Settings2 /> Edit Details
-                    </button>
+                    <span className="launch-badge">LIVE STOREFRONT RELEASE</span>
                   </div>
                   <h3>{activeLaunch.title}</h3>
                   <p className="launch-card-meta">
-                    Author: {activeLaunch.author} · Target: {new Date(activeLaunch.launch_date).toLocaleDateString()}
+                    Target Date: <strong suppressHydrationWarning>{new Date(activeLaunch.launch_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong>
                   </p>
                   <p className="launch-card-tagline">{activeLaunch.tagline}</p>
                   <div className="active-launch-actions">
-                    <button className="button button-dark btn-sm" onClick={() => openEditLaunchModal(activeLaunch)}>
-                      <Settings2 /> Update Launch Information
+                    <button className="button button-dark btn-sm" onClick={() => setActiveTab('payment-settings')}>
+                      <Wallet size={13} /> Configure Pricing & MoMo/Crypto
                     </button>
-                    <button
-                      className="button button-light btn-sm"
-                      onClick={() => handleViewRegistrations(activeLaunch.id, activeLaunch.title)}
-                    >
-                      <Users /> View Waitlist ({activeLaunch.registrations_count || stats?.registrationsCount || 0})
+                    <button className="button button-light btn-sm" onClick={() => setActiveTab('preview-editor')}>
+                      <BookOpen size={13} /> Edit Preview Excerpt
                     </button>
                   </div>
                 </div>
               </div>
-            </section>
-
-            <section className="admin-panel admin-activity">
-              <div className="admin-panel-heading">
-                <div>
-                  <p className="eyebrow">Recent Activity</p>
-                  <h2>Live feed</h2>
-                </div>
-              </div>
-              {recentActivity && recentActivity.length > 0 ? (
-                recentActivity.map((item, idx) => (
-                  <div className="activity-item" key={idx}>
-                    <span>{item.type === 'order' ? <ShoppingBag /> : <Mail />}</span>
-                    <div>
-                      <strong>{item.title}</strong>
-                      <p>{item.desc}</p>
-                      <small>{item.time}</small>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="admin-empty-sub">No recent transactions or messages recorded yet.</p>
-              )}
             </section>
           </div>
-        </>
+        </div>
       )}
 
-      {/* TAB: BOOKS */}
-      {activeTab === 'books' && (
+      {/* ================= TAB: PRESALES ORDERS MANAGEMENT ================= */}
+      {activeTab === 'presales' && (
         <section className="admin-panel">
           <div className="admin-panel-heading">
             <div>
-              <p className="eyebrow">Storefront Collection</p>
-              <h2>Manage Books</h2>
+              <p className="eyebrow">Customer Presales</p>
+              <h2>Book Presale Orders & Fulfilment</h2>
             </div>
-            <button className="button button-dark" onClick={() => setShowAddBookModal(true)}>
-              <Plus /> Add new book
+            <div className="admin-header-actions">
+              <button
+                className="button button-light btn-sm"
+                onClick={() => exportCsv(presalesList, `presale-orders-${Date.now()}.csv`)}
+              >
+                <Download size={14} /> Export CSV
+              </button>
+            </div>
+          </div>
+
+          {/* Filters & Search Toolbar */}
+          <div className="admin-filters-bar">
+            <div className="filter-search-box">
+              <Search size={16} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by Order #, Customer Name, or Email..."
+              />
+              {searchQuery && (
+                <button className="icon-button" onClick={() => setSearchQuery('')}>
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+
+            <div className="filter-selects-row">
+              <label>
+                Payment:
+                <select value={filterPaymentStatus} onChange={(e) => setFilterPaymentStatus(e.target.value)}>
+                  <option value="all">All Payment Statuses</option>
+                  <option value="Awaiting Payment">Awaiting Payment</option>
+                  <option value="Proof Submitted">Proof Submitted</option>
+                  <option value="Under Review">Under Review</option>
+                  <option value="Confirmed">Confirmed (Paid)</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+              </label>
+
+              <label>
+                Fulfilment:
+                <select value={filterFulfilmentStatus} onChange={(e) => setFilterFulfilmentStatus(e.target.value)}>
+                  <option value="all">All Fulfilment</option>
+                  <option value="Pending Payment">Pending Payment</option>
+                  <option value="Confirmed">Confirmed</option>
+                  <option value="Awaiting Book Release">Awaiting Release</option>
+                  <option value="Ready for Delivery">Ready for Delivery</option>
+                  <option value="Delivered">Delivered</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </label>
+
+              <label>
+                Method:
+                <select value={filterPaymentMethod} onChange={(e) => setFilterPaymentMethod(e.target.value)}>
+                  <option value="all">All Methods</option>
+                  <option value="bank_transfer">Bank Wire</option>
+                  <option value="mtn_momo">MTN MoMo</option>
+                  <option value="vodafone_momo">Vodafone/Telecel</option>
+                  <option value="btc">Bitcoin (BTC)</option>
+                  <option value="usdt_trc20">USDT (TRC20)</option>
+                  <option value="usdt_erc20">USDT (ERC20)</option>
+                  <option value="usdt_bep20">USDT (BEP20)</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          {/* Orders Table */}
+          <div className="admin-table-wrap">
+            <table className="admin-data-table">
+              <thead>
+                <tr>
+                  <th>Order Number</th>
+                  <th>Customer</th>
+                  <th>Edition & Qty</th>
+                  <th>Amount</th>
+                  <th>Method</th>
+                  <th>Payment Status</th>
+                  <th>Fulfilment</th>
+                  <th>Order Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {presalesList.length ? (
+                  presalesList.map((o) => (
+                    <tr key={o.id || o.order_number}>
+                      <td>
+                        <strong className="table-order-num">{o.order_number}</strong>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
+                          <button
+                            type="button"
+                            className="table-mini-copy"
+                            title="Copy Access Token link"
+                            onClick={() => {
+                              const url = `${window.location.origin}/order/${o.access_token}`
+                              navigator.clipboard.writeText(url)
+                              showToast('Order tracking link copied to clipboard!')
+                            }}
+                          >
+                            <Copy size={11} /> Copy Link
+                          </button>
+                          {o.proofs && o.proofs.some((p: any) => p.receipt_url) && (
+                            <button
+                              type="button"
+                              className="table-receipt-chip"
+                              title="Inspect attached receipt screenshot"
+                              onClick={() => {
+                                const p = o.proofs.find((item: any) => item.receipt_url)
+                                if (p) {
+                                  setViewingReceiptModal({
+                                    url: p.receipt_url,
+                                    orderNumber: o.order_number,
+                                    customerName: o.customer_name,
+                                    referenceNumber: p.reference_number || p.transaction_hash,
+                                    submittedAt: p.submitted_at,
+                                  })
+                                }
+                              }}
+                            >
+                              <ImageIcon size={10} /> Inspect Receipt
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <strong>{o.customer_name}</strong>
+                        <p className="table-sub">{o.customer_email}</p>
+                        {o.country && <small className="table-country-tag">{o.country}</small>}
+                      </td>
+                      <td>
+                        <span className="table-format-badge">
+                          {o.book_format?.includes('printed') ? <Package size={12} /> : <BookOpen size={12} />}
+                          {o.book_format?.replace(/_/g, ' ')}
+                        </span>
+                        <small className="table-qty-sub">Qty: {o.quantity || 1}</small>
+                      </td>
+                      <td>
+                        <strong>${Number(o.total_amount).toFixed(2)}</strong>
+                        {Number(o.shipping_fee) > 0 && (
+                          <small className="table-sub" style={{ display: 'block' }}>
+                            (+$ {Number(o.shipping_fee).toFixed(2)} ship)
+                          </small>
+                        )}
+                      </td>
+                      <td style={{ textTransform: 'capitalize' }}>
+                        <span className="payment-method-chip">
+                          {o.payment_method?.replace(/_/g, ' ')}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`status-badge status-${o.payment_status.toLowerCase().replace(/\s+/g, '-')}`}>
+                          {o.payment_status}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="status-badge status-fulfilment">
+                          {o.fulfilment_status}
+                        </span>
+                      </td>
+                      <td suppressHydrationWarning>{new Date(o.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                      <td>
+                        <div className="table-action-btns">
+                          <button
+                            className="button button-light btn-sm"
+                            onClick={() => setSelectedOrder(o)}
+                          >
+                            <Eye size={13} /> View
+                          </button>
+                          {o.payment_status !== 'Confirmed' && (
+                            <button
+                              className="button button-dark btn-sm"
+                              onClick={() => setOrderToVerify(o)}
+                            >
+                              Verify
+                            </button>
+                          )}
+                          <button
+                            className="button button-light btn-sm"
+                            onClick={() => {
+                              setOrderForFulfilment(o)
+                              setNewFulfilmentStatus(o.fulfilment_status || 'Confirmed')
+                              setTrackingReference(o.tracking_reference || '')
+                              setCourierName(o.courier_name || 'Standard Express')
+                            }}
+                          >
+                            <Truck size={13} /> Fulfilment
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: 'var(--muted)' }}>
+                      No presale orders matched your filter criteria.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {/* ================= TAB: PAYMENT METHODS & PRICING CONFIGURATION ================= */}
+      {activeTab === 'payment-settings' && (
+        <section className="admin-panel">
+          <div className="admin-panel-heading">
+            <div>
+              <p className="eyebrow">Financial Setup</p>
+              <h2>Payment Methods, Wallets & Presale Pricing</h2>
+            </div>
+            <button
+              className="button button-dark"
+              disabled={savingSettings}
+              onClick={handleSavePaymentSettings}
+            >
+              {savingSettings ? <><Loader2 className="animate-spin" size={16} /> Saving...</> : <>Save All Settings <ArrowRight size={16} /></>}
+            </button>
+          </div>
+
+          <form onSubmit={handleSavePaymentSettings} className="settings-grid-layout">
+            {/* Presale Status & Release Date */}
+            <div className="settings-card">
+              <div className="settings-card-head">
+                <Rocket size={18} />
+                <h3>Presale Controls & Launch Date</h3>
+              </div>
+              <div className="form-row-2">
+                <label className="checkbox-label admin-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={paymentSettings.presale_active}
+                    onChange={(e) =>
+                      setPaymentSettings({ ...paymentSettings, presale_active: e.target.checked })
+                    }
+                  />
+                  <span><strong>Presale Active on Storefront</strong> (accepting pre-orders)</span>
+                </label>
+                <label className="checkbox-label admin-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={paymentSettings.early_delivery_enabled}
+                    onChange={(e) =>
+                      setPaymentSettings({ ...paymentSettings, early_delivery_enabled: e.target.checked })
+                    }
+                  />
+                  <span><strong>Enable Early eBook Access</strong> (allow download before launch date)</span>
+                </label>
+              </div>
+              <div className="form-row-3">
+                <label>
+                  Official Release / Delivery Date
+                  <input
+                    type="datetime-local"
+                    value={
+                      paymentSettings.expected_release_date
+                        ? new Date(new Date(paymentSettings.expected_release_date).getTime() - new Date().getTimezoneOffset() * 60000)
+                            .toISOString()
+                            .slice(0, 16)
+                        : '2026-11-06T09:00'
+                    }
+                    onChange={(e) =>
+                      setPaymentSettings({
+                        ...paymentSettings,
+                        expected_release_date: new Date(e.target.value).toISOString(),
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  Domestic Shipping Fee ($ USD)
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={paymentSettings.shipping_fee_domestic}
+                    onChange={(e) =>
+                      setPaymentSettings({
+                        ...paymentSettings,
+                        shipping_fee_domestic: Number(e.target.value),
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  International Shipping Fee ($ USD)
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={paymentSettings.shipping_fee_international}
+                    onChange={(e) =>
+                      setPaymentSettings({
+                        ...paymentSettings,
+                        shipping_fee_international: Number(e.target.value),
+                      })
+                    }
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Edition Pricing Setup */}
+            <div className="settings-card">
+              <div className="settings-card-head">
+                <BookOpen size={18} />
+                <h3>Book Formats & Pricing</h3>
+              </div>
+              <div className="formats-pricing-list">
+                {paymentSettings.formats.map((fmt, idx) => (
+                  <div key={fmt.format} className="format-pricing-row">
+                    <div className="format-name-col">
+                      <strong>{fmt.name}</strong>
+                      <small>{fmt.is_physical ? 'Physical Print Copy' : 'Instant Digital eBook'}</small>
+                    </div>
+                    <div className="format-price-input-col">
+                      <label>Price ($ USD):</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={fmt.price}
+                        onChange={(e) => {
+                          const newFormats = [...paymentSettings.formats]
+                          newFormats[idx].price = Number(e.target.value)
+                          setPaymentSettings({ ...paymentSettings, formats: newFormats })
+                        }}
+                      />
+                    </div>
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={fmt.available}
+                        onChange={(e) => {
+                          const newFormats = [...paymentSettings.formats]
+                          newFormats[idx].available = e.target.checked
+                          setPaymentSettings({ ...paymentSettings, formats: newFormats })
+                        }}
+                      />
+                      <span>Available</span>
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Bank Transfer Settings */}
+            <div className="settings-card">
+              <div className="settings-card-head">
+                <Banknote size={18} />
+                <h3>Bank Wire / Transfer Details</h3>
+              </div>
+              <div className="form-row-2">
+                <label>
+                  Bank Name
+                  <input
+                    type="text"
+                    value={paymentSettings.bank.bank_name}
+                    onChange={(e) =>
+                      setPaymentSettings({
+                        ...paymentSettings,
+                        bank: { ...paymentSettings.bank, bank_name: e.target.value },
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  Account Name
+                  <input
+                    type="text"
+                    value={paymentSettings.bank.account_name}
+                    onChange={(e) =>
+                      setPaymentSettings({
+                        ...paymentSettings,
+                        bank: { ...paymentSettings.bank, account_name: e.target.value },
+                      })
+                    }
+                  />
+                </label>
+              </div>
+              <div className="form-row-3">
+                <label>
+                  Account Number
+                  <input
+                    type="text"
+                    value={paymentSettings.bank.account_number}
+                    onChange={(e) =>
+                      setPaymentSettings({
+                        ...paymentSettings,
+                        bank: { ...paymentSettings.bank, account_number: e.target.value },
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  Routing / Sort Code
+                  <input
+                    type="text"
+                    value={paymentSettings.bank.routing_or_sort_code || ''}
+                    onChange={(e) =>
+                      setPaymentSettings({
+                        ...paymentSettings,
+                        bank: { ...paymentSettings.bank, routing_or_sort_code: e.target.value },
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  SWIFT / BIC
+                  <input
+                    type="text"
+                    value={paymentSettings.bank.swift_bic || ''}
+                    onChange={(e) =>
+                      setPaymentSettings({
+                        ...paymentSettings,
+                        bank: { ...paymentSettings.bank, swift_bic: e.target.value },
+                      })
+                    }
+                  />
+                </label>
+              </div>
+              <label>
+                Bank Payment Instructions for Customers
+                <textarea
+                  rows={2}
+                  value={paymentSettings.bank.instructions}
+                  onChange={(e) =>
+                    setPaymentSettings({
+                      ...paymentSettings,
+                      bank: { ...paymentSettings.bank, instructions: e.target.value },
+                    })
+                  }
+                />
+              </label>
+            </div>
+
+            {/* Mobile Money Settings (MTN & Vodafone) */}
+            <div className="settings-card">
+              <div className="settings-card-head">
+                <Smartphone size={18} />
+                <h3>Mobile Money Channels (MTN & Telecel/Vodafone)</h3>
+              </div>
+              <div className="form-row-2">
+                {/* MTN */}
+                <div className="momo-sub-box">
+                  <h4>MTN Mobile Money</h4>
+                  <label>
+                    Account Name
+                    <input
+                      type="text"
+                      value={paymentSettings.mtn_momo.account_name}
+                      onChange={(e) =>
+                        setPaymentSettings({
+                          ...paymentSettings,
+                          mtn_momo: { ...paymentSettings.mtn_momo, account_name: e.target.value },
+                        })
+                      }
+                    />
+                  </label>
+                  <label>
+                    MoMo Number / Merchant ID
+                    <input
+                      type="text"
+                      value={paymentSettings.mtn_momo.phone_or_merchant_id}
+                      onChange={(e) =>
+                        setPaymentSettings({
+                          ...paymentSettings,
+                          mtn_momo: { ...paymentSettings.mtn_momo, phone_or_merchant_id: e.target.value },
+                        })
+                      }
+                    />
+                  </label>
+                </div>
+
+                {/* Vodafone / Telecel */}
+                <div className="momo-sub-box">
+                  <h4>Telecel Cash / Vodafone Cash</h4>
+                  <label>
+                    Account Name
+                    <input
+                      type="text"
+                      value={paymentSettings.vodafone_momo.account_name}
+                      onChange={(e) =>
+                        setPaymentSettings({
+                          ...paymentSettings,
+                          vodafone_momo: { ...paymentSettings.vodafone_momo, account_name: e.target.value },
+                        })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Till / Number
+                    <input
+                      type="text"
+                      value={paymentSettings.vodafone_momo.phone_or_merchant_id}
+                      onChange={(e) =>
+                        setPaymentSettings({
+                          ...paymentSettings,
+                          vodafone_momo: { ...paymentSettings.vodafone_momo, phone_or_merchant_id: e.target.value },
+                        })
+                      }
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Cryptocurrency Wallets (BTC & USDT) */}
+            <div className="settings-card">
+              <div className="settings-card-head">
+                <Bitcoin size={18} />
+                <h3>Cryptocurrency Receiving Addresses</h3>
+              </div>
+              <label>
+                Bitcoin (BTC) Receiving Wallet Address (Mainnet)
+                <input
+                  type="text"
+                  value={paymentSettings.btc.wallet_address}
+                  onChange={(e) =>
+                    setPaymentSettings({
+                      ...paymentSettings,
+                      btc: { ...paymentSettings.btc, wallet_address: e.target.value },
+                    })
+                  }
+                />
+              </label>
+
+              <div className="form-row-3" style={{ marginTop: '12px' }}>
+                <label>
+                  Tether USDT Address (TRC20 - TRON)
+                  <input
+                    type="text"
+                    value={paymentSettings.usdt.trc20_address}
+                    onChange={(e) =>
+                      setPaymentSettings({
+                        ...paymentSettings,
+                        usdt: { ...paymentSettings.usdt, trc20_address: e.target.value },
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  Tether USDT Address (ERC20 - Ethereum)
+                  <input
+                    type="text"
+                    value={paymentSettings.usdt.erc20_address}
+                    onChange={(e) =>
+                      setPaymentSettings({
+                        ...paymentSettings,
+                        usdt: { ...paymentSettings.usdt, erc20_address: e.target.value },
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  Tether USDT Address (BEP20 - BSC)
+                  <input
+                    type="text"
+                    value={paymentSettings.usdt.bep20_address}
+                    onChange={(e) =>
+                      setPaymentSettings({
+                        ...paymentSettings,
+                        usdt: { ...paymentSettings.usdt, bep20_address: e.target.value },
+                      })
+                    }
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="settings-actions-footer">
+              <button
+                type="submit"
+                className="button button-dark btn-lg"
+                disabled={savingSettings}
+              >
+                {savingSettings ? <><Loader2 className="animate-spin" size={16} /> Saving Changes...</> : <>Save All Payment & Pricing Settings <ArrowRight size={16} /></>}
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
+
+      {/* ================= TAB: BOOK PREVIEW EDITOR ================= */}
+      {activeTab === 'preview-editor' && (
+        <section className="admin-panel">
+          <div className="admin-panel-heading">
+            <div>
+              <p className="eyebrow">Reader Engagement</p>
+              <h2>Public Book Preview & Excerpt Editor</h2>
+            </div>
+            <div className="admin-header-actions">
+              <button
+                className="button button-light btn-sm"
+                onClick={() => {
+                  const newChapter: PreviewChapter = {
+                    id: `ch_${Date.now()}`,
+                    chapter_number: `Chapter 0${bookPreview.chapters.length + 1}`,
+                    title: 'New Approved Excerpt',
+                    subtitle: 'Subtitle for chapter',
+                    read_time: '4 min read',
+                    content: '### New Chapter Excerpt\n\nWrite your excerpt text here...',
+                    key_takeaways: ['Discipline is capital.'],
+                  }
+                  setBookPreview({
+                    ...bookPreview,
+                    chapters: [...bookPreview.chapters, newChapter],
+                  })
+                  setEditingChapter(newChapter)
+                }}
+              >
+                <Plus size={14} /> Add New Chapter
+              </button>
+              <button
+                className="button button-dark btn-sm"
+                disabled={savingPreview}
+                onClick={handleSaveBookPreview}
+              >
+                {savingPreview ? <><Loader2 className="animate-spin" size={14} /> Saving...</> : <>Save Preview <ArrowRight size={14} /></>}
+              </button>
+            </div>
+          </div>
+
+          <form onSubmit={handleSaveBookPreview} className="preview-editor-form">
+            <div className="form-row-2">
+              <label>
+                Preview Book Title
+                <input
+                  type="text"
+                  value={bookPreview.title}
+                  onChange={(e) => setBookPreview({ ...bookPreview, title: e.target.value })}
+                />
+              </label>
+              <label>
+                Author Name
+                <input
+                  type="text"
+                  value={bookPreview.author}
+                  onChange={(e) => setBookPreview({ ...bookPreview, author: e.target.value })}
+                />
+              </label>
+            </div>
+
+            <label className="checkbox-label admin-checkbox" style={{ margin: '14px 0 20px' }}>
+              <input
+                type="checkbox"
+                checked={bookPreview.is_published}
+                onChange={(e) => setBookPreview({ ...bookPreview, is_published: e.target.checked })}
+              />
+              <span><strong>Publish Preview on Website</strong> (accessible to public readers without payment)</span>
+            </label>
+
+            {/* Chapters List */}
+            <div className="chapters-editor-list">
+              <h3>Preview Excerpt Sections ({bookPreview.chapters.length})</h3>
+              {bookPreview.chapters.map((ch, idx) => (
+                <div key={ch.id || idx} className="chapter-editor-card">
+                  <div className="chapter-editor-top">
+                    <div>
+                      <span className="chapter-badge">{ch.chapter_number}</span>
+                      <h4>{ch.title}</h4>
+                      <small>{ch.read_time} · {ch.subtitle}</small>
+                    </div>
+                    <div className="table-action-btns">
+                      <button
+                        type="button"
+                        className="button button-light btn-sm"
+                        onClick={() => setEditingChapter(ch)}
+                      >
+                        Edit Content
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-button"
+                        title="Delete section"
+                        onClick={() => {
+                          const updated = bookPreview.chapters.filter((_, i) => i !== idx)
+                          setBookPreview({ ...bookPreview, chapters: updated })
+                        }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="settings-actions-footer">
+              <button
+                type="submit"
+                className="button button-dark btn-lg"
+                disabled={savingPreview}
+              >
+                {savingPreview ? <><Loader2 className="animate-spin" size={16} /> Saving Changes...</> : <>Save All Preview Content <ArrowRight size={16} /></>}
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
+
+      {/* ================= TAB: AUDIT LOGS ================= */}
+      {activeTab === 'audit-logs' && (
+        <section className="admin-panel">
+          <div className="admin-panel-heading">
+            <div>
+              <p className="eyebrow">Security & Compliance</p>
+              <h2>Administrator Audit Trail</h2>
+            </div>
+            <button
+              className="button button-light btn-sm"
+              onClick={() => exportCsv(auditLogs, `audit-logs-${Date.now()}.csv`)}
+            >
+              <Download size={14} /> Export Logs
+            </button>
+          </div>
+
+          <div className="admin-table-wrap">
+            <table className="admin-data-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Admin Identity</th>
+                  <th>Action</th>
+                  <th>Entity Target</th>
+                  <th>Details & Reference</th>
+                </tr>
+              </thead>
+              <tbody>
+                {auditLogs.length ? (
+                  auditLogs.map((log) => (
+                    <tr key={log.id}>
+                      <td>{new Date(log.created_at).toLocaleString()}</td>
+                      <td><strong>{log.admin_email}</strong></td>
+                      <td>
+                        <span className={`status-badge ${log.action.includes('verify') ? 'status-confirmed' : log.action.includes('reject') ? 'status-rejected' : 'status-fulfilment'}`}>
+                          {log.action}
+                        </span>
+                      </td>
+                      <td><code>{log.entity_id || log.entity_type}</code></td>
+                      <td>
+                        <small style={{ fontFamily: 'monospace', color: 'var(--muted)' }}>
+                          {typeof log.details === 'object' ? JSON.stringify(log.details) : log.details}
+                        </small>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: 'center', padding: '30px', color: 'var(--muted)' }}>
+                      No audit events recorded yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {/* ================= TAB: LAUNCHES ================= */}
+      {activeTab === 'launches' && (
+        <section className="admin-panel">
+          <div className="admin-panel-heading">
+            <div>
+              <p className="eyebrow">Launch Management</p>
+              <h2>Book Launches</h2>
+            </div>
+            <button className="button button-dark" onClick={() => setShowNewLaunchModal(true)}>
+              <Plus size={16} /> Create Dynamic Launch
             </button>
           </div>
 
@@ -939,124 +1868,50 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 <tr>
                   <th>Cover</th>
                   <th>Title & Author</th>
-                  <th>Category</th>
-                  <th>Price</th>
-                  <th>Ebook / PDF Link</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {booksList.map((book) => (
-                  <tr key={book.id}>
-                    <td>
-                      <img src={book.image} alt={book.title} className="table-book-thumb" />
-                    </td>
-                    <td>
-                      <strong>{book.title}</strong>
-                      <p className="table-sub">{book.author}</p>
-                    </td>
-                    <td><span className="table-tag">{book.category}</span></td>
-                    <td><strong>{book.price}</strong></td>
-                    <td>
-                      {book.pdf_url ? (
-                        <a href={book.pdf_url} target="_blank" rel="noreferrer" className="table-link">
-                          <Download /> PDF Attached
-                        </a>
-                      ) : (
-                        <span className="table-sub">None</span>
-                      )}
-                    </td>
-                    <td>
-                      <button
-                        className="table-delete-btn"
-                        onClick={() => setBookToDelete({ id: book.id, title: book.title })}
-                        aria-label={`Delete ${book.title}`}
-                        title="Delete book"
-                      >
-                        <Trash2 />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
-
-      {/* TAB: LAUNCHES */}
-      {activeTab === 'launches' && (
-        <section className="admin-panel">
-          <div className="admin-panel-heading">
-            <div>
-              <p className="eyebrow">Dynamic Launch Controller</p>
-              <h2>Manage Book Launches</h2>
-            </div>
-            <button className="button button-dark" onClick={() => setShowNewLaunchModal(true)}>
-              <Plus /> Create New Book Launch
-            </button>
-          </div>
-
-          <p className="admin-desc-note">
-            Manage your book launches, customize live countdowns, update book titles, author profiles, cover artwork, and key themes across the entire storefront in real-time.
-          </p>
-
-          <div className="admin-table-wrap">
-            <table className="admin-data-table">
-              <thead>
-                <tr>
-                  <th>Status</th>
-                  <th>Cover</th>
-                  <th>Launch Title</th>
-                  <th>Author</th>
                   <th>Launch Date</th>
-                  <th>Registrants</th>
+                  <th>Status</th>
+                  <th>Waitlist</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {launchesList.map((launch) => (
-                  <tr key={launch.id} className={launch.is_active ? 'row-active-launch' : ''}>
+                  <tr key={launch.id}>
                     <td>
-                      {launch.is_active ? (
-                        <span className="badge-active"><Check /> ACTIVE ON STORE</span>
-                      ) : (
-                        <button
-                          className="text-button"
-                          disabled={activatingLaunchId === launch.id}
-                          onClick={() => handleToggleLaunch(launch.id, launch.title)}
-                        >
-                          {activatingLaunchId === launch.id ? <><Loader2 className="animate-spin" size={13} /> Activating...</> : 'Set Active'}
-                        </button>
-                      )}
-                    </td>
-                    <td>
-                      <img src={launch.cover_image} alt={launch.title} className="table-book-thumb" />
+                      <img src={launch.cover_image || '/practical-trading-psychology.png'} alt="Cover" className="table-book-thumb" />
                     </td>
                     <td>
                       <strong>{launch.title}</strong>
-                      <p className="table-sub">{launch.slug}</p>
+                      <p className="table-sub">By {launch.author || AUTHOR_NAME}</p>
                     </td>
-                    <td>{launch.author}</td>
-                    <td>{new Date(launch.launch_date).toLocaleDateString()}</td>
+                    <td suppressHydrationWarning>{new Date(launch.launch_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                    <td>
+                      {launch.is_active ? (
+                        <span className="badge-sent">Live Storefront Active</span>
+                      ) : (
+                        <span className="table-sub">Inactive</span>
+                      )}
+                    </td>
                     <td>
                       <strong>{launch.registrations_count || 0} readers</strong>
                     </td>
                     <td>
-                      <div className="table-actions-cell">
-                        <button className="button button-light btn-sm" onClick={() => openEditLaunchModal(launch)}>
-                          <Settings2 /> Edit Details
-                        </button>
+                      <div className="table-action-btns">
                         <button
                           className="button button-light btn-sm"
-                          disabled={loadingRegsId === launch.id}
-                          onClick={() => handleViewRegistrations(launch.id, launch.title)}
+                          onClick={() => {
+                            setEditLaunchId(launch.id)
+                            setEditLaunchTitle(launch.title)
+                            setEditLaunchTagline(launch.tagline || '')
+                            setEditLaunchDesc(launch.description || launch.intro || '')
+                            setEditLaunchThemes(Array.isArray(launch.themes) ? launch.themes.join(', ') : '')
+                            setEditLaunchCover(launch.cover_image)
+                            setEditLaunchDate(new Date(launch.launch_date).toISOString().slice(0, 16))
+                            setEditLaunchActive(launch.is_active)
+                            setShowEditLaunchModal(true)
+                          }}
                         >
-                          {loadingRegsId === launch.id ? (
-                            <><Loader2 className="animate-spin" size={13} /> Loading...</>
-                          ) : (
-                            <><Users /> Registrants ({launch.registrations_count || 0})</>
-                          )}
+                          <Settings2 size={13} /> Edit
                         </button>
                       </div>
                     </td>
@@ -1068,16 +1923,16 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         </section>
       )}
 
-      {/* TAB: ORDERS */}
-      {activeTab === 'orders' && (
+      {/* ================= TAB: BOOKS ================= */}
+      {activeTab === 'books' && (
         <section className="admin-panel">
           <div className="admin-panel-heading">
             <div>
-              <p className="eyebrow">Paystack Transactions</p>
-              <h2>Customer Orders</h2>
+              <p className="eyebrow">Storefront Collection</p>
+              <h2>Manage Books</h2>
             </div>
-            <button className="button button-light btn-sm" onClick={() => exportCsv(ordersList, 'serendipity-orders.csv')}>
-              <Download /> Export CSV
+            <button className="button button-dark" onClick={() => setShowAddBookModal(true)}>
+              <Plus size={16} /> Add new book
             </button>
           </div>
 
@@ -1085,43 +1940,40 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             <table className="admin-data-table">
               <thead>
                 <tr>
-                  <th>Order Ref</th>
-                  <th>Customer</th>
-                  <th>Amount</th>
-                  <th>Items Purchased</th>
-                  <th>Status</th>
-                  <th>Ebook Delivery</th>
-                  <th>Date</th>
+                  <th>Cover</th>
+                  <th>Title & Author</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {ordersList.length ? (
-                  ordersList.map((order) => (
-                    <tr key={order.id || order.reference}>
-                      <td><code>{order.reference}</code></td>
+                {booksList.length ? (
+                  booksList.map((book) => (
+                    <tr key={book.id}>
+                      <td><img src={book.image} alt={book.title} className="table-book-thumb" /></td>
                       <td>
-                        <strong>{order.customer_name || 'Reader'}</strong>
-                        <p className="table-sub">{order.customer_email}</p>
+                        <strong>{book.title}</strong>
+                        <p className="table-sub">By {book.author || AUTHOR_NAME}</p>
                       </td>
-                      <td><strong>${Number(order.total_amount).toFixed(2)}</strong></td>
+                      <td>{book.category}</td>
+                      <td><strong>{book.price}</strong></td>
                       <td>
-                        <span className="table-sub">
-                          {Array.isArray(order.items) ? order.items.map((i: any) => `${i.title} (x${i.quantity || 1})`).join(', ') : '1 Book'}
-                        </span>
+                        <div className="table-action-btns">
+                          <button
+                            className="button button-light btn-sm"
+                            onClick={() => setBookToDelete({ id: book.id, title: book.title })}
+                          >
+                            <Trash2 size={13} /> Delete
+                          </button>
+                        </div>
                       </td>
-                      <td>
-                        <span className={`status-badge status-${order.status}`}>{order.status}</span>
-                      </td>
-                      <td>
-                        {order.pdf_sent ? <span className="badge-sent"><Check /> Sent via Resend</span> : <span className="table-sub">Pending</span>}
-                      </td>
-                      <td>{new Date(order.created_at).toLocaleDateString()}</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: '30px', color: 'var(--muted)' }}>
-                      No customer orders recorded yet.
+                    <td colSpan={5} style={{ textAlign: 'center', padding: '30px', color: 'var(--muted)' }}>
+                      No additional catalog books created yet.
                     </td>
                   </tr>
                 )}
@@ -1131,19 +1983,18 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         </section>
       )}
 
-      {/* TAB: MESSAGES */}
+      {/* ================= TAB: MESSAGES ================= */}
       {activeTab === 'messages' && (
         <section className="admin-panel">
           <div className="admin-panel-heading">
             <div>
-              <p className="eyebrow">Contact Form Engagement</p>
-              <h2>Reader Messages</h2>
+              <p className="eyebrow">Reader Inquiries</p>
+              <h2>Contact Messages</h2>
             </div>
-            <button className="button button-light btn-sm" onClick={() => exportCsv(messagesList, 'serendipity-messages.csv')}>
-              <Download /> Export CSV
+            <button className="button button-light btn-sm" onClick={() => exportCsv(messagesList, 'messages.csv')}>
+              <Download size={14} /> Export CSV
             </button>
           </div>
-
           <div className="admin-table-wrap">
             <table className="admin-data-table">
               <thead>
@@ -1161,7 +2012,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                       <td><strong>{msg.name}</strong></td>
                       <td><a href={`mailto:${msg.email}`} className="table-link">{msg.email}</a></td>
                       <td><p className="message-bubble">{msg.message}</p></td>
-                      <td>{new Date(msg.created_at).toLocaleDateString()}</td>
+                      <td suppressHydrationWarning>{new Date(msg.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                     </tr>
                   ))
                 ) : (
@@ -1177,7 +2028,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         </section>
       )}
 
-      {/* TAB: SUBSCRIBERS */}
+      {/* ================= TAB: SUBSCRIBERS ================= */}
       {activeTab === 'subscribers' && (
         <section className="admin-panel">
           <div className="admin-panel-heading">
@@ -1185,16 +2036,15 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               <p className="eyebrow">Newsletter Audience</p>
               <h2>Reading List Subscribers</h2>
             </div>
-            <button className="button button-light btn-sm" onClick={() => exportCsv(subscribersList, 'serendipity-subscribers.csv')}>
-              <Download /> Export CSV
+            <button className="button button-light btn-sm" onClick={() => exportCsv(subscribersList, 'subscribers.csv')}>
+              <Download size={14} /> Export CSV
             </button>
           </div>
-
           <div className="admin-table-wrap">
             <table className="admin-data-table">
               <thead>
                 <tr>
-                  <th>ID</th>
+                  <th>#</th>
                   <th>Subscriber Email</th>
                   <th>Joined Date</th>
                 </tr>
@@ -1205,7 +2055,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                     <tr key={sub.id || idx}>
                       <td>#{sub.id || idx + 1}</td>
                       <td><strong>{sub.email}</strong></td>
-                      <td>{new Date(sub.created_at || Date.now()).toLocaleDateString()}</td>
+                      <td suppressHydrationWarning>{new Date(sub.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                     </tr>
                   ))
                 ) : (
@@ -1221,59 +2071,566 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         </section>
       )}
 
-      {/* MODAL: ADD BOOK */}
+      {/* ================= MODAL: ORDER DETAILS INSPECTOR ================= */}
+      {selectedOrder && (
+        <div className="admin-modal-overlay" onClick={(e) => {
+          if (e.target === e.currentTarget) setSelectedOrder(null)
+        }}>
+          <div className="admin-modal-card wide-modal">
+            <div className="admin-modal-header">
+              <div>
+                <span className="presale-header-badge">ORDER INSPECTOR</span>
+                <h3>Order #{selectedOrder.order_number}</h3>
+              </div>
+              <button className="icon-button" onClick={() => setSelectedOrder(null)}><X /></button>
+            </div>
+
+            <div className="order-inspector-body">
+              <div className="inspector-grid">
+                {/* Column 1: Customer Details */}
+                <div className="inspector-col">
+                  <h4>Customer Information</h4>
+                  <p><strong>Name:</strong> {selectedOrder.customer_name}</p>
+                  <p><strong>Email:</strong> {selectedOrder.customer_email}</p>
+                  <p><strong>Phone:</strong> {selectedOrder.customer_phone || 'N/A'}</p>
+                  <p><strong>Country:</strong> {selectedOrder.country || 'N/A'}</p>
+                  {selectedOrder.shipping_address && (
+                    <div style={{ marginTop: '10px' }}>
+                      <strong>Shipping Address:</strong>
+                      <p className="table-sub">
+                        {selectedOrder.shipping_address.street}, {selectedOrder.shipping_address.city}, {selectedOrder.shipping_address.country}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Column 2: Order & Pricing */}
+                <div className="inspector-col">
+                  <h4>Order Summary</h4>
+                  <p><strong>Book:</strong> {selectedOrder.book_title}</p>
+                  <p><strong>Edition Format:</strong> {selectedOrder.book_format?.replace(/_/g, ' ')}</p>
+                  <p><strong>Quantity:</strong> {selectedOrder.quantity || 1}</p>
+                  <p><strong>Unit Price:</strong> ${Number(selectedOrder.unit_price).toFixed(2)}</p>
+                  <p><strong>Shipping Fee:</strong> ${Number(selectedOrder.shipping_fee || 0).toFixed(2)}</p>
+                  <p><strong>Total Amount:</strong> <span style={{ color: 'var(--primary)', fontSize: '1.1rem', fontWeight: 'bold' }}>${Number(selectedOrder.total_amount).toFixed(2)} USD</span></p>
+                  <p><strong>Payment Method:</strong> {selectedOrder.payment_method?.replace(/_/g, ' ')}</p>
+                </div>
+
+                {/* Column 3: Status & Tracking */}
+                <div className="inspector-col">
+                  <h4>Statuses & Actions</h4>
+                  <p><strong>Payment Status:</strong> <span className={`status-badge status-${selectedOrder.payment_status.toLowerCase().replace(/\s+/g, '-')}`}>{selectedOrder.payment_status}</span></p>
+                  <p><strong>Fulfilment:</strong> <span className="status-badge status-fulfilment">{selectedOrder.fulfilment_status}</span></p>
+                  {selectedOrder.rejection_reason && (
+                    <p style={{ color: '#dc2626', fontSize: '13px' }}><strong>Rejection Reason:</strong> {selectedOrder.rejection_reason}</p>
+                  )}
+                  {selectedOrder.tracking_reference && (
+                    <p><strong>Tracking Ref:</strong> <code>{selectedOrder.tracking_reference}</code> ({selectedOrder.courier_name})</p>
+                  )}
+                  <div style={{ marginTop: '16px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {selectedOrder.payment_status !== 'Confirmed' && (
+                      <button className="button button-dark btn-sm" onClick={() => setOrderToVerify(selectedOrder)}>
+                        Verify Payment
+                      </button>
+                    )}
+                    <button className="button button-light btn-sm" onClick={() => setOrderToReject(selectedOrder)}>
+                      Reject with Reason
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Submitted Payment Proofs Attached */}
+              <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--line)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+                  <h4 style={{ margin: 0 }}>Submitted Payment Evidence ({selectedOrder.proofs?.length || 0})</h4>
+                  {selectedOrder.proofs?.some((p: any) => p.receipt_url) && (
+                    <span className="badge-sent" style={{ fontSize: '11px' }}>
+                      <CheckCircle2 size={12} /> Receipt Screenshot Attached
+                    </span>
+                  )}
+                </div>
+                {selectedOrder.proofs && selectedOrder.proofs.length > 0 ? (
+                  <div className="proof-history-list">
+                    {selectedOrder.proofs.map((p: any, idx: number) => {
+                      const isPdf = p.receipt_url?.toLowerCase().endsWith('.pdf') || p.receipt_url?.includes('.pdf')
+                      return (
+                        <div key={p.id || idx} className="proof-history-item">
+                          <div className="proof-item-top">
+                            <span className={`status-badge status-${p.status?.toLowerCase().replace(/\s+/g, '-')}`}>{p.status}</span>
+                            <small>{new Date(p.submitted_at).toLocaleString()}</small>
+                          </div>
+                          <div className="proof-details-grid">
+                            <div className="proof-meta-details">
+                              {p.reference_number && <p><strong>Reference Number:</strong> <code>{p.reference_number}</code></p>}
+                              {p.transaction_hash && <p><strong>Tx Hash:</strong> <code>{p.transaction_hash}</code></p>}
+                              {p.sender_name_or_phone && <p><strong>Sender Name/Phone:</strong> {p.sender_name_or_phone}</p>}
+                              {p.notes && <p><strong>Notes:</strong> {p.notes}</p>}
+                            </div>
+
+                            {p.receipt_url && (
+                              <div className="receipt-inspect-card">
+                                {isPdf ? (
+                                  <div className="receipt-pdf-box">
+                                    <FileText size={32} className="pdf-icon" />
+                                    <div className="pdf-info">
+                                      <strong>Payment Document (PDF)</strong>
+                                      <small>Uploaded proof for verification</small>
+                                    </div>
+                                    <div className="receipt-actions-row">
+                                      <button
+                                        type="button"
+                                        className="button button-dark btn-sm"
+                                        onClick={() => setViewingReceiptModal({
+                                          url: p.receipt_url,
+                                          orderNumber: selectedOrder.order_number,
+                                          customerName: selectedOrder.customer_name,
+                                          referenceNumber: p.reference_number || p.transaction_hash,
+                                          submittedAt: p.submitted_at,
+                                        })}
+                                      >
+                                        <Maximize2 size={13} /> View PDF
+                                      </button>
+                                      <a href={p.receipt_url} target="_blank" rel="noreferrer" className="button button-light btn-sm">
+                                        <ExternalLink size={13} /> Open Tab
+                                      </a>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="receipt-image-card">
+                                    <div
+                                      className="receipt-thumb-container"
+                                      onClick={() => setViewingReceiptModal({
+                                        url: p.receipt_url,
+                                        orderNumber: selectedOrder.order_number,
+                                        customerName: selectedOrder.customer_name,
+                                        referenceNumber: p.reference_number || p.transaction_hash,
+                                        submittedAt: p.submitted_at,
+                                      })}
+                                      title="Click to zoom receipt screenshot"
+                                    >
+                                      <img src={p.receipt_url} alt="Payment Receipt Screenshot" className="receipt-thumb-image" />
+                                      <div className="receipt-zoom-badge">
+                                        <ZoomIn size={13} /> Enlarge
+                                      </div>
+                                    </div>
+                                    <div className="receipt-card-actions">
+                                      <button
+                                        type="button"
+                                        className="button button-dark btn-sm"
+                                        onClick={() => setViewingReceiptModal({
+                                          url: p.receipt_url,
+                                          orderNumber: selectedOrder.order_number,
+                                          customerName: selectedOrder.customer_name,
+                                          referenceNumber: p.reference_number || p.transaction_hash,
+                                          submittedAt: p.submitted_at,
+                                        })}
+                                      >
+                                        <Maximize2 size={13} /> Fullscreen
+                                      </button>
+                                      <a
+                                        href={p.receipt_url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="button button-light btn-sm"
+                                        title="Open full resolution in new tab"
+                                      >
+                                        <ExternalLink size={13} /> Tab
+                                      </a>
+                                      <a
+                                        href={p.receipt_url}
+                                        download={`receipt-${selectedOrder.order_number}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="button button-light btn-sm"
+                                        title="Download original receipt file"
+                                      >
+                                        <Download size={13} />
+                                      </a>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="admin-empty-sub">No receipt or blockchain hash submitted for this order yet.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: VERIFY PAYMENT CONFIRMATION ================= */}
+      {orderToVerify && (
+        <div className="admin-modal-overlay" onClick={(e) => {
+          if (e.target === e.currentTarget && !verifyingPayment) setOrderToVerify(null)
+        }}>
+          <div className="admin-modal-card" style={{ maxWidth: '520px' }}>
+            <div className="admin-modal-header">
+              <div>
+                <span className="presale-header-badge">FINANCE AUDIT</span>
+                <h3>Confirm Payment Verification</h3>
+              </div>
+              <button className="icon-button" onClick={() => setOrderToVerify(null)} disabled={verifyingPayment}><X /></button>
+            </div>
+            <div className="admin-modal-form">
+              <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--muted)' }}>
+                Are you sure you want to approve and confirm payment for Order <strong>#{orderToVerify.order_number}</strong>?
+              </p>
+              <div style={{ background: 'var(--paper)', padding: '14px', borderRadius: '4px', border: '1px solid var(--line)' }}>
+                <p style={{ margin: '0 0 4px' }}>Customer: <strong>{orderToVerify.customer_name}</strong> ({orderToVerify.customer_email})</p>
+                <p style={{ margin: '0 0 4px' }}>Amount: <strong>${Number(orderToVerify.total_amount).toFixed(2)} USD</strong></p>
+                <p style={{ margin: 0 }}>Method: <strong>{orderToVerify.payment_method?.replace(/_/g, ' ')}</strong></p>
+              </div>
+
+              {/* Receipt Preview in Verification dialog */}
+              {orderToVerify.proofs && orderToVerify.proofs.some((p: any) => p.receipt_url) && (
+                <div className="verify-proof-preview-box">
+                  <div className="verify-proof-head">
+                    <ImageIcon size={14} />
+                    <span>Attached Payment Receipt / Proof:</span>
+                  </div>
+                  {orderToVerify.proofs.filter((p: any) => p.receipt_url).map((p: any, idx: number) => (
+                    <div key={p.id || idx} className="verify-proof-item">
+                      <div
+                        className="verify-thumb-wrap"
+                        onClick={() => setViewingReceiptModal({
+                          url: p.receipt_url,
+                          orderNumber: orderToVerify.order_number,
+                          customerName: orderToVerify.customer_name,
+                          referenceNumber: p.reference_number || p.transaction_hash,
+                          submittedAt: p.submitted_at,
+                        })}
+                        title="Click to zoom receipt"
+                      >
+                        <img src={p.receipt_url} alt="Receipt thumbnail" className="verify-thumb-img" />
+                        <div className="verify-zoom-hover"><ZoomIn size={14} /></div>
+                      </div>
+                      <div className="verify-thumb-meta">
+                        {p.reference_number && <p style={{ margin: 0 }}><strong>Ref:</strong> <code>{p.reference_number}</code></p>}
+                        {p.transaction_hash && <p style={{ margin: 0 }}><strong>Tx:</strong> <code>{p.transaction_hash.slice(0, 18)}...</code></p>}
+                        {p.sender_name_or_phone && <p style={{ margin: 0 }}><strong>Sender:</strong> {p.sender_name_or_phone}</p>}
+                        <button
+                          type="button"
+                          className="table-mini-copy"
+                          style={{ marginTop: '4px', cursor: 'pointer' }}
+                          onClick={() => setViewingReceiptModal({
+                            url: p.receipt_url,
+                            orderNumber: orderToVerify.order_number,
+                            customerName: orderToVerify.customer_name,
+                            referenceNumber: p.reference_number || p.transaction_hash,
+                            submittedAt: p.submitted_at,
+                          })}
+                        >
+                          <Maximize2 size={11} /> Inspect Fullscreen
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <label style={{ marginTop: '14px' }}>
+                Bank Audit Reference / Internal Note (optional):
+                <input
+                  type="text"
+                  value={verifyNote}
+                  onChange={(e) => setVerifyNote(e.target.value)}
+                  placeholder="e.g. Verified in Standard Chartered deposit batch #4920"
+                />
+              </label>
+
+              <div className="admin-modal-actions">
+                <button type="button" className="text-button" onClick={() => setOrderToVerify(null)} disabled={verifyingPayment}>Cancel</button>
+                <button
+                  type="button"
+                  className="button button-dark"
+                  disabled={verifyingPayment}
+                  onClick={handleConfirmPayment}
+                >
+                  {verifyingPayment ? <><Loader2 className="animate-spin" size={16} /> Verifying...</> : <>Confirm Payment & Notify Customer <ArrowRight size={16} /></>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: REJECT PAYMENT ================= */}
+      {orderToReject && (
+        <div className="admin-modal-overlay" onClick={(e) => {
+          if (e.target === e.currentTarget && !rejectingPayment) setOrderToReject(null)
+        }}>
+          <div className="admin-modal-card" style={{ maxWidth: '520px' }}>
+            <div className="admin-modal-header">
+              <div>
+                <span className="presale-header-badge" style={{ color: '#dc2626' }}>REJECTION WORKFLOW</span>
+                <h3>Reject Payment Submission</h3>
+              </div>
+              <button className="icon-button" onClick={() => setOrderToReject(null)} disabled={rejectingPayment}><X /></button>
+            </div>
+            <div className="admin-modal-form">
+              <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--muted)' }}>
+                Specify the exact issue encountered for Order <strong>#{orderToReject.order_number}</strong>. The customer will receive this feedback with a link to re-submit proof.
+              </p>
+
+              <label>
+                Rejection Reason (required):
+                <textarea
+                  required
+                  rows={3}
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  placeholder="e.g. Deposit could not be matched with incoming wire, or transaction hash is invalid on Tronscan."
+                />
+              </label>
+
+              <div className="admin-modal-actions">
+                <button type="button" className="text-button" onClick={() => setOrderToReject(null)} disabled={rejectingPayment}>Cancel</button>
+                <button
+                  type="button"
+                  className="button button-dark"
+                  style={{ background: '#dc2626', borderColor: '#dc2626' }}
+                  disabled={rejectingPayment}
+                  onClick={handleRejectPayment}
+                >
+                  {rejectingPayment ? <><Loader2 className="animate-spin" size={16} /> Rejecting...</> : <>Reject Payment & Send Email <ArrowRight size={16} /></>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: FULFILMENT STATUS UPDATE ================= */}
+      {orderForFulfilment && (
+        <div className="admin-modal-overlay" onClick={(e) => {
+          if (e.target === e.currentTarget && !updatingFulfilment) setOrderForFulfilment(null)
+        }}>
+          <div className="admin-modal-card" style={{ maxWidth: '520px' }}>
+            <div className="admin-modal-header">
+              <div>
+                <span className="presale-header-badge">DISPATCH & FULFILMENT</span>
+                <h3>Update Order #{orderForFulfilment.order_number}</h3>
+              </div>
+              <button className="icon-button" onClick={() => setOrderForFulfilment(null)} disabled={updatingFulfilment}><X /></button>
+            </div>
+            <div className="admin-modal-form">
+              <label>
+                Fulfilment Status
+                <select
+                  value={newFulfilmentStatus}
+                  onChange={(e) => setNewFulfilmentStatus(e.target.value as FulfilmentStatus)}
+                >
+                  <option value="Pending Payment">Pending Payment</option>
+                  <option value="Confirmed">Confirmed</option>
+                  <option value="Awaiting Book Release">Awaiting Book Release</option>
+                  <option value="Ready for Delivery">Ready for Delivery</option>
+                  <option value="Delivered">Delivered</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </label>
+
+              <label>
+                Courier Name
+                <input
+                  type="text"
+                  value={courierName}
+                  onChange={(e) => setCourierName(e.target.value)}
+                  placeholder="e.g. DHL Express / Ghana Post Speedpost"
+                />
+              </label>
+
+              <label>
+                Tracking Reference Number (for physical copy)
+                <input
+                  type="text"
+                  value={trackingReference}
+                  onChange={(e) => setTrackingReference(e.target.value)}
+                  placeholder="e.g. GH-POST-98234190"
+                />
+              </label>
+
+              <div className="admin-modal-actions">
+                <button type="button" className="text-button" onClick={() => setOrderForFulfilment(null)} disabled={updatingFulfilment}>Cancel</button>
+                <button
+                  type="button"
+                  className="button button-dark"
+                  disabled={updatingFulfilment}
+                  onClick={handleUpdateFulfilment}
+                >
+                  {updatingFulfilment ? <><Loader2 className="animate-spin" size={16} /> Updating...</> : <>Save Fulfilment Status <ArrowRight size={16} /></>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: CHAPTER CONTENT EDITOR ================= */}
+      {editingChapter && (
+        <div className="admin-modal-overlay" onClick={(e) => {
+          if (e.target === e.currentTarget) setEditingChapter(null)
+        }}>
+          <div className="admin-modal-card wide-modal">
+            <div className="admin-modal-header">
+              <div>
+                <span className="presale-header-badge">CHAPTER EDITOR</span>
+                <h3>{editingChapter.chapter_number}: {editingChapter.title}</h3>
+              </div>
+              <button className="icon-button" onClick={() => setEditingChapter(null)}><X /></button>
+            </div>
+            <div className="admin-modal-form">
+              <div className="form-row-2">
+                <label>
+                  Chapter Number / Badge (e.g. Author&apos;s Preface or Chapter 01)
+                  <input
+                    type="text"
+                    value={editingChapter.chapter_number}
+                    onChange={(e) => setEditingChapter({ ...editingChapter, chapter_number: e.target.value })}
+                  />
+                </label>
+                <label>
+                  Reading Time (e.g. 5 min read)
+                  <input
+                    type="text"
+                    value={editingChapter.read_time}
+                    onChange={(e) => setEditingChapter({ ...editingChapter, read_time: e.target.value })}
+                  />
+                </label>
+              </div>
+
+              <label>
+                Chapter Title
+                <input
+                  type="text"
+                  value={editingChapter.title}
+                  onChange={(e) => setEditingChapter({ ...editingChapter, title: e.target.value })}
+                />
+              </label>
+
+              <label>
+                Subtitle / Core Premise
+                <input
+                  type="text"
+                  value={editingChapter.subtitle || ''}
+                  onChange={(e) => setEditingChapter({ ...editingChapter, subtitle: e.target.value })}
+                />
+              </label>
+
+              <label>
+                Formatted Content (Supports ### Headings, blockquotes, bullet points):
+                <textarea
+                  rows={12}
+                  value={editingChapter.content}
+                  onChange={(e) => setEditingChapter({ ...editingChapter, content: e.target.value })}
+                  style={{ fontFamily: 'monospace', fontSize: '13px', lineHeight: '1.6' }}
+                />
+              </label>
+
+              <div className="admin-modal-actions">
+                <button type="button" className="text-button" onClick={() => setEditingChapter(null)}>Close</button>
+                <button
+                  type="button"
+                  className="button button-dark"
+                  onClick={() => {
+                    const idx = bookPreview.chapters.findIndex((c) => c.id === editingChapter.id)
+                    const updated = [...bookPreview.chapters]
+                    if (idx >= 0) updated[idx] = editingChapter
+                    else updated.push(editingChapter)
+                    setBookPreview({ ...bookPreview, chapters: updated })
+                    setEditingChapter(null)
+                    showToast('Chapter updated in local draft. Remember to click Save Preview!')
+                  }}
+                >
+                  Apply Chapter Changes <ArrowRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: ADD NEW BOOK ================= */}
       {showAddBookModal && (
-        <div
-          className="admin-modal-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowAddBookModal(false)
-          }}
-        >
+        <div className="admin-modal-overlay" onClick={(e) => {
+          if (e.target === e.currentTarget) setShowAddBookModal(false)
+        }}>
           <div className="admin-modal-card">
             <div className="admin-modal-header">
               <h3>Add New Book to Collection</h3>
               <button className="icon-button" onClick={() => setShowAddBookModal(false)}><X /></button>
             </div>
-            <form onSubmit={handleCreateBook} className="admin-modal-form">
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                if (!newBookTitle || !newBookPrice) return
+                setSavingBook(true)
+                try {
+                  const res = await fetch('/api/books', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      title: newBookTitle,
+                      category: newBookCategory,
+                      price: newBookPrice.startsWith('$') ? newBookPrice : `$${newBookPrice}`,
+                      description: newBookDesc,
+                      image: newBookCover || '/practical-trading-psychology.png',
+                      pdf_url: newBookPdf,
+                    }),
+                  })
+                  const data = await res.json()
+                  if (res.ok && data.success) {
+                    showToast(`Book "${newBookTitle}" added!`)
+                    setShowAddBookModal(false)
+                    refreshBooks()
+                    loadAdminData()
+                  } else {
+                    alert(data.error || 'Failed to add book')
+                  }
+                } catch (err: any) {
+                  alert(err.message)
+                } finally {
+                  setSavingBook(false)
+                }
+              }}
+              className="admin-modal-form"
+            >
               <label>
                 Book Title
-                <input required value={newBookTitle} onChange={(e) => setNewBookTitle(e.target.value)} placeholder="e.g. Practical Trading Psychology" />
+                <input required value={newBookTitle} onChange={(e) => setNewBookTitle(e.target.value)} />
               </label>
               <div className="form-row-2">
                 <label>
                   Category
-                  <input required value={newBookCategory} onChange={(e) => setNewBookCategory(e.target.value)} placeholder="e.g. Mind & Money" />
+                  <input required value={newBookCategory} onChange={(e) => setNewBookCategory(e.target.value)} />
                 </label>
                 <label>
                   Price
-                  <input required value={newBookPrice} onChange={(e) => setNewBookPrice(e.target.value)} placeholder="$24.00" />
+                  <input required value={newBookPrice} onChange={(e) => setNewBookPrice(e.target.value)} />
                 </label>
               </div>
               <label>
-                Downloadable Ebook / PDF URL
-                <input value={newBookPdf} onChange={(e) => setNewBookPdf(e.target.value)} placeholder="https://..." />
-              </label>
-              <label>
                 Description
-                <textarea rows={3} value={newBookDesc} onChange={(e) => setNewBookDesc(e.target.value)} placeholder="Brief summary for catalog..." />
+                <textarea rows={3} value={newBookDesc} onChange={(e) => setNewBookDesc(e.target.value)} />
               </label>
               <div className="cloudinary-upload-box">
                 <label className="cloudinary-label">
-                  <UploadCloud /> Upload Cover to Cloudinary
+                  <UploadCloud size={20} /> Upload Cover
                   <input type="file" accept="image/*" onChange={(e) => handleCloudinaryUpload(e, setNewBookCover)} />
                 </label>
-                {uploadingImage && <p className="uploading-text"><Loader2 className="animate-spin" /> Uploading to Cloudinary CDN...</p>}
-                {newBookCover && (
-                  <div className="cover-preview-row">
-                    <img src={newBookCover} alt="Cover preview" className="cover-preview-img" />
-                    <span>{newBookCover.slice(0, 45)}...</span>
-                  </div>
-                )}
+                {newBookCover && <p style={{ fontSize: '12px' }}>Attached: {newBookCover.slice(0, 40)}...</p>}
               </div>
               <div className="admin-modal-actions">
-                <button type="button" className="text-button" onClick={() => setShowAddBookModal(false)} disabled={savingBook}>Cancel</button>
-                <button type="submit" className="button button-dark" disabled={savingBook || uploadingImage}>
-                  {savingBook ? <><Loader2 className="animate-spin" size={16} /> Saving Book...</> : <>Save Book <ArrowRight /></>}
+                <button type="button" className="text-button" onClick={() => setShowAddBookModal(false)}>Cancel</button>
+                <button type="submit" className="button button-dark" disabled={savingBook}>
+                  {savingBook ? <Loader2 className="animate-spin" size={16} /> : <>Save Book <ArrowRight size={16} /></>}
                 </button>
               </div>
             </form>
@@ -1281,64 +2638,80 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         </div>
       )}
 
-      {/* MODAL: EDIT BOOK LAUNCH */}
+      {/* ================= MODAL: EDIT LAUNCH ================= */}
       {showEditLaunchModal && (
-        <div
-          className="admin-modal-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !savingLaunch) setShowEditLaunchModal(false)
-          }}
-        >
+        <div className="admin-modal-overlay" onClick={(e) => {
+          if (e.target === e.currentTarget && !savingLaunch) setShowEditLaunchModal(false)
+        }}>
           <div className="admin-modal-card">
             <div className="admin-modal-header">
-              <div>
-                <p className="eyebrow">Launch Editor</p>
-                <h3>Edit Book Launch Details</h3>
-              </div>
-              <button className="icon-button" onClick={() => setShowEditLaunchModal(false)} disabled={savingLaunch}><X /></button>
+              <h3>Edit Book Launch</h3>
+              <button className="icon-button" onClick={() => setShowEditLaunchModal(false)}><X /></button>
             </div>
-            <form onSubmit={handleUpdateLaunch} className="admin-modal-form">
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                setSavingLaunch(true)
+                try {
+                  const res = await fetch(`/api/admin/launches/${editLaunchId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      title: editLaunchTitle,
+                      tagline: editLaunchTagline,
+                      intro: editLaunchDesc,
+                      description: editLaunchDesc,
+                      themes: editLaunchThemes.split(',').map((t) => t.trim()).filter(Boolean),
+                      cover_image: editLaunchCover,
+                      launch_date: new Date(editLaunchDate).toISOString(),
+                      is_active: editLaunchActive,
+                    }),
+                  })
+                  const data = await res.json().catch(() => ({}))
+                  if (res.ok && data.success) {
+                    showToast('Launch updated!')
+                    setShowEditLaunchModal(false)
+                    refreshLaunch()
+                    loadAdminData()
+                  } else {
+                    alert(data.error || 'Failed to update launch')
+                  }
+                } catch (err: any) {
+                  alert(err.message || 'Error updating launch')
+                } finally {
+                  setSavingLaunch(false)
+                }
+              }}
+              className="admin-modal-form"
+            >
               <label>
                 Launch Title
-                <input required value={editLaunchTitle} onChange={(e) => setEditLaunchTitle(e.target.value)} placeholder="e.g. Practical Trading Psychology" />
+                <input required value={editLaunchTitle} onChange={(e) => setEditLaunchTitle(e.target.value)} />
               </label>
               <label>
-                Launch Date & Time (Countdown Target)
+                Launch Date & Time
                 <input required type="datetime-local" value={editLaunchDate} onChange={(e) => setEditLaunchDate(e.target.value)} />
               </label>
               <label>
-                Tagline (appears in hero & launch countdown banner)
+                Tagline
                 <textarea rows={2} value={editLaunchTagline} onChange={(e) => setEditLaunchTagline(e.target.value)} />
               </label>
               <label>
-                Key Takeaways / Themes (comma-separated)
+                Themes (comma-separated)
                 <input value={editLaunchThemes} onChange={(e) => setEditLaunchThemes(e.target.value)} />
               </label>
               <label>
-                About Book Description
+                Description
                 <textarea rows={3} value={editLaunchDesc} onChange={(e) => setEditLaunchDesc(e.target.value)} />
               </label>
-              <div className="cloudinary-upload-box">
-                <label className="cloudinary-label">
-                  <UploadCloud /> Upload Book Cover to Cloudinary
-                  <input type="file" accept="image/*" onChange={(e) => handleCloudinaryUpload(e, setEditLaunchCover)} />
-                </label>
-                {uploadingImage && <p className="uploading-text"><Loader2 className="animate-spin" /> Uploading to Cloudinary CDN...</p>}
-                {editLaunchCover && (
-                  <div className="cover-preview-row">
-                    <img src={editLaunchCover} alt="Cover preview" className="cover-preview-img" />
-                    <span>{editLaunchCover.slice(0, 45)}...</span>
-                  </div>
-                )}
-              </div>
               <label className="checkbox-label admin-checkbox">
                 <input type="checkbox" checked={editLaunchActive} onChange={(e) => setEditLaunchActive(e.target.checked)} />
-                <span>Keep as ACTIVE Book Launch on the live storefront</span>
+                <span>Set as Active Launch on Storefront</span>
               </label>
               <div className="admin-modal-actions">
-                <button type="button" className="text-button" onClick={() => setShowEditLaunchModal(false)} disabled={savingLaunch}>Cancel</button>
-                <button type="submit" className="button button-dark" disabled={savingLaunch || uploadingImage}>
-                  {savingLaunch ? <><Loader2 className="animate-spin" size={16} /> Saving Changes...</> : <>Save Changes <ArrowRight /></>}
+                <button type="button" className="text-button" onClick={() => setShowEditLaunchModal(false)}>Cancel</button>
+                <button type="submit" className="button button-dark" disabled={savingLaunch}>
+                  {savingLaunch ? <Loader2 className="animate-spin" size={16} /> : <>Save Changes <ArrowRight size={16} /></>}
                 </button>
               </div>
             </form>
@@ -1346,61 +2719,77 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         </div>
       )}
 
-      {/* MODAL: CREATE NEW LAUNCH */}
+      {/* ================= MODAL: CREATE LAUNCH ================= */}
       {showNewLaunchModal && (
-        <div
-          className="admin-modal-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !savingNewLaunch) setShowNewLaunchModal(false)
-          }}
-        >
+        <div className="admin-modal-overlay" onClick={(e) => {
+          if (e.target === e.currentTarget && !savingNewLaunch) setShowNewLaunchModal(false)
+        }}>
           <div className="admin-modal-card">
             <div className="admin-modal-header">
               <h3>Create Dynamic Book Launch</h3>
-              <button className="icon-button" onClick={() => setShowNewLaunchModal(false)} disabled={savingNewLaunch}><X /></button>
+              <button className="icon-button" onClick={() => setShowNewLaunchModal(false)}><X /></button>
             </div>
-            <form onSubmit={handleCreateLaunch} className="admin-modal-form">
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                setSavingNewLaunch(true)
+                try {
+                  const res = await fetch('/api/admin/launches', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      title: newLaunchTitle,
+                      author: AUTHOR_NAME,
+                      author_bio: AUTHOR_BIO,
+                      author_image: AUTHOR_IMAGE,
+                      tagline: newLaunchTagline,
+                      intro: newLaunchDesc,
+                      description: newLaunchDesc,
+                      themes: newLaunchThemes.split(',').map((t) => t.trim()).filter(Boolean),
+                      cover_image: newLaunchCover || '/practical-trading-psychology.png',
+                      launch_date: new Date(newLaunchDate).toISOString(),
+                      is_active: newLaunchActive,
+                    }),
+                  })
+                  const data = await res.json()
+                  if (res.ok && data.success) {
+                    showToast('New Book Launch created!')
+                    setShowNewLaunchModal(false)
+                    refreshLaunch()
+                    loadAdminData()
+                  }
+                } catch (err: any) {
+                  alert(err.message)
+                } finally {
+                  setSavingNewLaunch(false)
+                }
+              }}
+              className="admin-modal-form"
+            >
               <label>
                 Launch Title
-                <input required value={newLaunchTitle} onChange={(e) => setNewLaunchTitle(e.target.value)} placeholder="e.g. Practical Trading Psychology" />
+                <input required value={newLaunchTitle} onChange={(e) => setNewLaunchTitle(e.target.value)} />
               </label>
               <label>
-                Launch Date & Time (Countdown Target)
+                Launch Date
                 <input required type="datetime-local" value={newLaunchDate} onChange={(e) => setNewLaunchDate(e.target.value)} />
               </label>
               <label>
-                Tagline (appears in header strip & hero)
+                Tagline
                 <textarea rows={2} value={newLaunchTagline} onChange={(e) => setNewLaunchTagline(e.target.value)} />
               </label>
               <label>
-                Themes (comma-separated for key takeaways grid)
-                <input value={newLaunchThemes} onChange={(e) => setNewLaunchThemes(e.target.value)} placeholder="Emotional discipline, Process over outcome, Managing psychology" />
-              </label>
-              <label>
-                About Book Description
+                Description
                 <textarea rows={3} value={newLaunchDesc} onChange={(e) => setNewLaunchDesc(e.target.value)} />
               </label>
-              <div className="cloudinary-upload-box">
-                <label className="cloudinary-label">
-                  <UploadCloud /> Upload Launch Cover to Cloudinary
-                  <input type="file" accept="image/*" onChange={(e) => handleCloudinaryUpload(e, setNewLaunchCover)} />
-                </label>
-                {uploadingImage && <p className="uploading-text"><Loader2 className="animate-spin" /> Uploading to Cloudinary CDN...</p>}
-                {newLaunchCover && (
-                  <div className="cover-preview-row">
-                    <img src={newLaunchCover} alt="Cover preview" className="cover-preview-img" />
-                    <span>{newLaunchCover.slice(0, 45)}...</span>
-                  </div>
-                )}
-              </div>
               <label className="checkbox-label admin-checkbox">
                 <input type="checkbox" checked={newLaunchActive} onChange={(e) => setNewLaunchActive(e.target.checked)} />
-                <span>Immediately set as the ACTIVE Book Launch on the live storefront</span>
+                <span>Immediately set as active storefront launch</span>
               </label>
               <div className="admin-modal-actions">
-                <button type="button" className="text-button" onClick={() => setShowNewLaunchModal(false)} disabled={savingNewLaunch}>Cancel</button>
-                <button type="submit" className="button button-dark" disabled={savingNewLaunch || uploadingImage}>
-                  {savingNewLaunch ? <><Loader2 className="animate-spin" size={16} /> Creating Launch...</> : <>Create & Deploy Launch <ArrowRight /></>}
+                <button type="button" className="text-button" onClick={() => setShowNewLaunchModal(false)}>Cancel</button>
+                <button type="submit" className="button button-dark" disabled={savingNewLaunch}>
+                  {savingNewLaunch ? <Loader2 className="animate-spin" size={16} /> : <>Create Launch <ArrowRight size={16} /></>}
                 </button>
               </div>
             </form>
@@ -1408,75 +2797,11 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         </div>
       )}
 
-      {/* MODAL: VIEW LAUNCH REGISTRANTS */}
-      {selectedLaunchRegs !== null && (
-        <div
-          className="admin-modal-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setSelectedLaunchRegs(null)
-          }}
-        >
-          <div className="admin-modal-card wide-modal">
-            <div className="admin-modal-header">
-              <div>
-                <p className="eyebrow">Launch Registrations</p>
-                <h3>{selectedLaunchTitle} ({selectedLaunchRegs.length} Readers)</h3>
-              </div>
-              <div className="admin-header-actions">
-                <button className="button button-light btn-sm" onClick={() => exportCsv(selectedLaunchRegs, `${selectedLaunchTitle}-registrants.csv`)}>
-                  <Download /> Export CSV
-                </button>
-                <button className="icon-button" onClick={() => setSelectedLaunchRegs(null)}><X /></button>
-              </div>
-            </div>
-            <div className="admin-table-wrap">
-              {selectedLaunchRegs.length ? (
-                <table className="admin-data-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Reader Name</th>
-                      <th>Email Address</th>
-                      <th>Phone</th>
-                      <th>Updates Opt-In</th>
-                      <th>Registration Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedLaunchRegs.map((r, i) => (
-                      <tr key={r.id || i}>
-                        <td>{i + 1}</td>
-                        <td><strong>{r.name}</strong></td>
-                        <td><a href={`mailto:${r.email}`} className="table-link">{r.email}</a></td>
-                        <td>{r.phone || 'N/A'}</td>
-                        <td>
-                          {r.agreed_updates !== false ? (
-                            <span className="badge-sent">Yes (Opted in)</span>
-                          ) : (
-                            <span className="table-sub">No</span>
-                          )}
-                        </td>
-                        <td>{new Date(r.created_at).toLocaleDateString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <p className="admin-empty-sub">No readers registered for this launch yet.</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: CHANGE PASSWORD */}
+      {/* ================= MODAL: CHANGE PASSWORD ================= */}
       {showChangePasswordModal && (
-        <div
-          className="admin-modal-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !passLoading) setShowChangePasswordModal(false)
-          }}
-        >
+        <div className="admin-modal-overlay" onClick={(e) => {
+          if (e.target === e.currentTarget && !passLoading) setShowChangePasswordModal(false)
+        }}>
           <div className="admin-modal-card">
             <div className="admin-modal-header">
               <div>
@@ -1519,14 +2844,10 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                   placeholder="Re-enter new password"
                 />
               </label>
-              <p className="admin-info-note">
-                <ShieldCheck style={{ width: 14, height: 14, verticalAlign: 'middle', marginRight: 4 }} />
-                A security alert will be sent to <strong>hello@elvisjusticebooks.com</strong> once changed.
-              </p>
               <div className="admin-modal-actions">
                 <button type="button" className="text-button" onClick={() => setShowChangePasswordModal(false)}>Cancel</button>
                 <button type="submit" className="button button-dark" disabled={passLoading}>
-                  {passLoading ? <Loader2 className="animate-spin" /> : <>Update Password <ArrowRight /></>}
+                  {passLoading ? <Loader2 className="animate-spin" size={16} /> : <>Update Password <ArrowRight size={16} /></>}
                 </button>
               </div>
             </form>
@@ -1534,66 +2855,115 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         </div>
       )}
 
-      {/* MODAL: CONFIRM DELETE BOOK */}
+      {/* ================= MODAL: CONFIRM DELETE BOOK ================= */}
       {bookToDelete && (
-        <div
-          className="admin-modal-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !deletingBook) setBookToDelete(null)
-          }}
-        >
+        <div className="admin-modal-overlay" onClick={(e) => {
+          if (e.target === e.currentTarget && !deletingBook) setBookToDelete(null)
+        }}>
           <div className="admin-modal-card" style={{ maxWidth: '480px' }}>
-            <div className="admin-modal-header" style={{ borderBottom: 'none', paddingBottom: 0, marginBottom: '14px' }}>
+            <div className="admin-modal-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{
-                  width: '42px',
-                  height: '42px',
-                  borderRadius: '50%',
-                  background: 'rgba(180, 40, 40, 0.1)',
-                  color: '#b42828',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(180, 40, 40, 0.1)', color: '#b42828', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Trash2 size={20} />
                 </div>
-                <div>
-                  <h3 style={{ fontSize: '1.25rem', margin: 0, fontFamily: 'var(--serif)' }}>Delete Book</h3>
-                </div>
+                <h3>Delete Book</h3>
               </div>
               <button className="icon-button" onClick={() => setBookToDelete(null)} disabled={deletingBook}><X /></button>
             </div>
-            
-            <p style={{ color: 'var(--muted)', fontSize: '0.95rem', lineHeight: 1.5, margin: '8px 0 24px' }}>
-              Are you sure you want to delete <strong style={{ color: 'var(--foreground)' }}>&quot;{bookToDelete.title}&quot;</strong>? This action will permanently remove the book from your live bookstore collection and database.
+            <p style={{ color: 'var(--muted)', fontSize: '0.95rem', margin: '14px 0 24px' }}>
+              Are you sure you want to delete <strong>&quot;{bookToDelete.title}&quot;</strong> permanently?
             </p>
-
-            <div className="admin-modal-actions" style={{ marginTop: '0', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-              <button
-                type="button"
-                className="text-button"
-                onClick={() => setBookToDelete(null)}
-                disabled={deletingBook}
-              >
-                Cancel
-              </button>
+            <div className="admin-modal-actions">
+              <button type="button" className="text-button" onClick={() => setBookToDelete(null)}>Cancel</button>
               <button
                 type="button"
                 className="button button-dark"
-                style={{ background: '#b42828', borderColor: '#b42828', color: '#fff', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                style={{ background: '#b42828', borderColor: '#b42828' }}
                 disabled={deletingBook}
                 onClick={confirmDeleteBook}
               >
-                {deletingBook ? <><Loader2 className="animate-spin" size={16} /> Deleting...</> : <><Trash2 size={16} /> Yes, Delete Book</>}
+                {deletingBook ? <Loader2 className="animate-spin" size={16} /> : <>Yes, Delete Book</>}
               </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* ================= MODAL: RECEIPT LIGHTBOX INSPECTOR ================= */}
+      {viewingReceiptModal && (
+        <div
+          className="admin-modal-overlay receipt-lightbox-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setViewingReceiptModal(null)
+          }}
+        >
+          <div className="receipt-lightbox-card">
+            <div className="receipt-lightbox-header">
+              <div className="receipt-header-meta">
+                <span className="presale-header-badge">PAYMENT RECEIPT INSPECTION</span>
+                <h3>Order #{viewingReceiptModal.orderNumber}</h3>
+                <div className="receipt-sub-details">
+                  {viewingReceiptModal.customerName && <span>Customer: <strong>{viewingReceiptModal.customerName}</strong></span>}
+                  {viewingReceiptModal.referenceNumber && <span>Reference: <code>{viewingReceiptModal.referenceNumber}</code></span>}
+                  {viewingReceiptModal.submittedAt && <span>Submitted: {new Date(viewingReceiptModal.submittedAt).toLocaleString()}</span>}
+                </div>
+              </div>
+              <div className="receipt-lightbox-actions">
+                <a
+                  href={viewingReceiptModal.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="button button-light btn-sm"
+                  title="Open full resolution in new window"
+                >
+                  <ExternalLink size={14} /> Open in New Tab
+                </a>
+                <a
+                  href={viewingReceiptModal.url}
+                  download={`receipt-${viewingReceiptModal.orderNumber || 'proof'}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="button button-light btn-sm"
+                  title="Download receipt file"
+                >
+                  <Download size={14} /> Download
+                </a>
+                <button
+                  type="button"
+                  className="icon-button"
+                  onClick={() => setViewingReceiptModal(null)}
+                  title="Close viewer (Esc)"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+
+            <div className="receipt-lightbox-body">
+              {viewingReceiptModal.url.toLowerCase().endsWith('.pdf') || viewingReceiptModal.url.includes('.pdf') ? (
+                <div className="pdf-embed-wrapper">
+                  <iframe
+                    src={viewingReceiptModal.url}
+                    title="PDF Receipt Viewer"
+                    className="pdf-iframe-view"
+                  />
+                </div>
+              ) : (
+                <div className="receipt-image-wrapper">
+                  <img
+                    src={viewingReceiptModal.url}
+                    alt={`Receipt for order ${viewingReceiptModal.orderNumber}`}
+                    className="receipt-full-image"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <Link href="/" className="admin-storefront-link">
-        <ArrowLeft /> Back to storefront
+        <ArrowLeft size={14} /> Back to live storefront
       </Link>
     </main>
   )
