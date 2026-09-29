@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -9,7 +9,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  List,
   Sparkles,
+  Type,
   X,
 } from 'lucide-react'
 import { BookPreview, PreviewChapter, DEFAULT_BOOK_PREVIEW } from '@/lib/types'
@@ -57,6 +59,11 @@ export function BookPreviewModal({
   const [preview, setPreview] = useState<BookPreview>(DEFAULT_BOOK_PREVIEW)
   const [activeChapterIndex, setActiveChapterIndex] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [mobileTocOpen, setMobileTocOpen] = useState(false)
+  const [fontSize, setFontSize] = useState<'sm' | 'md' | 'lg'>('md')
+  
+  const contentCanvasRef = useRef<HTMLElement>(null)
+  const tabsScrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!isOpen) return
@@ -81,7 +88,13 @@ export function BookPreviewModal({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        if (mobileTocOpen) {
+          setMobileTocOpen(false)
+        } else {
+          onClose()
+        }
+      }
     }
     if (isOpen) {
       window.addEventListener('keydown', handleKeyDown)
@@ -91,7 +104,17 @@ export function BookPreviewModal({
       window.removeEventListener('keydown', handleKeyDown)
       document.body.style.overflow = 'unset'
     }
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, mobileTocOpen])
+
+  // Scroll active chapter tab into view on mobile pill strip
+  useEffect(() => {
+    if (tabsScrollRef.current) {
+      const activeEl = tabsScrollRef.current.querySelector('.preview-strip-tab.is-active') as HTMLElement
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+      }
+    }
+  }, [activeChapterIndex])
 
   if (!isOpen) return null
 
@@ -103,6 +126,22 @@ export function BookPreviewModal({
   const currentChapter = chapters[activeChapterIndex] || chapters[0]
   const isLastChapter = activeChapterIndex === chapters.length - 1
 
+  const handleSelectChapter = (idx: number) => {
+    setActiveChapterIndex(idx)
+    setMobileTocOpen(false)
+    if (contentCanvasRef.current) {
+      contentCanvasRef.current.scrollTop = 0
+    }
+    const el = document.getElementById('chapter-content-body')
+    if (el) el.scrollTop = 0
+  }
+
+  const toggleFontSize = () => {
+    if (fontSize === 'sm') setFontSize('md')
+    else if (fontSize === 'md') setFontSize('lg')
+    else setFontSize('sm')
+  }
+
   return (
     <div className="preview-modal-overlay" onClick={(e) => {
       if (e.target === e.currentTarget) onClose()
@@ -110,46 +149,98 @@ export function BookPreviewModal({
       <div className="preview-reader-card" role="dialog" aria-modal="true" aria-label="Book Preview Reader">
         {/* Reader Top Bar */}
         <header className="preview-top-bar">
-          <div className="preview-top-meta">
-            <span className="preview-badge"><BookOpen size={13} /> Official Book Preview</span>
-            <span className="preview-book-title">{preview.title}</span>
-            <span className="preview-author-sub">By {preview.author}</span>
-          </div>
-          <div className="preview-top-actions">
+          <div className="preview-top-left">
             <button
+              type="button"
+              className="preview-mobile-toc-btn"
+              onClick={() => setMobileTocOpen(!mobileTocOpen)}
+              aria-label="Toggle Table of Contents"
+              title="Table of Contents"
+            >
+              <List size={17} />
+              <span className="toc-btn-text">
+                Contents <small>({activeChapterIndex + 1}/{chapters.length})</small>
+              </span>
+            </button>
+
+            <div className="preview-top-meta">
+              <span className="preview-badge"><BookOpen size={12} /> Excerpt</span>
+              <span className="preview-book-title">{preview.title}</span>
+              <span className="preview-author-sub">By {preview.author}</span>
+            </div>
+          </div>
+
+          <div className="preview-top-actions">
+            {/* Font Size Adjuster */}
+            <button
+              type="button"
+              className="preview-font-toggle-btn"
+              onClick={toggleFontSize}
+              title={`Reading Text Size: ${fontSize.toUpperCase()} (Click to toggle)`}
+              aria-label="Adjust font size"
+            >
+              <span className="font-toggle-icon">Aa</span>
+              <span className="font-size-indicator">{fontSize.toUpperCase()}</span>
+            </button>
+
+            <button
+              type="button"
               className="button button-dark btn-sm preview-cta-btn"
               onClick={() => {
                 onClose()
                 onPreOrderClick()
               }}
             >
-              Pre-order Book <ArrowRight size={14} />
+              <span className="preview-cta-full">Pre-order Book</span>
+              <span className="preview-cta-short">Pre-order</span>
+              <ArrowRight size={13} />
             </button>
-            <button className="icon-button" onClick={onClose} aria-label="Close preview reader">
-              <X />
+
+            <button className="icon-button preview-close-btn" onClick={onClose} aria-label="Close preview reader">
+              <X size={19} />
             </button>
           </div>
         </header>
 
+        {/* Mobile & Tablet Horizontal Chapter Selector Strip */}
+        <nav className="preview-mobile-strip-wrap" aria-label="Quick chapter selector">
+          <div className="preview-mobile-strip" ref={tabsScrollRef}>
+            {chapters.map((ch, idx) => (
+              <button
+                key={ch.id || idx}
+                type="button"
+                className={`preview-strip-tab ${activeChapterIndex === idx ? 'is-active' : ''}`}
+                onClick={() => handleSelectChapter(idx)}
+              >
+                <span className="strip-tab-num">{ch.chapter_number}</span>
+                <span className="strip-tab-title">{ch.title}</span>
+              </button>
+            ))}
+          </div>
+        </nav>
+
         {/* Reader Body Grid */}
         <div className="preview-reader-layout">
-          {/* Chapter Navigation Sidebar */}
+          {/* Chapter Navigation Sidebar (Desktop & Wide Tablet) */}
           <aside className="preview-chapters-nav">
-            <p className="eyebrow">Contents & Excerpts</p>
+            <div className="preview-nav-header">
+              <p className="eyebrow">Table of Contents</p>
+              <span className="chapters-count-tag">{chapters.length} Excerpts</span>
+            </div>
+            
             <div className="preview-chapter-links">
               {chapters.map((ch, idx) => (
                 <button
                   key={ch.id || idx}
                   className={`chapter-tab-btn ${activeChapterIndex === idx ? 'is-active' : ''}`}
-                  onClick={() => {
-                    setActiveChapterIndex(idx)
-                    const el = document.getElementById('chapter-content-body')
-                    if (el) el.scrollTop = 0
-                  }}
+                  onClick={() => handleSelectChapter(idx)}
                 >
-                  <span className="chapter-tab-num">{ch.chapter_number}</span>
+                  <div className="chapter-tab-top">
+                    <span className="chapter-tab-num">{ch.chapter_number}</span>
+                    <span className="chapter-tab-time"><Clock size={11} /> {ch.read_time}</span>
+                  </div>
                   <strong className="chapter-tab-title">{ch.title}</strong>
-                  <span className="chapter-tab-time"><Clock size={11} /> {ch.read_time}</span>
+                  {ch.subtitle && <p className="chapter-tab-sub">{ch.subtitle}</p>}
                 </button>
               ))}
             </div>
@@ -157,7 +248,7 @@ export function BookPreviewModal({
             <div className="preview-sidebar-cta">
               <div className="sidebar-cta-inner">
                 <Sparkles size={16} />
-                <strong>Want the full blueprint?</strong>
+                <strong>Want the full book?</strong>
                 <p>Reserve your first edition copy now before official release.</p>
                 <button
                   className="button button-dark btn-sm"
@@ -172,10 +263,69 @@ export function BookPreviewModal({
             </div>
           </aside>
 
+          {/* Mobile Table of Contents Slide-out Drawer */}
+          {mobileTocOpen && (
+            <div className="preview-mobile-toc-overlay" onClick={() => setMobileTocOpen(false)}>
+              <div className="preview-mobile-toc-drawer" onClick={(e) => e.stopPropagation()}>
+                <div className="mobile-toc-head">
+                  <div>
+                    <span className="eyebrow">TABLE OF CONTENTS</span>
+                    <h3>Preview Chapters</h3>
+                  </div>
+                  <button
+                    type="button"
+                    className="icon-button"
+                    onClick={() => setMobileTocOpen(false)}
+                    aria-label="Close table of contents"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+                <div className="mobile-toc-list">
+                  {chapters.map((ch, idx) => (
+                    <button
+                      key={ch.id || idx}
+                      type="button"
+                      className={`mobile-toc-item ${activeChapterIndex === idx ? 'is-active' : ''}`}
+                      onClick={() => handleSelectChapter(idx)}
+                    >
+                      <div className="mobile-toc-item-meta">
+                        <span className="chapter-tab-num">{ch.chapter_number}</span>
+                        <span className="chapter-tab-time"><Clock size={11} /> {ch.read_time}</span>
+                      </div>
+                      <strong className="mobile-toc-title">{ch.title}</strong>
+                      {ch.subtitle && <p className="mobile-toc-sub">{ch.subtitle}</p>}
+                    </button>
+                  ))}
+                </div>
+                <div className="mobile-toc-footer">
+                  <button
+                    type="button"
+                    className="button button-dark"
+                    style={{ width: '100%', justifyContent: 'center' }}
+                    onClick={() => {
+                      onClose()
+                      onPreOrderClick()
+                    }}
+                  >
+                    Pre-order Complete Edition <ArrowRight size={15} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Main Reading Canvas */}
-          <main id="chapter-content-body" className="preview-content-canvas">
+          <main
+            id="chapter-content-body"
+            ref={contentCanvasRef}
+            className="preview-content-canvas"
+          >
             <div className="chapter-header-box">
-              <span className="chapter-badge">{currentChapter.excerpt_badge || currentChapter.chapter_number}</span>
+              <div className="chapter-header-top-row">
+                <span className="chapter-badge">{currentChapter.excerpt_badge || currentChapter.chapter_number}</span>
+                <span className="chapter-progress-pill">Chapter {activeChapterIndex + 1} of {chapters.length}</span>
+              </div>
               <h1 className="chapter-display-title">{currentChapter.title}</h1>
               {currentChapter.subtitle && (
                 <p className="chapter-display-subtitle">{currentChapter.subtitle}</p>
@@ -189,10 +339,11 @@ export function BookPreviewModal({
               </div>
             </div>
 
-            {/* Chapter Formatted Content */}
-            <article className="chapter-prose">
+            {/* Chapter Formatted Content with dynamic font size */}
+            <article className={`chapter-prose font-size-${fontSize}`}>
               {currentChapter.content.split('\n\n').map((block, bIdx) => {
                 const trimmed = block.trim()
+                if (!trimmed) return null
                 if (trimmed.startsWith('### ')) {
                   return <h3 key={bIdx} className="prose-h3">{trimmed.replace('### ', '')}</h3>
                 }
@@ -259,37 +410,37 @@ export function BookPreviewModal({
                     Unlock all 12 chapters, interactive exercises, risk calculation formulas, and behavioral psychology strategies in the complete edition.
                   </p>
                   <button
-                    className="button button-dark btn-lg"
+                    type="button"
+                    className="button button-dark btn-lg preview-end-preorder-btn"
                     onClick={() => {
                       onClose()
                       onPreOrderClick()
                     }}
                   >
-                    Proceed to Pre-order <ArrowRight />
+                    Proceed to Pre-order <ArrowRight size={16} />
                   </button>
                 </div>
               ) : (
                 <div className="chapter-step-buttons">
                   <button
-                    className="button button-light btn-sm"
+                    type="button"
+                    className="button button-light btn-sm step-nav-btn prev-btn"
                     disabled={activeChapterIndex === 0}
-                    onClick={() => {
-                      setActiveChapterIndex(activeChapterIndex - 1)
-                      const el = document.getElementById('chapter-content-body')
-                      if (el) el.scrollTop = 0
-                    }}
+                    onClick={() => handleSelectChapter(activeChapterIndex - 1)}
                   >
-                    <ChevronLeft size={16} /> Previous Section
+                    <ChevronLeft size={16} /> <span className="nav-btn-text">Previous Section</span>
                   </button>
+
+                  <div className="step-page-counter">
+                    {activeChapterIndex + 1} / {chapters.length}
+                  </div>
+
                   <button
-                    className="button button-dark btn-sm"
-                    onClick={() => {
-                      setActiveChapterIndex(activeChapterIndex + 1)
-                      const el = document.getElementById('chapter-content-body')
-                      if (el) el.scrollTop = 0
-                    }}
+                    type="button"
+                    className="button button-dark btn-sm step-nav-btn next-btn"
+                    onClick={() => handleSelectChapter(activeChapterIndex + 1)}
                   >
-                    Next Section <ChevronRight size={16} />
+                    <span className="nav-btn-text">Next Section</span> <ChevronRight size={16} />
                   </button>
                 </div>
               )}

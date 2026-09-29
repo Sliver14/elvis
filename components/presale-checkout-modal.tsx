@@ -295,6 +295,7 @@ export function PresaleCheckoutModal({
 
         {/* Stepper Progress */}
         <div className="presale-stepper">
+          <div className="mobile-step-indicator">Step {step} of 4</div>
           <div className={`step-item ${step >= 1 ? 'is-active' : ''} ${step > 1 ? 'is-completed' : ''}`}>
             <span className="step-num">{step > 1 ? <Check size={12} /> : '1'}</span>
             <span className="step-label">Edition</span>
