@@ -115,7 +115,7 @@ export function LaunchView() {
             </button>
           </div>
           <div className="hero-micro-meta">
-            <span><ShieldCheck size={14} color="var(--primary)" /> Verified Manual & Multi-Payment</span>
+            <span><ShieldCheck size={14} color="var(--primary)" /> Secured Payment</span>
             <span>·</span>
             <span suppressHydrationWarning>
               Expected Release:{' '}
