@@ -288,32 +288,51 @@ export function PresaleCheckoutModal({
             <h2>Practical Trading Psychology</h2>
             <p className="presale-header-tagline">Process Over Profit · Win in the mind first</p>
           </div>
-          <button className="icon-button" onClick={onClose} disabled={submitting} aria-label="Close checkout">
-            <X />
+          <button className="icon-button presale-close-btn" onClick={onClose} disabled={submitting} aria-label="Close checkout">
+            <X size={19} />
           </button>
         </div>
 
         {/* Stepper Progress */}
         <div className="presale-stepper">
-          <div className="mobile-step-indicator">Step {step} of 4</div>
-          <div className={`step-item ${step >= 1 ? 'is-active' : ''} ${step > 1 ? 'is-completed' : ''}`}>
-            <span className="step-num">{step > 1 ? <Check size={12} /> : '1'}</span>
-            <span className="step-label">Edition</span>
+          <div className="mobile-step-indicator">
+            <div className="mobile-step-pill">
+              <span className="mobile-step-num">Step {Math.min(step, 4)} of 4</span>
+              <span className="mobile-step-title">
+                {step === 1 && 'Select Edition'}
+                {step === 2 && 'Customer & Delivery'}
+                {step === 3 && 'Payment Method'}
+                {step === 4 && 'Payment Proof'}
+                {step === 5 && 'Order Registered'}
+              </span>
+            </div>
+            <div className="mobile-step-bar-wrap">
+              <div
+                className="mobile-step-bar-fill"
+                style={{ width: `${Math.min(step, 4) * 25}%` }}
+              />
+            </div>
           </div>
-          <div className={`step-line ${step >= 2 ? 'is-active' : ''}`} />
-          <div className={`step-item ${step >= 2 ? 'is-active' : ''} ${step > 2 ? 'is-completed' : ''}`}>
-            <span className="step-num">{step > 2 ? <Check size={12} /> : '2'}</span>
-            <span className="step-label">Details</span>
-          </div>
-          <div className={`step-line ${step >= 3 ? 'is-active' : ''}`} />
-          <div className={`step-item ${step >= 3 ? 'is-active' : ''} ${step > 3 ? 'is-completed' : ''}`}>
-            <span className="step-num">{step > 3 ? <Check size={12} /> : '3'}</span>
-            <span className="step-label">Payment</span>
-          </div>
-          <div className={`step-line ${step >= 4 ? 'is-active' : ''}`} />
-          <div className={`step-item ${step >= 4 ? 'is-active' : ''} ${step > 4 ? 'is-completed' : ''}`}>
-            <span className="step-num">{step > 4 ? <Check size={12} /> : '4'}</span>
-            <span className="step-label">Evidence</span>
+          <div className="stepper-desktop-track">
+            <div className={`step-item ${step >= 1 ? 'is-active' : ''} ${step > 1 ? 'is-completed' : ''}`}>
+              <span className="step-num">{step > 1 ? <Check size={12} /> : '1'}</span>
+              <span className="step-label">Edition</span>
+            </div>
+            <div className={`step-line ${step >= 2 ? 'is-active' : ''}`} />
+            <div className={`step-item ${step >= 2 ? 'is-active' : ''} ${step > 2 ? 'is-completed' : ''}`}>
+              <span className="step-num">{step > 2 ? <Check size={12} /> : '2'}</span>
+              <span className="step-label">Details</span>
+            </div>
+            <div className={`step-line ${step >= 3 ? 'is-active' : ''}`} />
+            <div className={`step-item ${step >= 3 ? 'is-active' : ''} ${step > 3 ? 'is-completed' : ''}`}>
+              <span className="step-num">{step > 3 ? <Check size={12} /> : '3'}</span>
+              <span className="step-label">Payment</span>
+            </div>
+            <div className={`step-line ${step >= 4 ? 'is-active' : ''}`} />
+            <div className={`step-item ${step >= 4 ? 'is-active' : ''} ${step > 4 ? 'is-completed' : ''}`}>
+              <span className="step-num">{step > 4 ? <Check size={12} /> : '4'}</span>
+              <span className="step-label">Evidence</span>
+            </div>
           </div>
         </div>
 
