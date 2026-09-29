@@ -9,6 +9,14 @@ export const metadata: Metadata = {
   title: 'SERENDIPITY / ELVIS — Books for curious minds',
   description: 'An independent bookstore for ideas with staying power. Discover Practical Trading Psychology and more.',
   generator: 'insightnovatech.com',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/apple-icon.svg', type: 'image/svg+xml' },
+    ],
+  },
 }
 
 export const viewport: Viewport = {
