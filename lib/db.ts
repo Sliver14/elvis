@@ -248,6 +248,25 @@ export async function initDatabase() {
       );
     `
 
+    // 13. Broadcast Campaigns & Scheduled Delivery Logs Table
+    await sql`
+      CREATE TABLE IF NOT EXISTS broadcast_campaigns (
+        id VARCHAR(255) PRIMARY KEY,
+        campaign_type VARCHAR(50) NOT NULL,
+        launch_id VARCHAR(255),
+        subject VARCHAR(255) NOT NULL,
+        total_recipients INTEGER DEFAULT 0,
+        scheduled_at TIMESTAMPTZ,
+        status VARCHAR(50) DEFAULT 'dispatched',
+        sent_by VARCHAR(255),
+        details JSONB DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+    `
+    try {
+      await sql`CREATE INDEX IF NOT EXISTS idx_broadcast_created ON broadcast_campaigns(created_at DESC);`
+    } catch {}
+
     // Check if initial seeding has already been performed
     const seedCheck = await sql`SELECT value FROM admin_settings WHERE key = 'initial_seed_completed';`
     const hasSeeded = seedCheck.length > 0
@@ -474,4 +493,258 @@ export async function logAdminAudit(
     console.error('Error inserting admin audit log:', e)
   }
 }
+
+/**
+ * Fetch deduplicated recipients from both waitlist (launch_registrations) and newsletter (newsletter_subscribers)
+ */
+export async function getDeduplicatedLaunchRecipients(options: {
+  launchId?: string
+  includeWaitlist?: boolean
+  includeNewsletter?: boolean
+} = {}) {
+  const { launchId, includeWaitlist = true, includeNewsletter = true } = options
+  const sql = getDb()
+
+  if (!sql) {
+    return {
+      recipients: [],
+      waitlistCount: 0,
+      newsletterCount: 0,
+      totalUnique: 0,
+    }
+  }
+
+  try {
+    let waitlistRows: any[] = []
+    let newsletterRows: any[] = []
+
+    if (includeWaitlist) {
+      if (launchId) {
+        waitlistRows = await sql`
+          SELECT DISTINCT ON (LOWER(email)) id, name, email, agreed_updates, created_at
+          FROM launch_registrations
+          WHERE launch_id = ${launchId}
+          ORDER BY LOWER(email), created_at DESC;
+        `
+      } else {
+        waitlistRows = await sql`
+          SELECT DISTINCT ON (LOWER(email)) id, name, email, agreed_updates, created_at
+          FROM launch_registrations
+          ORDER BY LOWER(email), created_at DESC;
+        `
+      }
+    }
+
+    if (includeNewsletter) {
+      newsletterRows = await sql`
+        SELECT DISTINCT ON (LOWER(email)) id, email, created_at
+        FROM newsletter_subscribers
+        ORDER BY LOWER(email), created_at DESC;
+      `
+    }
+
+    // Merge & Deduplicate
+    const emailMap = new Map<string, { email: string; name: string; source: 'waitlist' | 'newsletter' | 'both' }>()
+
+    for (const w of waitlistRows) {
+      const key = (w.email || '').trim().toLowerCase()
+      if (!key || !key.includes('@')) continue
+      emailMap.set(key, {
+        email: (w.email || '').trim(),
+        name: (w.name || '').trim(),
+        source: 'waitlist',
+      })
+    }
+
+    for (const n of newsletterRows) {
+      const key = (n.email || '').trim().toLowerCase()
+      if (!key || !key.includes('@')) continue
+      if (emailMap.has(key)) {
+        const existing = emailMap.get(key)!
+        existing.source = 'both'
+      } else {
+        emailMap.set(key, {
+          email: (n.email || '').trim(),
+          name: '',
+          source: 'newsletter',
+        })
+      }
+    }
+
+    const recipients = Array.from(emailMap.values())
+
+    return {
+      recipients,
+      waitlistCount: waitlistRows.length,
+      newsletterCount: newsletterRows.length,
+      totalUnique: recipients.length,
+    }
+  } catch (error) {
+    console.error('Error fetching deduplicated recipients:', error)
+    return {
+      recipients: [],
+      waitlistCount: 0,
+      newsletterCount: 0,
+      totalUnique: 0,
+    }
+  }
+}
+
+/**
+ * Fetch all confirmed presale orders ready for digital/physical fulfillment
+ */
+export async function getConfirmedPresaleOrders(options: {
+  launchId?: string
+  onlyUndelivered?: boolean
+} = {}) {
+  const { launchId, onlyUndelivered = false } = options
+  const sql = getDb()
+
+  if (!sql) {
+    return { orders: [], count: 0 }
+  }
+
+  try {
+    let rawOrders: any[] = []
+
+    if (launchId) {
+      if (onlyUndelivered) {
+        rawOrders = await sql`
+          SELECT o.*, be.download_token
+          FROM orders o
+          LEFT JOIN book_entitlements be ON o.id = be.order_id
+          WHERE (o.payment_status = 'Confirmed' OR o.status = 'successful')
+            AND o.launch_id = ${launchId}
+            AND (o.pdf_sent = false OR o.pdf_sent IS NULL)
+          ORDER BY o.created_at ASC;
+        `
+      } else {
+        rawOrders = await sql`
+          SELECT o.*, be.download_token
+          FROM orders o
+          LEFT JOIN book_entitlements be ON o.id = be.order_id
+          WHERE (o.payment_status = 'Confirmed' OR o.status = 'successful')
+            AND o.launch_id = ${launchId}
+          ORDER BY o.created_at ASC;
+        `
+      }
+    } else {
+      if (onlyUndelivered) {
+        rawOrders = await sql`
+          SELECT o.*, be.download_token
+          FROM orders o
+          LEFT JOIN book_entitlements be ON o.id = be.order_id
+          WHERE (o.payment_status = 'Confirmed' OR o.status = 'successful')
+            AND (o.pdf_sent = false OR o.pdf_sent IS NULL)
+          ORDER BY o.created_at ASC;
+        `
+      } else {
+        rawOrders = await sql`
+          SELECT o.*, be.download_token
+          FROM orders o
+          LEFT JOIN book_entitlements be ON o.id = be.order_id
+          WHERE (o.payment_status = 'Confirmed' OR o.status = 'successful')
+          ORDER BY o.created_at ASC;
+        `
+      }
+    }
+
+    // Ensure every digital order has a download entitlement token
+    const enrichedOrders = await Promise.all(
+      rawOrders.map(async (order) => {
+        let downloadToken = order.download_token || order.access_token
+        if (!downloadToken) {
+          const crypto = await import('crypto')
+          downloadToken = crypto.randomUUID()
+          try {
+            await sql`
+              INSERT INTO book_entitlements (
+                order_id, order_number, customer_email, download_token, download_count, max_downloads, created_at
+              )
+              VALUES (${order.id}, ${order.order_number || order.reference}, ${order.customer_email}, ${downloadToken}, 0, 10, CURRENT_TIMESTAMP)
+              ON CONFLICT DO NOTHING;
+            `
+          } catch {}
+        }
+        return {
+          ...order,
+          download_token: downloadToken,
+        }
+      })
+    )
+
+    return {
+      orders: enrichedOrders,
+      count: enrichedOrders.length,
+    }
+  } catch (error) {
+    console.error('Error fetching confirmed presale orders:', error)
+    return { orders: [], count: 0 }
+  }
+}
+
+/**
+ * Record a broadcast campaign
+ */
+export async function recordBroadcastCampaign(campaign: {
+  id: string
+  campaignType: string
+  launchId?: string
+  subject: string
+  totalRecipients: number
+  scheduledAt?: string | null
+  status: string
+  sentBy?: string
+  details?: Record<string, any>
+}) {
+  const sql = getDb()
+  if (!sql) return
+
+  try {
+    await sql`
+      INSERT INTO broadcast_campaigns (
+        id, campaign_type, launch_id, subject, total_recipients, scheduled_at, status, sent_by, details, created_at
+      )
+      VALUES (
+        ${campaign.id},
+        ${campaign.campaignType},
+        ${campaign.launchId || null},
+        ${campaign.subject},
+        ${campaign.totalRecipients},
+        ${campaign.scheduledAt ? new Date(campaign.scheduledAt).toISOString() : null},
+        ${campaign.status},
+        ${campaign.sentBy || 'Admin'},
+        ${JSON.stringify(campaign.details || {})}::jsonb,
+        CURRENT_TIMESTAMP
+      );
+    `
+  } catch (e) {
+    console.error('Error recording broadcast campaign:', e)
+  }
+}
+
+/**
+ * Get recent broadcast campaigns
+ */
+export async function getBroadcastCampaigns(limit = 20) {
+  const sql = getDb()
+  if (!sql) return []
+
+  try {
+    const campaigns = await sql`
+      SELECT *
+      FROM broadcast_campaigns
+      ORDER BY created_at DESC
+      LIMIT ${limit};
+    `
+    return campaigns.map((c: any) => ({
+      ...c,
+      details: typeof c.details === 'string' ? JSON.parse(c.details) : c.details,
+    }))
+  } catch (e) {
+    console.error('Error loading broadcast campaigns:', e)
+    return []
+  }
+}
+
 

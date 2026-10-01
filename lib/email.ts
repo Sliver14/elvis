@@ -534,6 +534,7 @@ export async function sendPaymentProofSubmittedCustomerEmail({
 
 /**
  * Send Payment Confirmed Email to Customer
+ * Confirms payment has been received and explains book delivery on launch date
  */
 export async function sendPaymentConfirmedCustomerEmail({
   customerEmail,
@@ -569,20 +570,27 @@ export async function sendPaymentConfirmedCustomerEmail({
     <div style="font-family: Georgia, 'Times New Roman', serif; background-color: #F7F6F3; padding: 40px 20px; color: #281810;">
       <div style="max-width: 600px; margin: auto; background: #ffffff; border: 1px solid #ded8cb; padding: 40px; border-radius: 4px; box-shadow: 0 10px 30px rgba(40,24,16,0.06);">
         <div style="border-bottom: 1px solid #ded8cb; padding-bottom: 22px; margin-bottom: 24px;">
-          <span style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #8E8E8E;">SERENDIPITY / ELVIS · VERIFIED PURCHASE</span>
-          <h1 style="font-size: 28px; color: #281810; margin: 10px 0 0; font-weight: 400;">Payment Confirmed!</h1>
+          <span style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #8E8E8E;">SERENDIPITY / ELVIS · VERIFIED PRESALE PURCHASE</span>
+          <h1 style="font-size: 28px; color: #281810; margin: 10px 0 0; font-weight: 400;">Pre-order Payment Confirmed!</h1>
         </div>
 
         <p style="font-family: Arial, sans-serif; font-size: 15px; color: #4a382c; line-height: 1.6;">
           Hello <strong>${customerName}</strong>,<br/><br/>
-          Your payment for <strong>${bookTitle}</strong> (Order <strong>#${orderNumber}</strong>) has been verified and officially confirmed by Dr Elvis Justice Bedi Publications.
+          Your payment for <strong>${bookTitle}</strong> (Order <strong>#${orderNumber}</strong>) has been verified and officially confirmed. Your copy is now securely reserved.
         </p>
 
-        <div style="background: #f4fbf7; border: 1px solid #c3e6cb; padding: 20px; border-radius: 4px; margin: 24px 0; font-family: Arial, sans-serif;">
+        <div style="background: #f4fbf7; border: 1px solid #c3e6cb; padding: 22px; border-radius: 4px; margin: 24px 0; font-family: Arial, sans-serif;">
           <h3 style="margin: 0 0 8px; color: #155724; font-size: 16px;">Pre-order Status: Confirmed & Reserved</h3>
-          <p style="margin: 0; font-size: 13px; color: #2d6a4f; line-height: 1.5;">
-            Selected Edition: <strong>${formatName}</strong><br/>
-            ${isPhysical ? 'Your physical edition is allocated for priority dispatch on the official launch day.' : `Your digital edition is secured and will be unlocked automatically on the official launch date (${releaseDateStr}).`}
+          <p style="margin: 0 0 10px; font-size: 13px; color: #2d6a4f; line-height: 1.6;">
+            <strong>Edition Selected:</strong> ${formatName}<br/>
+            <strong>Official Launch Date:</strong> ${releaseDateStr}
+          </p>
+          <p style="margin: 0; font-size: 13px; color: #2d6a4f; line-height: 1.6; border-top: 1px dashed #a3d9b8; padding-top: 10px;">
+            ${
+              isPhysical
+                ? 'Your physical hardcover edition is allocated and queued for priority dispatch on the official launch day.'
+                : `Your complete digital book download link will be delivered directly to your inbox (<strong>${customerEmail}</strong>) on the official launch date (${releaseDateStr}).`
+            }
           </p>
         </div>
 
@@ -590,6 +598,9 @@ export async function sendPaymentConfirmedCustomerEmail({
           downloadUrl
             ? `
           <div style="text-align: center; margin: 28px 0;">
+            <p style="font-family: Arial, sans-serif; font-size: 13px; color: #155724; margin-bottom: 12px;">
+              Early digital access has been granted for your edition:
+            </p>
             <a href="${downloadUrl}" target="_blank" style="display: inline-block; background: #6B3D24; color: #ffffff; padding: 14px 28px; font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; text-decoration: none; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.05em;">
               Download Your Book Now &rarr;
             </a>
@@ -598,14 +609,18 @@ export async function sendPaymentConfirmedCustomerEmail({
             : `
           <div style="text-align: center; margin: 28px 0;">
             <a href="${trackingUrl}" target="_blank" style="display: inline-block; background: #281810; color: #ffffff; padding: 14px 28px; font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; text-decoration: none; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.05em;">
-              View Pre-order & Tracking &rarr;
+              View Pre-order & Live Tracking &rarr;
             </a>
           </div>
         `
         }
 
+        <p style="font-family: Georgia, serif; font-size: 15px; font-style: italic; color: #6B3D24; margin-bottom: 28px; text-align: center;">
+          &ldquo;Process over profit. Win in the mind first.&rdquo;
+        </p>
+
         <div style="border-top: 1px solid #ded8cb; padding-top: 18px; font-family: Arial, sans-serif; font-size: 11px; color: #8E8E8E; text-align: center;">
-          Serendipity / Elvis Bookstore · <a href="mailto:hello@elvisjusticebooks.com" style="color: #6B3D24;">hello@elvisjusticebooks.com</a>
+          Serendipity / Elvis Bookstore · Need assistance? <a href="mailto:hello@elvisjusticebooks.com" style="color: #6B3D24;">hello@elvisjusticebooks.com</a>
         </div>
       </div>
     </div>
@@ -698,7 +713,7 @@ export async function sendPaymentRejectedCustomerEmail({
 }
 
 /**
- * Send Book Release / Delivery Notification
+ * Send Single Book Release / Delivery Notification
  */
 export async function sendBookReleasedCustomerEmail({
   customerEmail,
@@ -788,6 +803,318 @@ export async function sendBookReleasedCustomerEmail({
     return { success: false, error }
   }
 }
+
+export interface BulkLaunchRecipient {
+  email: string
+  name?: string
+  source?: 'waitlist' | 'newsletter' | 'both'
+}
+
+export interface SendBulkLaunchNotificationParams {
+  recipients: BulkLaunchRecipient[]
+  launchTitle: string
+  authorName?: string
+  launchDate?: string
+  tagline?: string
+  customMessage?: string
+  storeUrl?: string
+  previewUrl?: string
+  scheduledAt?: string // ISO 8601 e.g. "2026-11-06T09:00:00.000Z"
+}
+
+/**
+ * Bulk Launch Notification for deduplicated Waitlist + Newsletter subscribers
+ * Supports Resend Scheduled Sending and batching
+ */
+export async function sendBulkLaunchNotificationEmails({
+  recipients,
+  launchTitle = 'Practical Trading Psychology',
+  authorName = 'Dr Elvis Justice Bedi',
+  launchDate,
+  tagline = 'Process over profit. Win in the mind first.',
+  customMessage,
+  storeUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  previewUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/preview/practical-trading-psychology`,
+  scheduledAt,
+}: SendBulkLaunchNotificationParams) {
+  if (!recipients || recipients.length === 0) {
+    return { success: true, totalSent: 0, scheduled: Boolean(scheduledAt), message: 'No recipients to notify.' }
+  }
+
+  const dateStr = launchDate
+    ? new Date(launchDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : 'Today'
+
+  // Helper to build HTML for each recipient
+  const buildHtml = (name?: string) => `
+    <div style="font-family: Georgia, 'Times New Roman', serif; background-color: #F7F6F3; padding: 40px 20px; color: #281810;">
+      <div style="max-width: 620px; margin: auto; background: #ffffff; border: 1px solid #ded8cb; padding: 42px; border-radius: 4px; box-shadow: 0 10px 30px rgba(40,24,16,0.06);">
+        <div style="border-bottom: 1px solid #ded8cb; padding-bottom: 22px; margin-bottom: 24px;">
+          <span style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #8E8E8E;">SERENDIPITY / ELVIS · OFFICIAL RELEASE</span>
+          <h1 style="font-size: 28px; color: #281810; margin: 10px 0 0; font-weight: 400;">${launchTitle} Is Now Live</h1>
+        </div>
+
+        <p style="font-family: Arial, sans-serif; font-size: 15px; color: #4a382c; line-height: 1.6;">
+          Hello ${name ? `<strong>${name}</strong>` : 'Reader'},<br/><br/>
+          The wait is over. <strong>${launchTitle}</strong> by <strong>${authorName}</strong> is now officially released!
+        </p>
+
+        ${
+          customMessage
+            ? `
+          <div style="background: #fffdfa; border-left: 4px solid #B57A4B; padding: 16px 20px; margin: 22px 0; font-family: Arial, sans-serif; font-size: 14px; color: #4a382c; line-height: 1.6;">
+            ${customMessage}
+          </div>
+        `
+            : ''
+        }
+
+        <div style="background: #faf8f5; border: 1px solid #ded8cb; padding: 24px; border-radius: 4px; margin: 26px 0;">
+          <p style="margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: #B57A4B; font-weight: bold;">New Book Release</p>
+          <h2 style="margin: 0 0 10px; font-size: 22px; color: #281810; font-family: Georgia, serif;">${launchTitle}</h2>
+          <p style="margin: 0 0 16px; font-family: Arial, sans-serif; font-size: 14px; color: #6B3D24; font-style: italic;">
+            &ldquo;${tagline}&rdquo;
+          </p>
+          <p style="margin: 0; font-family: Arial, sans-serif; font-size: 13px; color: #4a382c; line-height: 1.6;">
+            Available formats: <strong>Digital eBook (PDF & EPUB)</strong>, <strong>Audiobook Masterclass</strong>, and <strong>Executive Clothbound Hardcover</strong>.
+          </p>
+        </div>
+
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="${storeUrl}" target="_blank" style="display: inline-block; background: #6B3D24; color: #ffffff; padding: 14px 30px; font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; text-decoration: none; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 10px; margin-bottom: 10px;">
+            Order Your Copy Now &rarr;
+          </a>
+          <a href="${previewUrl}" target="_blank" style="display: inline-block; background: #faf8f5; border: 1px solid #ded8cb; color: #281810; padding: 13px 24px; font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; text-decoration: none; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px;">
+            Read Free Preview Excerpt
+          </a>
+        </div>
+
+        <div style="border-top: 1px solid #ded8cb; padding-top: 18px; font-family: Arial, sans-serif; font-size: 11px; color: #8E8E8E; text-align: center;">
+          Serendipity / Elvis Bookstore · Books for Curious Minds · <a href="mailto:hello@elvisjusticebooks.com" style="color: #6B3D24;">hello@elvisjusticebooks.com</a>
+          <br/>You received this email because you registered on our priority waitlist or reading newsletter.
+        </div>
+      </div>
+    </div>
+  `
+
+  if (!resend) {
+    console.log(`[Resend Mock Bulk Launch Notification] Dispatched to ${recipients.length} recipients (Scheduled: ${scheduledAt || 'Immediate'})`)
+    return {
+      success: true,
+      totalSent: recipients.length,
+      scheduled: Boolean(scheduledAt),
+      scheduledAt,
+      mocked: true,
+    }
+  }
+
+  try {
+    // Process in batches of 100 (Resend batch API limit)
+    const BATCH_SIZE = 100
+    let totalSuccess = 0
+    const errors: any[] = []
+
+    for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+      const batchSlice = recipients.slice(i, i + BATCH_SIZE)
+      const batchPayload = batchSlice.map((r) => {
+        const item: any = {
+          from: `Dr Elvis Justice Bedi <${resendFromEmail}>`,
+          to: [r.email],
+          subject: `Out Now: ${launchTitle} by ${authorName}`,
+          html: buildHtml(r.name),
+        }
+        if (scheduledAt) {
+          item.scheduledAt = new Date(scheduledAt).toISOString()
+        }
+        return item
+      })
+
+      try {
+        const res = await resend.batch.send(batchPayload)
+        if (res.error) {
+          console.error('Resend batch error:', res.error)
+          errors.push(res.error)
+        } else {
+          totalSuccess += batchSlice.length
+        }
+      } catch (err: any) {
+        console.error('Resend batch send exception:', err)
+        errors.push(err?.message)
+      }
+    }
+
+    return {
+      success: errors.length === 0,
+      totalSent: totalSuccess,
+      scheduled: Boolean(scheduledAt),
+      scheduledAt,
+      errors: errors.length > 0 ? errors : undefined,
+    }
+  } catch (error: any) {
+    console.error('Failed to send bulk launch notification:', error)
+    return { success: false, error: error?.message || 'Bulk sending failed' }
+  }
+}
+
+export interface PresaleDeliveryItem {
+  orderNumber: string
+  customerEmail: string
+  customerName: string
+  bookTitle: string
+  bookFormat: string
+  downloadUrl?: string
+  accessToken?: string
+  trackingUrl?: string
+  trackingReference?: string
+  courierName?: string
+}
+
+export interface SendBulkPresaleDeliveryParams {
+  items: PresaleDeliveryItem[]
+  scheduledAt?: string // ISO 8601 string or timestamp
+}
+
+/**
+ * Bulk Digital Book Delivery for Paid Presale Customers
+ * Delivers secure download tokens / shipment notifications with optional Scheduled Sending
+ */
+export async function sendBulkPresaleBookDeliveryEmails({
+  items,
+  scheduledAt,
+}: SendBulkPresaleDeliveryParams) {
+  if (!items || items.length === 0) {
+    return { success: true, totalDelivered: 0, scheduled: Boolean(scheduledAt), message: 'No presale orders to fulfill.' }
+  }
+
+  const buildHtml = (item: PresaleDeliveryItem) => {
+    const isPhysical = item.bookFormat?.includes('printed') || item.bookFormat?.includes('bundle')
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const trackingUrl = item.trackingUrl || `${appUrl}/order/${item.accessToken || item.orderNumber}`
+
+    return `
+      <div style="font-family: Georgia, 'Times New Roman', serif; background-color: #F7F6F3; padding: 40px 20px; color: #281810;">
+        <div style="max-width: 620px; margin: auto; background: #ffffff; border: 1px solid #ded8cb; padding: 42px; border-radius: 4px; box-shadow: 0 10px 30px rgba(40,24,16,0.06);">
+          <div style="border-bottom: 1px solid #ded8cb; padding-bottom: 22px; margin-bottom: 24px;">
+            <span style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #8E8E8E;">SERENDIPITY / ELVIS · EXCLUSIVE PRESALE FULFILLMENT</span>
+            <h1 style="font-size: 28px; color: #281810; margin: 10px 0 0; font-weight: 400;">Your Book Has Arrived!</h1>
+          </div>
+
+          <p style="font-family: Arial, sans-serif; font-size: 15px; color: #4a382c; line-height: 1.6;">
+            Hello <strong>${item.customerName || 'Reader'}</strong>,<br/><br/>
+            Thank you for being an early presale supporter of <strong>${item.bookTitle}</strong> by Dr Elvis Justice Bedi. The launch has arrived, and your official copy is ready!
+          </p>
+
+          <div style="background: #faf8f5; border: 1px solid #ded8cb; padding: 20px; border-radius: 4px; margin: 24px 0; font-family: Arial, sans-serif;">
+            <p style="margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #8E8E8E;">Order Reference</p>
+            <strong style="color: #281810; font-size: 15px;">#${item.orderNumber}</strong> &nbsp;·&nbsp; Edition: <strong>${item.bookFormat.replace(/_/g, ' ')}</strong>
+          </div>
+
+          ${
+            item.downloadUrl
+              ? `
+            <div style="background: #f4fbf7; border: 1px solid #c3e6cb; padding: 26px; border-radius: 4px; margin: 26px 0; text-align: center;">
+              <h3 style="margin: 0 0 8px; color: #155724; font-size: 18px; font-family: Georgia, serif;">Instant Digital Edition Ready</h3>
+              <p style="font-family: Arial, sans-serif; font-size: 13px; color: #2d6a4f; margin-bottom: 20px;">
+                Your personal license has been generated for ${item.customerEmail}. Click below to download:
+              </p>
+              <a href="${item.downloadUrl}" target="_blank" style="display: inline-block; background: #6B3D24; color: #ffffff; padding: 15px 32px; font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; text-decoration: none; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.06em;">
+                Download Complete Book (PDF / eBook) &rarr;
+              </a>
+            </div>
+          `
+              : ''
+          }
+
+          ${
+            isPhysical
+              ? `
+            <div style="background: #faf8f5; border: 1px solid #ded8cb; padding: 20px; border-radius: 4px; margin: 24px 0; font-family: Arial, sans-serif; font-size: 13px;">
+              <strong>Physical Edition Priority Dispatch:</strong>
+              <p style="margin: 6px 0 0; color: #4a382c; line-height: 1.5;">
+                Courier: <strong>${item.courierName || 'Priority Express'}</strong><br/>
+                Tracking Reference: <strong>${item.trackingReference || 'Preparing Dispatch'}</strong>
+              </p>
+            </div>
+          `
+              : ''
+          }
+
+          <div style="text-align: center; margin: 28px 0;">
+            <a href="${trackingUrl}" target="_blank" style="display: inline-block; background: #281810; color: #ffffff; padding: 12px 24px; font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; text-decoration: none; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.05em;">
+              View Order Details & Reader Portal &rarr;
+            </a>
+          </div>
+
+          <p style="font-family: Georgia, serif; font-size: 15px; font-style: italic; color: #6B3D24; margin: 28px 0; text-align: center;">
+            &ldquo;Process over profit. Win in the mind first.&rdquo;
+          </p>
+
+          <div style="border-top: 1px solid #ded8cb; padding-top: 18px; font-family: Arial, sans-serif; font-size: 11px; color: #8E8E8E; text-align: center;">
+            Serendipity / Elvis Bookstore · Need support? <a href="mailto:hello@elvisjusticebooks.com" style="color: #6B3D24;">hello@elvisjusticebooks.com</a>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  if (!resend) {
+    console.log(`[Resend Mock Bulk Presale Delivery] Delivering books to ${items.length} paid presale orders (Scheduled: ${scheduledAt || 'Immediate'})`)
+    return {
+      success: true,
+      totalDelivered: items.length,
+      scheduled: Boolean(scheduledAt),
+      scheduledAt,
+      mocked: true,
+    }
+  }
+
+  try {
+    const BATCH_SIZE = 100
+    let totalSuccess = 0
+    const errors: any[] = []
+
+    for (let i = 0; i < items.length; i += BATCH_SIZE) {
+      const batchSlice = items.slice(i, i + BATCH_SIZE)
+      const batchPayload = batchSlice.map((item) => {
+        const emailObj: any = {
+          from: `Dr Elvis Justice Bedi <${resendFromEmail}>`,
+          to: [item.customerEmail],
+          subject: `Your Book Is Ready: ${item.bookTitle} (Pre-order #${item.orderNumber})`,
+          html: buildHtml(item),
+        }
+        if (scheduledAt) {
+          emailObj.scheduledAt = new Date(scheduledAt).toISOString()
+        }
+        return emailObj
+      })
+
+      try {
+        const res = await resend.batch.send(batchPayload)
+        if (res.error) {
+          console.error('Resend batch presale delivery error:', res.error)
+          errors.push(res.error)
+        } else {
+          totalSuccess += batchSlice.length
+        }
+      } catch (err: any) {
+        console.error('Resend batch delivery error:', err)
+        errors.push(err?.message)
+      }
+    }
+
+    return {
+      success: errors.length === 0,
+      totalDelivered: totalSuccess,
+      scheduled: Boolean(scheduledAt),
+      scheduledAt,
+      errors: errors.length > 0 ? errors : undefined,
+    }
+  } catch (error: any) {
+    console.error('Failed to send bulk presale delivery:', error)
+    return { success: false, error: error?.message || 'Bulk fulfillment failed' }
+  }
+}
+
 
 
 

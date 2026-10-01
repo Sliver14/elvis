@@ -451,6 +451,129 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [bookToDelete, setBookToDelete] = useState<{ id: string; title: string } | null>(null)
   const [deletingBook, setDeletingBook] = useState(false)
 
+  // Launch Distribution & Scheduled Sending Hub
+  const [showBroadcastModal, setShowBroadcastModal] = useState(false)
+  const [broadcastTab, setBroadcastTab] = useState<'announcement' | 'presale_delivery' | 'history'>('announcement')
+  const [audienceSummary, setAudienceSummary] = useState<{
+    launch_title: string
+    launch_date: string
+    waitlist_count: number
+    newsletter_count: number
+    total_unique_recipients: number
+    confirmed_presale_orders_count: number
+    early_delivery_enabled: boolean
+  } | null>(null)
+  const [loadingAudience, setLoadingAudience] = useState(false)
+
+  // Announcement Form State
+  const [broadcastSubject, setBroadcastSubject] = useState('')
+  const [broadcastCustomMsg, setBroadcastCustomMsg] = useState('')
+  const [includeWaitlist, setIncludeWaitlist] = useState(true)
+  const [includeNewsletter, setIncludeNewsletter] = useState(true)
+  const [broadcastScheduleMode, setBroadcastScheduleMode] = useState<'immediate' | 'scheduled'>('scheduled')
+  const [broadcastScheduledDate, setBroadcastScheduledDate] = useState('2026-11-06T09:00')
+  const [sendingBroadcast, setSendingBroadcast] = useState(false)
+
+  // Presale Delivery Form State
+  const [deliveryScheduleMode, setDeliveryScheduleMode] = useState<'immediate' | 'scheduled'>('scheduled')
+  const [deliveryScheduledDate, setDeliveryScheduledDate] = useState('2026-11-06T09:00')
+  const [deliveringBooks, setDeliveringBooks] = useState(false)
+  const [onlyUndeliveredOrders, setOnlyUndeliveredOrders] = useState(false)
+
+  // Broadcast History
+  const [broadcastCampaigns, setBroadcastCampaigns] = useState<any[]>([])
+  const [loadingCampaigns, setLoadingCampaigns] = useState(false)
+
+  const openBroadcastHub = async (tab: 'announcement' | 'presale_delivery' | 'history' = 'announcement') => {
+    setBroadcastTab(tab)
+    setShowBroadcastModal(true)
+    setLoadingAudience(true)
+    try {
+      const [sumRes, campRes] = await Promise.all([
+        fetch('/api/admin/launches/recipients-summary'),
+        fetch('/api/admin/broadcasts'),
+      ])
+      const sumData = await sumRes.json()
+      if (sumData.success && sumData.summary) {
+        setAudienceSummary(sumData.summary)
+        if (sumData.summary.launch_date) {
+          try {
+            const dtStr = new Date(sumData.summary.launch_date).toISOString().slice(0, 16)
+            setBroadcastScheduledDate(dtStr)
+            setDeliveryScheduledDate(dtStr)
+          } catch {}
+        }
+      }
+      const campData = await campRes.json()
+      if (campData.success && campData.campaigns) {
+        setBroadcastCampaigns(campData.campaigns)
+      }
+    } catch (e) {
+      console.error('Error fetching broadcast summary:', e)
+    } finally {
+      setLoadingAudience(false)
+    }
+  }
+
+  const handleSendLaunchBroadcast = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSendingBroadcast(true)
+    try {
+      const payload = {
+        subject: broadcastSubject || undefined,
+        custom_message: broadcastCustomMsg || undefined,
+        scheduled_at: broadcastScheduleMode === 'scheduled' ? broadcastScheduledDate : undefined,
+        include_waitlist: includeWaitlist,
+        include_newsletter: includeNewsletter,
+      }
+      const res = await fetch('/api/admin/launches/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        showToast(data.message || 'Launch announcement processed successfully!')
+        setShowBroadcastModal(false)
+        loadAdminData()
+      } else {
+        alert(data.error || 'Failed to dispatch launch broadcast.')
+      }
+    } catch {
+      alert('Network error dispatching broadcast.')
+    } finally {
+      setSendingBroadcast(false)
+    }
+  }
+
+  const handleDeliverPresaleBooks = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setDeliveringBooks(true)
+    try {
+      const payload = {
+        scheduled_at: deliveryScheduleMode === 'scheduled' ? deliveryScheduledDate : undefined,
+        only_undelivered: onlyUndeliveredOrders,
+      }
+      const res = await fetch('/api/admin/launches/deliver-books', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        showToast(data.message || 'Presale book delivery processed successfully!')
+        setShowBroadcastModal(false)
+        loadAdminData()
+      } else {
+        alert(data.error || 'Failed to deliver presale books.')
+      }
+    } catch {
+      alert('Network error delivering books.')
+    } finally {
+      setDeliveringBooks(false)
+    }
+  }
+
   // Load All Admin Data
   const loadAdminData = async () => {
     setLoadingData(true)
@@ -933,6 +1056,35 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             </article>
           </div>
 
+          {/* Launch Day Notification & Bulk Scheduled Fulfillment Control Center */}
+          <div className="admin-broadcast-banner">
+            <div className="broadcast-banner-info">
+              <div className="broadcast-banner-badge">
+                <Sparkles size={13} /> LAUNCH DISTRIBUTION & SCHEDULED SENDING
+              </div>
+              <h3>Launch Day Broadcast & Presale Book Delivery Hub</h3>
+              <p>
+                Dispatch scheduled announcements to deduplicated waitlist & newsletter subscribers (0 duplicate emails), and deliver digital books with download tokens to all paid presale orders.
+              </p>
+            </div>
+            <div className="broadcast-banner-actions">
+              <button
+                type="button"
+                className="button button-dark btn-sm"
+                onClick={() => openBroadcastHub('announcement')}
+              >
+                <Mail size={14} /> Broadcast Launch to Audience
+              </button>
+              <button
+                type="button"
+                className="button button-light btn-sm"
+                onClick={() => openBroadcastHub('presale_delivery')}
+              >
+                <Download size={14} /> Deliver Books to Presales
+              </button>
+            </div>
+          </div>
+
           {/* Quick Review Queue + Launch Status */}
           <div className="admin-content-grid">
             {/* Quick Action Payment Queue */}
@@ -1089,6 +1241,12 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               <h2>Book Presale Orders & Fulfilment</h2>
             </div>
             <div className="admin-header-actions">
+              <button
+                className="button button-dark btn-sm"
+                onClick={() => openBroadcastHub('presale_delivery')}
+              >
+                <Download size={14} /> Deliver Digital Books
+              </button>
               <button
                 className="button button-light btn-sm"
                 onClick={() => exportCsv(presalesList, `presale-orders-${Date.now()}.csv`)}
@@ -1857,9 +2015,17 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               <p className="eyebrow">Launch Management</p>
               <h2>Book Launches</h2>
             </div>
-            <button className="button button-dark" onClick={() => setShowNewLaunchModal(true)}>
-              <Plus size={16} /> Create Dynamic Launch
-            </button>
+            <div className="admin-header-actions">
+              <button
+                className="button button-light btn-sm"
+                onClick={() => openBroadcastHub('announcement')}
+              >
+                <Mail size={14} /> Broadcast Launch
+              </button>
+              <button className="button button-dark btn-sm" onClick={() => setShowNewLaunchModal(true)}>
+                <Plus size={15} /> Create Dynamic Launch
+              </button>
+            </div>
           </div>
 
           <div className="admin-table-wrap">
@@ -2793,6 +2959,339 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: LAUNCH DISTRIBUTION & SCHEDULED SENDING HUB ================= */}
+      {showBroadcastModal && (
+        <div
+          className="admin-modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !sendingBroadcast && !deliveringBooks) {
+              setShowBroadcastModal(false)
+            }
+          }}
+        >
+          <div className="admin-modal-card wide-modal" style={{ maxWidth: '840px' }}>
+            <div className="admin-modal-header">
+              <div>
+                <p className="eyebrow">SERENDIPITY / ELVIS · LAUNCH DAY BROADCAST & FULFILLMENT</p>
+                <h3>Launch Distribution & Scheduled Sending Hub</h3>
+              </div>
+              <button
+                className="icon-button"
+                onClick={() => setShowBroadcastModal(false)}
+                disabled={sendingBroadcast || deliveringBooks}
+              >
+                <X />
+              </button>
+            </div>
+
+            {/* Modal Internal Navigation Tabs */}
+            <div className="broadcast-modal-tabs">
+              <button
+                type="button"
+                className={`broadcast-tab-btn ${broadcastTab === 'announcement' ? 'is-active' : ''}`}
+                onClick={() => setBroadcastTab('announcement')}
+              >
+                <Mail size={14} /> Broadcast Launch to Audience
+              </button>
+              <button
+                type="button"
+                className={`broadcast-tab-btn ${broadcastTab === 'presale_delivery' ? 'is-active' : ''}`}
+                onClick={() => setBroadcastTab('presale_delivery')}
+              >
+                <Download size={14} /> Deliver Books to Paid Presales ({audienceSummary?.confirmed_presale_orders_count ?? presalesList.filter(o => o.payment_status === 'Confirmed').length})
+              </button>
+              <button
+                type="button"
+                className={`broadcast-tab-btn ${broadcastTab === 'history' ? 'is-active' : ''}`}
+                onClick={() => setBroadcastTab('history')}
+              >
+                <Clock size={14} /> Campaign Logs ({broadcastCampaigns.length})
+              </button>
+            </div>
+
+            {/* Audience Summary Metrics Bar */}
+            <div className="broadcast-summary-grid">
+              <div className="broadcast-stat-chip">
+                <span>Waitlist Registrants</span>
+                <strong>{audienceSummary?.waitlist_count ?? stats?.registrationsCount ?? 0}</strong>
+              </div>
+              <div className="broadcast-stat-chip">
+                <span>Newsletter Readers</span>
+                <strong>{audienceSummary?.newsletter_count ?? subscribersList.length}</strong>
+              </div>
+              <div className="broadcast-stat-chip stat-highlight">
+                <span>Unique Reach (0 Duplicates)</span>
+                <strong>{audienceSummary?.total_unique_recipients ?? ((audienceSummary?.waitlist_count || 0) + (audienceSummary?.newsletter_count || 0))}</strong>
+              </div>
+              <div className="broadcast-stat-chip">
+                <span>Confirmed Presales</span>
+                <strong>{audienceSummary?.confirmed_presale_orders_count ?? presalesList.filter(o => o.payment_status === 'Confirmed').length}</strong>
+              </div>
+            </div>
+
+            {/* TAB 1: BROADCAST LAUNCH ANNOUNCEMENT */}
+            {broadcastTab === 'announcement' && (
+              <form onSubmit={handleSendLaunchBroadcast} className="admin-modal-form">
+                <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', background: 'var(--paper)', padding: '12px 16px', borderRadius: '4px', border: '1px solid var(--line)' }}>
+                  <label className="checkbox-label admin-checkbox" style={{ margin: 0, textTransform: 'none', color: 'var(--ink)' }}>
+                    <input
+                      type="checkbox"
+                      checked={includeWaitlist}
+                      onChange={(e) => setIncludeWaitlist(e.target.checked)}
+                    />
+                    <span>Include Priority Waitlist ({audienceSummary?.waitlist_count ?? 0})</span>
+                  </label>
+                  <label className="checkbox-label admin-checkbox" style={{ margin: 0, textTransform: 'none', color: 'var(--ink)' }}>
+                    <input
+                      type="checkbox"
+                      checked={includeNewsletter}
+                      onChange={(e) => setIncludeNewsletter(e.target.checked)}
+                    />
+                    <span>Include Newsletter Subscribers ({audienceSummary?.newsletter_count ?? 0})</span>
+                  </label>
+                </div>
+
+                <div className="zero-duplicate-banner">
+                  <CheckCircle2 size={15} />
+                  <span>
+                    <strong>Zero-Duplicate Engine Active:</strong> Subscribers present on both waitlist and newsletter are automatically merged. Each recipient receives exactly 1 email.
+                  </span>
+                </div>
+
+                <label>
+                  Announcement Subject Line
+                  <input
+                    type="text"
+                    value={broadcastSubject}
+                    onChange={(e) => setBroadcastSubject(e.target.value)}
+                    placeholder={`Out Now: ${audienceSummary?.launch_title || activeLaunch.title} by Dr Elvis Justice Bedi`}
+                  />
+                </label>
+
+                <label>
+                  Custom Author Message or Launch Note (Optional)
+                  <textarea
+                    rows={3}
+                    value={broadcastCustomMsg}
+                    onChange={(e) => setBroadcastCustomMsg(e.target.value)}
+                    placeholder="e.g. Thank you for your patience and enthusiasm. The book is officially available worldwide as of today..."
+                  />
+                </label>
+
+                <div>
+                  <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--muted)', margin: '0 0 6px' }}>
+                    Delivery Dispatch Mode
+                  </p>
+                  <div className="schedule-mode-selector">
+                    <div
+                      className={`schedule-card-option ${broadcastScheduleMode === 'scheduled' ? 'is-selected' : ''}`}
+                      onClick={() => setBroadcastScheduleMode('scheduled')}
+                    >
+                      <div className="schedule-card-top">
+                        <Clock size={15} color={broadcastScheduleMode === 'scheduled' ? 'var(--accent)' : 'var(--muted)'} />
+                        <span>Schedule for Launch Date</span>
+                      </div>
+                      <p className="schedule-card-desc">
+                        Queues with Resend bulk delivery engine to send at the exact launch time.
+                      </p>
+                    </div>
+
+                    <div
+                      className={`schedule-card-option ${broadcastScheduleMode === 'immediate' ? 'is-selected' : ''}`}
+                      onClick={() => setBroadcastScheduleMode('immediate')}
+                    >
+                      <div className="schedule-card-top">
+                        <Sparkles size={15} color={broadcastScheduleMode === 'immediate' ? 'var(--accent)' : 'var(--muted)'} />
+                        <span>Send Immediately (Bulk Dispatch)</span>
+                      </div>
+                      <p className="schedule-card-desc">
+                        Dispatches immediately to all unique audience members in batched API calls.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {broadcastScheduleMode === 'scheduled' && (
+                  <label>
+                    Scheduled Release Date & Time (Local / UTC)
+                    <input
+                      type="datetime-local"
+                      required
+                      value={broadcastScheduledDate}
+                      onChange={(e) => setBroadcastScheduledDate(e.target.value)}
+                    />
+                  </label>
+                )}
+
+                <div className="admin-modal-actions" style={{ marginTop: '12px' }}>
+                  <button type="button" className="text-button" onClick={() => setShowBroadcastModal(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="button button-dark" disabled={sendingBroadcast || (!includeWaitlist && !includeNewsletter)}>
+                    {sendingBroadcast ? (
+                      <><Loader2 className="animate-spin" size={15} /> Processing Bulk Broadcast...</>
+                    ) : broadcastScheduleMode === 'scheduled' ? (
+                      <><Clock size={15} /> Schedule Launch Broadcast</>
+                    ) : (
+                      <><Mail size={15} /> Send Broadcast Now ({audienceSummary?.total_unique_recipients ?? 'Audience'})</>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* TAB 2: DELIVER BOOKS TO PAID PRESALES */}
+            {broadcastTab === 'presale_delivery' && (
+              <form onSubmit={handleDeliverPresaleBooks} className="admin-modal-form">
+                <div style={{ background: '#f4fbf7', border: '1px solid #c3e6cb', padding: '16px 20px', borderRadius: '4px', color: '#155724' }}>
+                  <h4 style={{ margin: '0 0 6px', fontSize: '15px' }}>Presale Digital Book Delivery</h4>
+                  <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.5 }}>
+                    This action delivers complete digital editions (PDF / eBook download links with personalized license entitlements) to all confirmed, paid presale customers. Physical hardcover orders will receive their dispatch preparation notification.
+                  </p>
+                </div>
+
+                <div style={{ background: 'var(--paper)', padding: '12px 16px', borderRadius: '4px', border: '1px solid var(--line)' }}>
+                  <label className="checkbox-label admin-checkbox" style={{ margin: 0, textTransform: 'none', color: 'var(--ink)' }}>
+                    <input
+                      type="checkbox"
+                      checked={onlyUndeliveredOrders}
+                      onChange={(e) => setOnlyUndeliveredOrders(e.target.checked)}
+                    />
+                    <span>Only send to orders that haven&apos;t received books yet (skip already fulfilled)</span>
+                  </label>
+                </div>
+
+                <div>
+                  <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--muted)', margin: '0 0 6px' }}>
+                    Delivery Dispatch Mode
+                  </p>
+                  <div className="schedule-mode-selector">
+                    <div
+                      className={`schedule-card-option ${deliveryScheduleMode === 'scheduled' ? 'is-selected' : ''}`}
+                      onClick={() => setDeliveryScheduleMode('scheduled')}
+                    >
+                      <div className="schedule-card-top">
+                        <Clock size={15} color={deliveryScheduleMode === 'scheduled' ? 'var(--accent)' : 'var(--muted)'} />
+                        <span>Schedule Delivery on Launch Date</span>
+                      </div>
+                      <p className="schedule-card-desc">
+                        Schedules book download link emails for the official launch release date.
+                      </p>
+                    </div>
+
+                    <div
+                      className={`schedule-card-option ${deliveryScheduleMode === 'immediate' ? 'is-selected' : ''}`}
+                      onClick={() => setDeliveryScheduleMode('immediate')}
+                    >
+                      <div className="schedule-card-top">
+                        <Download size={15} color={deliveryScheduleMode === 'immediate' ? 'var(--accent)' : 'var(--muted)'} />
+                        <span>Deliver Immediately to Paid Orders</span>
+                      </div>
+                      <p className="schedule-card-desc">
+                        Immediately provisions tokens and emails download links to confirmed buyers.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {deliveryScheduleMode === 'scheduled' && (
+                  <label>
+                    Scheduled Release Date & Time
+                    <input
+                      type="datetime-local"
+                      required
+                      value={deliveryScheduledDate}
+                      onChange={(e) => setDeliveryScheduledDate(e.target.value)}
+                    />
+                  </label>
+                )}
+
+                <div className="admin-modal-actions" style={{ marginTop: '12px' }}>
+                  <button type="button" className="text-button" onClick={() => setShowBroadcastModal(false)}>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="button button-dark"
+                    disabled={deliveringBooks || (audienceSummary?.confirmed_presale_orders_count === 0 && presalesList.filter(o => o.payment_status === 'Confirmed').length === 0)}
+                  >
+                    {deliveringBooks ? (
+                      <><Loader2 className="animate-spin" size={15} /> Delivering Digital Books...</>
+                    ) : deliveryScheduleMode === 'scheduled' ? (
+                      <><Clock size={15} /> Schedule Presale Fulfillment</>
+                    ) : (
+                      <><Download size={15} /> Deliver Books Now ({audienceSummary?.confirmed_presale_orders_count ?? presalesList.filter(o => o.payment_status === 'Confirmed').length} Orders)</>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* TAB 3: CAMPAIGN LOGS */}
+            {broadcastTab === 'history' && (
+              <div>
+                {broadcastCampaigns.length > 0 ? (
+                  <div className="admin-table-wrap">
+                    <table className="admin-data-table">
+                      <thead>
+                        <tr>
+                          <th>Campaign Type</th>
+                          <th>Subject / Details</th>
+                          <th>Recipients</th>
+                          <th>Schedule / Status</th>
+                          <th>Dispatched By</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {broadcastCampaigns.map((camp) => (
+                          <tr key={camp.id}>
+                            <td>
+                              <span className={camp.campaign_type === 'launch_announcement' ? 'badge-confirmed' : 'badge-sent'}>
+                                {camp.campaign_type === 'launch_announcement' ? 'Launch Announcement' : 'Presale Delivery'}
+                              </span>
+                            </td>
+                            <td>
+                              <strong>{camp.subject}</strong>
+                              {camp.details?.custom_message && (
+                                <p className="table-sub">&ldquo;{camp.details.custom_message.slice(0, 50)}...&rdquo;</p>
+                              )}
+                            </td>
+                            <td><strong>{camp.total_recipients}</strong></td>
+                            <td>
+                              {camp.scheduled_at ? (
+                                <div>
+                                  <span className="badge-pending" style={{ fontSize: '11px' }}>
+                                    <Clock size={10} /> Scheduled
+                                  </span>
+                                  <p className="table-sub">{new Date(camp.scheduled_at).toLocaleString()}</p>
+                                </div>
+                              ) : (
+                                <div>
+                                  <span className="badge-confirmed" style={{ fontSize: '11px' }}>
+                                    <Check size={10} /> Dispatched
+                                  </span>
+                                  <p className="table-sub">{new Date(camp.created_at).toLocaleString()}</p>
+                                </div>
+                              )}
+                            </td>
+                            <td><span className="table-sub">{camp.sent_by || 'Admin'}</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="admin-empty-state-box">
+                    <Clock size={28} color="var(--muted)" />
+                    <p>No bulk broadcasts or delivery campaigns recorded yet.</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
